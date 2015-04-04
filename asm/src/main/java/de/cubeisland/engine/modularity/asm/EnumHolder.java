@@ -1,8 +1,5 @@
 package de.cubeisland.engine.modularity.asm;
 
-/**
-* Created by Phillip on 04.04.2015.
-*/
 public class EnumHolder
 {
     private String desc;
@@ -13,5 +10,4 @@ public class EnumHolder
         this.desc = desc;
         this.value = value;
     }
-
 }

@@ -1,7 +1,8 @@
 package de.cubeisland.engine.modularity.asm;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
@@ -12,13 +13,20 @@ public class ASMModuleParser
     private Type type;
     private int classVersion;
     private Type superType;
-    private final List<ModuleAnnotation> annoations = new ArrayList<ModuleAnnotation>();
+    private final Set<ModuleAnnotation> annotations = new HashSet<ModuleAnnotation>();
+
+    private final Stack<ModuleAnnotation> annotationStack = new Stack<ModuleAnnotation>();
+
 
     static enum AnnotationType
     {
-        CLASS, FIELD, METHOD, SUBTYPE;
+        CLASS,
+        FIELD,
+        METHOD,
+        SUBTYPE;
 
     }
+
     public ASMModuleParser(ClassReader reader)
     {
         reader.accept(new ModuleClassVisitor(this), 0);
@@ -33,30 +41,40 @@ public class ASMModuleParser
 
     public void startClassAnnotation(String name)
     {
-        this.annoations.add(new ModuleAnnotation(Type.getType(name), CLASS, this.type.getClassName()));
+        ModuleAnnotation annotation = new ModuleAnnotation(Type.getType(name), CLASS, this.type.getClassName());
+        this.annotations.add(annotation);
+        annotationStack.push(annotation);
     }
 
-    private ModuleAnnotation getLastAnnotation() {
-        return this.annoations.get(this.annoations.size() - 1);
+    private ModuleAnnotation getLastAnnotation()
+    {
+        return annotationStack.peek();
     }
 
     public void addAnnotationProperty(String name, Object value)
     {
         getLastAnnotation().addProperty(name, value);
     }
-}
-/*
-public ASMModParser(InputStream stream) throws IOException
+
+    public void addAnnotationArray(String name)
     {
-        try
-        {
-            ClassReader reader = new ClassReader(stream);
-            reader.accept(new ModClassVisitor(this), 0);
-        }
-        catch (Exception ex)
-        {
-            FMLLog.log(Level.ERROR, ex, "Unable to read a class file correctly");
-            throw new LoaderException(ex);
-        }
+        getLastAnnotation().addArray(name);
     }
- */
+
+    public void addSubAnnotation(String name, String desc)
+    {
+        ModuleAnnotation annotation = getLastAnnotation().addChildAnnotation(name, desc);
+        annotations.add(annotation);
+        annotationStack.push(annotation);
+    }
+
+    public void endArray()
+    {
+        getLastAnnotation().endArray();
+    }
+
+    public void endSubAnnotation()
+    {
+        annotationStack.pop();
+    }
+}
