@@ -22,7 +22,9 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-public interface Module
+import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
+
+public interface Module extends DependencyNode
 {
-    ModuleMetadata getMetadata();
+    ModuleMetadata getInformation();
 }

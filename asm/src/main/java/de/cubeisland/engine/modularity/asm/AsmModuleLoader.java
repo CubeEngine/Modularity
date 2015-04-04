@@ -25,7 +25,7 @@ package de.cubeisland.engine.modularity.asm;
 import java.io.File;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.ModuleLoader;
-import de.cubeisland.engine.modularity.core.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
 
 public class AsmModuleLoader implements ModuleLoader
 {

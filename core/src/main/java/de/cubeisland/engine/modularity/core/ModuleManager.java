@@ -22,7 +22,11 @@
  */
 package de.cubeisland.engine.modularity.core;
 
+import java.util.Set;
+
 public interface ModuleManager
 {
     Module getModule(String uniqueId);
+    <T extends Module> T getModule(Class<T> mainClass);
+    Set<Module> getModules();
 }

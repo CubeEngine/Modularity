@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
+import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
 
 public interface ModuleLoader
 {

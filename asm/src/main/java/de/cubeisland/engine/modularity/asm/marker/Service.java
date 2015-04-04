@@ -20,54 +20,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.marker;
 
-import java.util.Set;
-import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
-
-public class AsmModuleMetadata implements ModuleMetadata
+/**
+ * Created by Phillip on 05.04.2015.
+ */
+public @interface Service
 {
-    public String getIdentifier()
-    {
-        return null;
-    }
-
-    public String getName()
-    {
-        return null;
-    }
-
-    public String getDescription()
-    {
-        return null;
-    }
-
-    public Set<String> getAuthors()
-    {
-        return null;
-    }
-
-    @Override
-    public ClassLoader getClassLoader()
-    {
-        return null;
-    }
-
-    @Override
-    public Set<String> loadAfter()
-    {
-        return null;
-    }
-
-    @Override
-    public Set<String> requiredDependencies()
-    {
-        return null;
-    }
-
-    @Override
-    public Set<String> optionalDependencies()
-    {
-        return null;
-    }
 }

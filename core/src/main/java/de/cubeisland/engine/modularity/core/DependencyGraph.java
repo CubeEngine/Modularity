@@ -24,6 +24,7 @@ package de.cubeisland.engine.modularity.core;
 
 import java.util.HashSet;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
 
 public class DependencyGraph
 {

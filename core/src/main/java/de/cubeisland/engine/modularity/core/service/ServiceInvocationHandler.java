@@ -44,14 +44,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.PriorityQueue;
 
-import de.cubeisland.engine.modularity.core.service.Service.Implementation;
+import de.cubeisland.engine.modularity.core.service.ServiceContainer.Implementation;
 
 class ServiceInvocationHandler implements InvocationHandler
 {
-    private final Service<?> service;
+    private final ServiceContainer<?> service;
     private final PriorityQueue<Implementation> implementations;
 
-    public ServiceInvocationHandler(Service<?> service, PriorityQueue<Implementation> implementations)
+    public ServiceInvocationHandler(ServiceContainer<?> service, PriorityQueue<Implementation> implementations)
     {
         this.service = service;
         this.implementations = implementations;

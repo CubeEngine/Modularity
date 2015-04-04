@@ -20,23 +20,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-/**
- * This file is part of CubeEngine.
- * CubeEngine is licensed under the GNU General Public License Version 3.
- *
- * CubeEngine is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * CubeEngine is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with CubeEngine.  If not, see <http://www.gnu.org/licenses/>.
- */
 package de.cubeisland.engine.modularity.core.service;
 
 import java.util.HashMap;
@@ -47,18 +30,18 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.service.Service.Priority;
+import de.cubeisland.engine.modularity.core.service.ServiceContainer.Priority;
 
 public class ServiceManager
 {
-    private final Map<Class<?>, Service<?>> services = new HashMap<Class<?>, Service<?>>();
+    private final Map<Class<?>, ServiceContainer<?>> services = new HashMap<Class<?>, ServiceContainer<?>>();
 
     @SuppressWarnings("unchecked")
-    public <S> Service<S> getService(Class<S> service)
+    public <S> ServiceContainer<S> getService(Class<S> service)
     {
         synchronized (this.services)
         {
-            return (Service<S>)this.services.get(service);
+            return (ServiceContainer<S>)this.services.get(service);
         }
     }
 
@@ -67,13 +50,13 @@ public class ServiceManager
         return this.getService(service).getImplementation();
     }
 
-    public <S> Service<S> registerService(Module module, Class<S> interfaceClass, S implementation)
+    public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation)
     {
-        return this.registerService(module, interfaceClass, implementation, Priority.NORMAL);
+        return this.registerService(interfaceClass, implementation, Priority.NORMAL);
     }
 
     @SuppressWarnings("unchecked")
-    public <S> Service<S> registerService(Module module, Class<S> interfaceClass, S implementation, Priority priority)
+    public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation, Priority priority)
     {
         if (!interfaceClass.isInterface())
         {
@@ -82,12 +65,12 @@ public class ServiceManager
 
         synchronized (this.services)
         {
-            Service<S> service = (Service<S>)this.services.get(interfaceClass);
+            ServiceContainer<S> service = (ServiceContainer<S>)this.services.get(interfaceClass);
             if (service == null)
             {
-                this.services.put(interfaceClass, service = new Service<S>(module, interfaceClass));
+                this.services.put(interfaceClass, service = new ServiceContainer<S>(interfaceClass));
             }
-            service.addImplementation(module, implementation, priority);
+            service.addImplementation(implementation, priority);
             return service;
         }
     }
@@ -104,10 +87,10 @@ public class ServiceManager
     {
         synchronized (this.services)
         {
-            Iterator<Entry<Class<?>, Service<?>>> it = this.services.entrySet().iterator();
+            Iterator<Entry<Class<?>, ServiceContainer<?>>> it = this.services.entrySet().iterator();
             while (it.hasNext())
             {
-                if (it.next().getValue().getModule() == module)
+                if (it.next().getValue().getClass().getClassLoader() == module.getInformation().getClassLoader())
                 {
                     it.remove();
                 }
@@ -119,28 +102,28 @@ public class ServiceManager
     {
         synchronized (this.services)
         {
-            for (Service<?> service : this.services.values())
+            for (ServiceContainer<?> service : this.services.values())
             {
                 service.removeImplementations(module);
             }
         }
     }
 
-    public Set<Service<?>> getServices()
+    public Set<ServiceContainer<?>> getServices()
     {
         synchronized (this.services)
         {
-            return new HashSet<Service<?>>(this.services.values());
+            return new HashSet<ServiceContainer<?>>(this.services.values());
         }
     }
 
     @SuppressWarnings("unchecked")
     public <T> boolean isImplemented(Class<T> serviceInterface)
     {
-        Service<T> service;
+        ServiceContainer<T> service;
         synchronized (this.services)
         {
-            service = (Service<T>)this.services.get(serviceInterface);
+            service = (ServiceContainer<T>)this.services.get(serviceInterface);
         }
         return service != null && service.hasImplementations();
     }

@@ -47,27 +47,20 @@ import java.util.PriorityQueue;
 
 import de.cubeisland.engine.modularity.core.Module;
 
-public class Service<T>
+public class ServiceContainer<T>
 {
-    private final Module module;
     private final Class<T> interfaceClass;
     private final PriorityQueue<Implementation> implementations;
     private final T proxy;
     private final ServiceInvocationHandler invocationHandler;
 
     @SuppressWarnings("unchecked")
-    public Service(Module module, Class<T> interfaceClass)
+    public ServiceContainer(Class<T> interfaceClass)
     {
         this.interfaceClass = interfaceClass;
-        this.module = module;
         this.implementations = new PriorityQueue<Implementation>();
         this.invocationHandler = new ServiceInvocationHandler(this, this.implementations);
-        this.proxy = (T)Proxy.newProxyInstance(module.getClass().getClassLoader(), new Class[] {interfaceClass}, this.invocationHandler);
-    }
-
-    public Module getModule()
-    {
-        return module;
+        this.proxy = (T)Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[] {interfaceClass}, this.invocationHandler);
     }
 
     public Class<T> getInterface()
@@ -93,16 +86,16 @@ public class Service<T>
         }
     }
 
-    public Service<T> addImplementation(Module module, T implementation, Priority priority)
+    public ServiceContainer<T> addImplementation(T implementation, Priority priority)
     {
         synchronized (this.implementations)
         {
-            this.implementations.add(new Implementation(module, implementation, priority));
+            this.implementations.add(new Implementation(implementation, priority));
         }
         return this;
     }
 
-    public Service<T> removeImplementation(T implementation)
+    public ServiceContainer<T> removeImplementation(T implementation)
     {
         synchronized (this.implementations)
         {
@@ -118,14 +111,14 @@ public class Service<T>
         return this;
     }
 
-    public Service<T> removeImplementations(Module module)
+    public ServiceContainer<T> removeImplementations(Module module)
     {
         synchronized (this.implementations)
         {
             Iterator<Implementation> it = this.implementations.iterator();
             while (it.hasNext())
             {
-                if (it.next().getModule() == module)
+                if (it.next().getClass().getClassLoader() == module.getInformation().getClassLoader())
                 {
                     it.remove();
                 }
@@ -136,20 +129,13 @@ public class Service<T>
 
     static class Implementation implements Comparable<Implementation>
     {
-        private final Module module;
         private final Object target;
         private final Priority priority;
 
-        public Implementation(Module module, Object target, Priority priority)
+        public Implementation(Object target, Priority priority)
         {
-            this.module = module;
             this.target = target;
             this.priority = priority;
-        }
-
-        public Module getModule()
-        {
-            return module;
         }
 
         public Object getTarget()
@@ -162,15 +148,15 @@ public class Service<T>
             return priority;
         }
 
-        public int compareTo(Implementation o)
+        public int compareTo(Implementation other)
         {
-            if (priority.ordinal() == o.priority.ordinal())
+            if (priority.ordinal() == other.priority.ordinal())
             {
                 return 0;
             }
             else
             {
-                return priority.ordinal() < o.priority.ordinal() ? 1 : -1;
+                return priority.ordinal() < other.priority.ordinal() ? 1 : -1;
             }
         }
     }
