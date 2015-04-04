@@ -3,10 +3,12 @@ package de.cubeisland.engine.modularity.asm;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
 import static de.cubeisland.engine.modularity.asm.ASMModuleParser.AnnotationType.CLASS;
+import static de.cubeisland.engine.modularity.asm.ASMModuleParser.AnnotationType.FIELD;
 
 public class ASMModuleParser
 {
@@ -16,6 +18,8 @@ public class ASMModuleParser
     private final Set<ModuleAnnotation> annotations = new HashSet<ModuleAnnotation>();
 
     private final Stack<ModuleAnnotation> annotationStack = new Stack<ModuleAnnotation>();
+
+
 
 
     static enum AnnotationType
@@ -41,8 +45,17 @@ public class ASMModuleParser
 
     public void startClassAnnotation(String name)
     {
+        annotationStack.clear();
         ModuleAnnotation annotation = new ModuleAnnotation(Type.getType(name), CLASS, this.type.getClassName());
         this.annotations.add(annotation);
+        annotationStack.push(annotation);
+    }
+
+    public void startFieldAnnotation(String name, String annotationName)
+    {
+        annotationStack.clear();
+        ModuleAnnotation annotation = new ModuleAnnotation(Type.getType(annotationName), FIELD, name);
+        annotations.add(annotation);
         annotationStack.push(annotation);
     }
 

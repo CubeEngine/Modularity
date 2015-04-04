@@ -27,6 +27,12 @@ public class ModuleClassVisitor extends ClassVisitor
         return new ModuleAnnotationVisitor(this.discoverer);
     }
 
+    @Override
+    public FieldVisitor visitField(int access, String name, String desc, String signature, Object value)
+    {
+        return new ModuleFieldVisitor(name, discoverer);
+    }
+
     // TODO implement dependency declaration through fields
 }
 
