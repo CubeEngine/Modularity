@@ -64,7 +64,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jdkVersion>1.++</jdkVersion>
+        <jdkVersion>1.6</jdkVersion>
     </properties>
 
     <dependencies>
