@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with CubeEngine.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.cubeisland.engine.modularity.service;
+package de.cubeisland.engine.modularity.core.service;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import de.cubeisland.engine.modularity.Module;
+import de.cubeisland.engine.modularity.core.Module;
 
 public class Service<T>
 {

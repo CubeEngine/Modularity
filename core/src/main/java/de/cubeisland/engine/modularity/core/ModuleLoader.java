@@ -1,4 +1,4 @@
-package de.cubeisland.engine.modularity;
+package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 

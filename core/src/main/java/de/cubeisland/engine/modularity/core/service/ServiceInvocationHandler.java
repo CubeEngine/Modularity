@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with CubeEngine.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.cubeisland.engine.modularity.service;
+package de.cubeisland.engine.modularity.core.service;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.PriorityQueue;
 
-import de.cubeisland.engine.modularity.service.Service.Implementation;
+import de.cubeisland.engine.modularity.core.service.Service.Implementation;
 
 class ServiceInvocationHandler implements InvocationHandler
 {

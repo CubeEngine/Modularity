@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with CubeEngine.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.cubeisland.engine.modularity.service;
+package de.cubeisland.engine.modularity.core.service;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import de.cubeisland.engine.modularity.Module;
-import de.cubeisland.engine.modularity.service.Service.Priority;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.service.Service.Priority;
 
 public class ServiceManager
 {
