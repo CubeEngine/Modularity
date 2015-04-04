@@ -22,34 +22,24 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
+import de.cubeisland.engine.modularity.asm.annotation.ChildAnnotation;
+import de.cubeisland.engine.modularity.asm.annotation.ClassAnnotation;
+import de.cubeisland.engine.modularity.asm.annotation.FieldAnnotation;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
-
-import static de.cubeisland.engine.modularity.asm.ASMModuleParser.AnnotationType.CLASS;
-import static de.cubeisland.engine.modularity.asm.ASMModuleParser.AnnotationType.FIELD;
 
 public class ASMModuleParser
 {
     private Type type;
     private int classVersion;
     private Type superType;
-    private final Set<ModuleAnnotation> annotations = new HashSet<ModuleAnnotation>();
-
-    private final Stack<ModuleAnnotation> annotationStack = new Stack<ModuleAnnotation>();
-
-
-
-
-    static enum AnnotationType
-    {
-        CLASS,
-        FIELD,
-        METHOD,
-        SUBTYPE
-    }
+    private final Set<BaseAnnotation> annotations = new HashSet<BaseAnnotation>();
+    private final Stack<BaseAnnotation> annotationStack = new Stack<BaseAnnotation>();
 
     public ASMModuleParser(ClassReader reader)
     {
@@ -65,49 +55,62 @@ public class ASMModuleParser
 
     public void startClassAnnotation(String name)
     {
-        annotationStack.clear();
-        ModuleAnnotation annotation = new ModuleAnnotation(Type.getType(name), CLASS, this.type.getClassName());
+        BaseAnnotation annotation = new ClassAnnotation(Type.getType(name), this.type.getClassName());
         this.annotations.add(annotation);
-        annotationStack.push(annotation);
+        push(annotation);
     }
 
-    public void startFieldAnnotation(String name, String annotationName)
+    public void startFieldAnnotation(String name, String desc, String annotationName)
     {
-        annotationStack.clear();
-        ModuleAnnotation annotation = new ModuleAnnotation(Type.getType(annotationName), FIELD, name);
+        final FieldAnnotation annotation = new FieldAnnotation(Type.getType(annotationName), Type.getType(desc), name);
         annotations.add(annotation);
-        annotationStack.push(annotation);
+        push(annotation);
     }
 
-    private ModuleAnnotation getLastAnnotation()
+    private BaseAnnotation getLastAnnotation()
     {
         return annotationStack.peek();
     }
 
     public void addAnnotationProperty(String name, Object value)
     {
-        getLastAnnotation().addProperty(name, value);
+        getLastAnnotation().getData().addProperty(name, value);
+        push(getLastAnnotation());
     }
 
     public void addAnnotationArray(String name)
     {
-        getLastAnnotation().addArray(name);
+        getLastAnnotation().getData().addProperty(name, new ArrayList<Object>());
+        push(getLastAnnotation());
     }
 
     public void addSubAnnotation(String name, String desc)
     {
-        ModuleAnnotation annotation = getLastAnnotation().addChildAnnotation(name, desc);
-        annotations.add(annotation);
-        annotationStack.push(annotation);
+        BaseAnnotation base = getLastAnnotation();
+        ChildAnnotation child = new ChildAnnotation(Type.getType(desc), base);
+        base.getData().addProperties(name, child.getData());
+        push(child);
     }
 
-    public void endArray()
+    private void push(BaseAnnotation a)
     {
-        getLastAnnotation().endArray();
+        annotationStack.push(a);
     }
 
-    public void endSubAnnotation()
+    private BaseAnnotation pop()
     {
-        annotationStack.pop();
+        assert !annotationStack.empty(): "Trying to pop empty stack!";
+
+        return annotationStack.pop();
+    }
+
+    public void end()
+    {
+        annotations.add(pop());
+    }
+
+    public Set<BaseAnnotation> getAnnotations()
+    {
+        return annotations;
     }
 }

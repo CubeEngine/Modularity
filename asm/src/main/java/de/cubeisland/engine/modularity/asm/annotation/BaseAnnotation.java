@@ -20,48 +20,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.annotation;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Opcodes;
+import java.util.ArrayList;
+import org.objectweb.asm.Type;
 
-public class ModuleClassVisitor extends ClassVisitor
+public abstract class BaseAnnotation
 {
-    private final ASMModuleParser discoverer;
+    private final Type type;
+    private final String member;
+    private final AnnotationData data = new AnnotationData();
 
-    public ModuleClassVisitor(ASMModuleParser discoverer)
+    protected BaseAnnotation(Type type, String member)
     {
-        super(Opcodes.ASM5);
-        this.discoverer = discoverer;
+        this.type = type;
+        this.member = member;
     }
 
-    @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces)
+    public Type getType()
     {
-        this.discoverer.beginNewTypeName(name, version, superName);
+        return type;
     }
 
-    @Override
-    public AnnotationVisitor visitAnnotation(String name, boolean visible)
+    public AnnotationData getData()
     {
-        discoverer.startClassAnnotation(name);
-        return new ModuleAnnotationVisitor(this.discoverer);
+        return data;
     }
-
-    @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature, Object value)
-    {
-        return new ModuleFieldVisitor(name, desc, discoverer);
-    }
-
-    @Override
-    public void visitEnd()
-    {
-        discoverer.end();
-    }
-
-    // TODO implement dependency declaration through fields
 }
-

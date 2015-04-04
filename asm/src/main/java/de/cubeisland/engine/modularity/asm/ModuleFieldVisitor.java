@@ -23,25 +23,41 @@
 package de.cubeisland.engine.modularity.asm;
 
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.TypePath;
 
 public class ModuleFieldVisitor extends FieldVisitor
 {
     private final String name;
+    private final String desc;
     private final ASMModuleParser discoverer;
 
-    public ModuleFieldVisitor(String name, ASMModuleParser discoverer)
+    public ModuleFieldVisitor(String name, String desc, ASMModuleParser discoverer)
     {
         super(Opcodes.ASM5);
         this.name = name;
+        this.desc = desc;
         this.discoverer = discoverer;
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String annotationName, boolean runtimeVisible)
     {
-        discoverer.startFieldAnnotation(name, annotationName);
+        discoverer.startFieldAnnotation(name, desc, annotationName);
         return new ModuleAnnotationVisitor(discoverer);
+    }
+
+    @Override
+    public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible)
+    {
+        return super.visitTypeAnnotation(typeRef, typePath, desc, visible);
+    }
+
+    @Override
+    public void visitAttribute(Attribute attr)
+    {
+        System.out.println(attr.type);
     }
 }

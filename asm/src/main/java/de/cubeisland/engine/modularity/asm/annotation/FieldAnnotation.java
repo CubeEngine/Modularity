@@ -20,50 +20,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.annotation;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
-public class ModuleAnnotationVisitor extends AnnotationVisitor
+public class FieldAnnotation extends BaseAnnotation
 {
-    private final ASMModuleParser discoverer;
+    private final Type fieldType;
 
-    public ModuleAnnotationVisitor(ASMModuleParser discoverer)
+    public FieldAnnotation(Type type, Type fieldType, String member)
     {
-        super(Opcodes.ASM5);
-        this.discoverer = discoverer;
+        super(type, member);
+        this.fieldType = fieldType;
     }
 
-    @Override
-    public void visit(String name, Object value)
+    public Type getFieldType()
     {
-        this.discoverer.addAnnotationProperty(name, value);
-    }
-
-    @Override
-    public void visitEnum(String name, String desc, String value)
-    {
-        this.discoverer.addAnnotationProperty(name, new EnumHolder(desc, value));
-    }
-
-    @Override
-    public AnnotationVisitor visitArray(String name)
-    {
-        discoverer.addAnnotationArray(name);
-        return new ModuleAnnotationVisitor(discoverer);
-    }
-
-    @Override
-    public AnnotationVisitor visitAnnotation(String name, String desc)
-    {
-        discoverer.addSubAnnotation(name, desc);
-        return new ModuleAnnotationVisitor(discoverer);
-    }
-
-    @Override
-    public void visitEnd()
-    {
-        discoverer.end();
+        return fieldType;
     }
 }

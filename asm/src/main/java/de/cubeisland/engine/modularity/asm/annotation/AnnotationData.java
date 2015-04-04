@@ -20,48 +20,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.annotation;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Opcodes;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class ModuleClassVisitor extends ClassVisitor
+import static java.util.Collections.unmodifiableMap;
+
+public class AnnotationData
 {
-    private final ASMModuleParser discoverer;
+    private final Map<String, Object> properties = new HashMap<String, Object>();
 
-    public ModuleClassVisitor(ASMModuleParser discoverer)
+    @SuppressWarnings("unchecked")
+    public void addProperty(String name, Object value)
     {
-        super(Opcodes.ASM5);
-        this.discoverer = discoverer;
+        Object val = properties.get(name);
+        if (val instanceof List)
+        {
+            ((List)val).add(value);
+        }
+        else
+        {
+            properties.put(name, value);
+        }
     }
 
-    @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces)
+    public void addProperties(String name, AnnotationData data)
     {
-        this.discoverer.beginNewTypeName(name, version, superName);
+        addProperty(name, data.properties);
     }
 
-    @Override
-    public AnnotationVisitor visitAnnotation(String name, boolean visible)
+    public Map<String, Object> getProperties()
     {
-        discoverer.startClassAnnotation(name);
-        return new ModuleAnnotationVisitor(this.discoverer);
+        return unmodifiableMap(properties);
     }
-
-    @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature, Object value)
-    {
-        return new ModuleFieldVisitor(name, desc, discoverer);
-    }
-
-    @Override
-    public void visitEnd()
-    {
-        discoverer.end();
-    }
-
-    // TODO implement dependency declaration through fields
 }
-
