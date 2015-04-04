@@ -43,7 +43,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.PriorityQueue;
-
 import de.cubeisland.engine.modularity.core.service.ServiceContainer.Implementation;
 
 class ServiceInvocationHandler implements InvocationHandler
@@ -64,7 +63,8 @@ class ServiceInvocationHandler implements InvocationHandler
             final Implementation impl = this.implementations.peek();
             if (impl == null)
             {
-                throw new IllegalStateException("The service <" + this.service.getInterface().getName() + "> was invoked, but has no implementations!");
+                throw new IllegalStateException("The service <" + this.service.getInterface().getName()
+                                                    + "> was invoked, but has no implementations!");
             }
 
             try

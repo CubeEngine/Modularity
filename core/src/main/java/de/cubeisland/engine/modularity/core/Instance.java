@@ -20,15 +20,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.FIELD)
-public @interface InjectedService
+public interface Instance
 {
+    DependencyInformation getInformation();
 }

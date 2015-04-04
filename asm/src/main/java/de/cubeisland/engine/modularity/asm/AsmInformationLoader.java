@@ -20,11 +20,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.asm;
 
-import de.cubeisland.engine.modularity.core.meta.DependencyInformation;
+import java.io.File;
+import java.util.Set;
+import de.cubeisland.engine.modularity.core.InformationLoader;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public interface DependencyNode
+public class AsmInformationLoader implements InformationLoader
 {
-    DependencyInformation getInformation();
+    @Override
+    public Set<DependencyInformation> loadInformation(File file)
+    {
+        return null;
+    }
 }

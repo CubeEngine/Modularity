@@ -20,8 +20,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core.meta;
+package de.cubeisland.engine.modularity.core;
 
-public interface ServiceMetadata extends DependencyInformation
+import java.util.Set;
+import de.cubeisland.engine.modularity.core.service.ServiceContainer;
+
+public interface Modularity
 {
+    InformationLoader getLoader();
+
+    Instance getNode(String identifier);
+
+    <T extends Instance> T getNode(Class<T> type);
+
+    Set<Instance> getNodes();
+
+    Set<Module> getModules();
+
+    Set<ServiceContainer<?>> getServices();
 }

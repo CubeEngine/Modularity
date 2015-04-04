@@ -99,7 +99,7 @@ public class ASMModuleParser
 
     private BaseAnnotation pop()
     {
-        assert !annotationStack.empty(): "Trying to pop empty stack!";
+        assert !annotationStack.empty() : "Trying to pop empty stack!";
 
         return annotationStack.pop();
     }

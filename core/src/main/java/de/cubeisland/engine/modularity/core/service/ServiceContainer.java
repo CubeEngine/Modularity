@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
-
 import de.cubeisland.engine.modularity.core.Module;
 
 public class ServiceContainer<T>
@@ -60,7 +59,8 @@ public class ServiceContainer<T>
         this.interfaceClass = interfaceClass;
         this.implementations = new PriorityQueue<Implementation>();
         this.invocationHandler = new ServiceInvocationHandler(this, this.implementations);
-        this.proxy = (T)Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[] {interfaceClass}, this.invocationHandler);
+        this.proxy = (T)Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[]{interfaceClass},
+                                               this.invocationHandler);
     }
 
     public Class<T> getInterface()

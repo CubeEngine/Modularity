@@ -20,15 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core.meta;
+package de.cubeisland.engine.modularity.core;
 
+import java.io.File;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public interface ModuleMetadata extends DependencyInformation
+public interface InformationLoader
 {
-    String getName();
-    String getDescription();
-    Set<String> getAuthors();
-
-    Set<String> loadAfter();
+    Set<DependencyInformation> loadInformation(File file);
 }

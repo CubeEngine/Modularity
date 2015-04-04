@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer.Priority;
 

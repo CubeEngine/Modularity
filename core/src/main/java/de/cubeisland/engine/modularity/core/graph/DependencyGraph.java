@@ -20,23 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.core.graph;
 
 import java.util.HashSet;
 import java.util.Set;
-import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
 
 public class DependencyGraph
 {
-    private Set<ModuleMetadata> modules;
+    private Set<DependencyInformation> nodes;
 
     public DependencyGraph()
     {
-        this.modules = new HashSet<ModuleMetadata>();
-    }
-
-    public void addModule(ModuleMetadata metadata)
-    {
-
+        this.nodes = new HashSet<DependencyInformation>();
     }
 }

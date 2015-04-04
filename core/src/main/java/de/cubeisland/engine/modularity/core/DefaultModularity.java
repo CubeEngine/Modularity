@@ -22,11 +22,44 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import java.io.File;
-import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
+import java.util.Set;
+import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
-public interface ModuleLoader
+public class DefaultModularity implements Modularity
 {
-    ModuleMetadata loadModuleMetadata(File file);
-    Module loadModule(ModuleMetadata metadata);
+    @Override
+    public InformationLoader getLoader()
+    {
+        return null;
+    }
+
+    @Override
+    public Instance getNode(String identifier)
+    {
+        return null;
+    }
+
+    @Override
+    public <T extends Instance> T getNode(Class<T> type)
+    {
+        return null;
+    }
+
+    @Override
+    public Set<Instance> getNodes()
+    {
+        return null;
+    }
+
+    @Override
+    public Set<Module> getModules()
+    {
+        return null;
+    }
+
+    @Override
+    public Set<ServiceContainer<?>> getServices()
+    {
+        return null;
+    }
 }

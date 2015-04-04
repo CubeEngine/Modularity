@@ -20,15 +20,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core.graph;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.HashSet;
+import java.util.Set;
 
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.FIELD)
-public @interface InjectedService
+/**
+ * Created by Phillip on 05.04.2015.
+ */
+public class Node
 {
+    private final DependencyInformation information;
+    private final Set<Node> children = new HashSet<Node>();
+
+    public Node(DependencyInformation information)
+    {
+        this.information = information;
+    }
+
+    public DependencyInformation getInformation()
+    {
+        return information;
+    }
 }

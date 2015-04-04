@@ -22,7 +22,6 @@
  */
 package de.cubeisland.engine.modularity.asm.annotation;
 
-import java.util.ArrayList;
 import org.objectweb.asm.Type;
 
 public abstract class BaseAnnotation

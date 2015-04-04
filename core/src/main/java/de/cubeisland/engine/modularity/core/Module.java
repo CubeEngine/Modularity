@@ -22,9 +22,17 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-public interface Module extends DependencyNode
+public interface Module extends Instance
 {
+    void onLoad();
+
+    void onEnable();
+
+    void onDisable();
+
+    void onUnload();
+
     ModuleMetadata getInformation();
 }

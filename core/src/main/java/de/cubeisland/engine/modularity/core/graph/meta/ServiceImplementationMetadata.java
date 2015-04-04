@@ -20,22 +20,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core.graph.meta;
 
-import java.io.File;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.ModuleLoader;
-import de.cubeisland.engine.modularity.core.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public class AsmModuleLoader implements ModuleLoader
+public interface ServiceImplementationMetadata extends DependencyInformation
 {
-    public ModuleMetadata loadModuleMetadata(File file)
-    {
-        return null;
-    }
-
-    public Module loadModule(ModuleMetadata metadata)
-    {
-        return null;
-    }
 }

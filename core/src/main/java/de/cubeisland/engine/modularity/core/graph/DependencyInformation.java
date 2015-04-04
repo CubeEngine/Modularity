@@ -20,14 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core.meta;
+package de.cubeisland.engine.modularity.core.graph;
 
 import java.util.Set;
 
 public interface DependencyInformation
 {
     String getIdentifier();
+
     ClassLoader getClassLoader();
+
     Set<String> requiredDependencies();
+
     Set<String> optionalDependencies();
 }
