@@ -1,7 +1,9 @@
 package de.cubeisland.engine.modularity.asm.meta.candidate;
 
-import java.lang.reflect.Modifier;
+import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
@@ -10,13 +12,15 @@ import static java.util.Collections.unmodifiableSet;
 public abstract class TypeCandidate extends Candidate
 {
     private final Set<TypeReference> interfaces;
-    private final Set<FieldCandidate> fields = new HashSet<FieldCandidate>();
-    private final Set<MethodCandidate> methods = new HashSet<MethodCandidate>();
+    private final Map<String, FieldCandidate> fields = new HashMap<String, FieldCandidate>();
+    private final Map<String, MethodCandidate> methods = new HashMap<String, MethodCandidate>();
+    private final File sourceFile;
     private final int modifiers;
 
-    public TypeCandidate(String name, int modifiers, Set<TypeReference> interfaces)
+    public TypeCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces)
     {
         super(name);
+        this.sourceFile = sourceFile;
         this.modifiers = modifiers;
         this.interfaces = unmodifiableSet(interfaces);
     }
@@ -27,9 +31,31 @@ public abstract class TypeCandidate extends Candidate
         return parts[parts.length - 1];
     }
 
+    public File getSourceFile()
+    {
+        return sourceFile;
+    }
+
     public String getSimpleName()
     {
         return simpleName(getName());
+    }
+
+    public boolean hasInterface(Class interfaze)
+    {
+        return hasInterface(interfaze.getName());
+    }
+
+    public boolean hasInterface(String interfaze)
+    {
+        for (final TypeReference anInterface : this.interfaces)
+        {
+            if (anInterface.getReferencedClass().equals(interfaze))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Set<TypeReference> getImplementedInterfaces()
@@ -37,24 +63,34 @@ public abstract class TypeCandidate extends Candidate
         return interfaces;
     }
 
-    public void addField(FieldCandidate fieldCandidate)
+    public void addField(FieldCandidate candidate)
     {
-        this.fields.add(fieldCandidate);
+        this.fields.put(candidate.getName(), candidate);
     }
 
     public Set<FieldCandidate> getFields()
     {
-        return unmodifiableSet(fields);
+        return new HashSet<FieldCandidate>(fields.values());
+    }
+
+    public FieldCandidate getField(String name)
+    {
+        return fields.get(name);
     }
 
     public void addMethod(MethodCandidate candidate)
     {
-        this.methods.add(candidate);
+        this.methods.put(candidate.getName(), candidate);
     }
 
     public Set<MethodCandidate> getMethods()
     {
-        return unmodifiableSet(methods);
+        return new HashSet<MethodCandidate>(methods.values());
+    }
+
+    public MethodCandidate getMethod(String name)
+    {
+        return methods.get(name);
     }
 
     public TypeReference newReference()
@@ -68,6 +104,50 @@ public abstract class TypeCandidate extends Candidate
     }
 
     protected abstract String typeName();
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof TypeCandidate))
+        {
+            return false;
+        }
+
+        final TypeCandidate that = (TypeCandidate)o;
+
+        if (modifiers != that.modifiers)
+        {
+            return false;
+        }
+        if (!fields.equals(that.fields))
+        {
+            return false;
+        }
+        if (!interfaces.equals(that.interfaces))
+        {
+            return false;
+        }
+        if (!methods.equals(that.methods))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = interfaces.hashCode();
+        result = 31 * result + fields.hashCode();
+        result = 31 * result + methods.hashCode();
+        result = 31 * result + modifiers;
+        return result;
+    }
 
     @Override
     public String toString()
@@ -118,7 +198,7 @@ public abstract class TypeCandidate extends Candidate
         }
         s.append(" {");
 
-        for (FieldCandidate field : this.fields)
+        for (FieldCandidate field : getFields())
         {
             s.append("\n\t").append(field);
         }
@@ -129,7 +209,7 @@ public abstract class TypeCandidate extends Candidate
                 s.append("\n\t").append(constructor);
             }
         }
-        for (MethodCandidate method : this.methods)
+        for (MethodCandidate method : getMethods())
         {
             s.append("\n\t").append(method);
         }

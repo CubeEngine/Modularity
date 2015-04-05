@@ -39,6 +39,50 @@ public class FieldCandidate extends Candidate
     }
 
     @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof FieldCandidate))
+        {
+            return false;
+        }
+
+        final FieldCandidate that = (FieldCandidate)o;
+
+        if (modifiers != that.modifiers)
+        {
+            return false;
+        }
+        if (!declaringClass.equals(that.declaringClass))
+        {
+            return false;
+        }
+        if (!type.equals(that.type))
+        {
+            return false;
+        }
+        if (value != null ? !value.equals(that.value) : that.value != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = declaringClass.hashCode();
+        result = 31 * result + modifiers;
+        result = 31 * result + type.hashCode();
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString()
     {
         StringBuilder s = new StringBuilder();

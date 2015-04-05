@@ -29,9 +29,10 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface Module
+public @interface ModuleInfo
 {
-    String value();
+    String name();
     String version() default "1.0.0";
+    // TODO inject source version via maven plugin somehow
     String[] loadAfter() default {};
 }

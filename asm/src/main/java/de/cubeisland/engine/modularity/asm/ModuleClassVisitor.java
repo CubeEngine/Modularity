@@ -22,6 +22,7 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,11 +48,13 @@ import static org.objectweb.asm.Opcodes.*;
 
 public class ModuleClassVisitor extends ClassVisitor
 {
+    private final File file;
     private TypeCandidate candidate;
 
-    public ModuleClassVisitor()
+    public ModuleClassVisitor(File file)
     {
         super(Opcodes.ASM5);
+        this.file = file;
     }
 
     public TypeCandidate getCandidate()
@@ -68,7 +71,7 @@ public class ModuleClassVisitor extends ClassVisitor
 
         if (check(access, ACC_INTERFACE))
         {
-            candidate = new InterfaceCandidate(typeName, modifiers, interfaceReferences);
+            candidate = new InterfaceCandidate(file, typeName, modifiers, interfaceReferences);
         }
         else if (check(access, ACC_ANNOTATION))
         {}
@@ -76,7 +79,7 @@ public class ModuleClassVisitor extends ClassVisitor
         {}
         else
         {
-            candidate = new ClassCandidate(typeName, modifiers, interfaceReferences, refForObjectType(superName));
+            candidate = new ClassCandidate(file, typeName, modifiers, interfaceReferences, refForObjectType(superName));
         }
     }
 

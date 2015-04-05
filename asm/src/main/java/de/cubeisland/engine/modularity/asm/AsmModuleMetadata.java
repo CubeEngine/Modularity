@@ -23,10 +23,16 @@
 package de.cubeisland.engine.modularity.asm;
 
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class AsmModuleMetadata implements ModuleMetadata
 {
+    public AsmModuleMetadata(ClassCandidate module)
+    {
+        // TODO implement stuffs pls
+    }
+
     public String getIdentifier()
     {
         return null;

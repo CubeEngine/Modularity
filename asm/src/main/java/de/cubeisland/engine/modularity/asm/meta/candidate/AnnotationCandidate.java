@@ -40,6 +40,40 @@ public class AnnotationCandidate extends Candidate
     }
 
     @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof AnnotationCandidate))
+        {
+            return false;
+        }
+
+        final AnnotationCandidate that = (AnnotationCandidate)o;
+
+        if (!properties.equals(that.properties))
+        {
+            return false;
+        }
+        if (!type.equals(that.type))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = type.hashCode();
+        result = 31 * result + properties.hashCode();
+        return result;
+    }
+
+    @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();

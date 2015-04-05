@@ -31,6 +31,23 @@ public abstract class Candidate
         return unmodifiableSet(annotations);
     }
 
+    public boolean isAnnotatedWith(Class clazz)
+    {
+        return isAnnotatedWith(clazz.getName());
+    }
+
+    public boolean isAnnotatedWith(String annotationType)
+    {
+        for (final AnnotationCandidate annotation : annotations)
+        {
+            if (annotation.getName().equals(annotationType))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected static String stringModifiers(int modifiers)
     {
         StringBuilder mods = new StringBuilder();

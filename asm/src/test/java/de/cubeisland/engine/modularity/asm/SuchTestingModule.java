@@ -23,9 +23,9 @@
 package de.cubeisland.engine.modularity.asm;
 
 import de.cubeisland.engine.modularity.asm.marker.InjectedService;
-import de.cubeisland.engine.modularity.asm.marker.Module;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 
-@Module(value = "wow", loadAfter = {"no.thing", "a.lot"})
+@ModuleInfo(value = "wow", loadAfter = {"no.thing", "a.lot"})
 public class SuchTestingModule
 {
     @InjectedService(required = false)

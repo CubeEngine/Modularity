@@ -1,13 +1,14 @@
 package de.cubeisland.engine.modularity.asm.meta.candidate;
 
+import java.io.File;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
 public class InterfaceCandidate extends TypeCandidate
 {
-    public InterfaceCandidate(String name, int modifiers, Set<TypeReference> interfaces)
+    public InterfaceCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces)
     {
-        super(name, modifiers, interfaces);
+        super(sourceFile, name, modifiers, interfaces);
     }
 
     @Override

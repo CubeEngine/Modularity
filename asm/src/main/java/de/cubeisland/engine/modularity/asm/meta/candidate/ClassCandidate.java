@@ -1,5 +1,6 @@
 package de.cubeisland.engine.modularity.asm.meta.candidate;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
@@ -11,9 +12,9 @@ public class ClassCandidate extends TypeCandidate
     private final TypeReference extendedClass;
     private final Set<ConstructorCandidate> constructors = new HashSet<ConstructorCandidate>();
 
-    public ClassCandidate(String name, int modifiers, Set<TypeReference> interfaces, TypeReference extendedClass)
+    public ClassCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces, TypeReference extendedClass)
     {
-        super(name, modifiers, interfaces);
+        super(sourceFile, name, modifiers, interfaces);
         this.extendedClass = extendedClass;
     }
 

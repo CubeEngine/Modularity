@@ -40,6 +40,50 @@ public class MethodCandidate extends Candidate
     }
 
     @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof MethodCandidate))
+        {
+            return false;
+        }
+
+        final MethodCandidate that = (MethodCandidate)o;
+
+        if (modifiers != that.modifiers)
+        {
+            return false;
+        }
+        if (!declaringClass.equals(that.declaringClass))
+        {
+            return false;
+        }
+        if (!parameterTypes.equals(that.parameterTypes))
+        {
+            return false;
+        }
+        if (!returnType.equals(that.returnType))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = declaringClass.hashCode();
+        result = 31 * result + modifiers;
+        result = 31 * result + returnType.hashCode();
+        result = 31 * result + parameterTypes.hashCode();
+        return result;
+    }
+
+    @Override
     public String toString()
     {
         StringBuilder s = new StringBuilder();

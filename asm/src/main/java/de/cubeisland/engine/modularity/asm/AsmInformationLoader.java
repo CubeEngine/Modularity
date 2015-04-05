@@ -29,26 +29,52 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.marker.Service;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.InformationLoader;
+import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import org.objectweb.asm.ClassReader;
 
 public class AsmInformationLoader implements InformationLoader
 {
+    private final Map<String, TypeCandidate> knownTypes = new HashMap<String, TypeCandidate>();
+
+    public Set<DependencyInformation> loadInformation(Set<File> files)
+    {
+        Set<DependencyInformation> information = new HashSet<DependencyInformation>();
+
+        for (final File file : files)
+        {
+            information.addAll(loadInformation(file));
+        }
+
+        // TODO search for service impl
+
+        return information;
+    }
+
     @Override
     public Set<DependencyInformation> loadInformation(File file)
     {
         try
         {
+            Set<DependencyInformation> result = new HashSet<DependencyInformation>();
+
             Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
             for (InputStream stream : getStreams(file))
             {
-                ModuleClassVisitor classVisitor = new ModuleClassVisitor();
+                ModuleClassVisitor classVisitor = new ModuleClassVisitor(file);
                 new ClassReader(stream).accept(classVisitor, 0);
                 TypeCandidate candidate = classVisitor.getCandidate();
                 if (candidate != null)
@@ -56,6 +82,52 @@ public class AsmInformationLoader implements InformationLoader
                     candidates.add(candidate);
                 }
             }
+
+            List<ClassCandidate> modules = new ArrayList<ClassCandidate>();
+            List<InterfaceCandidate> services = new ArrayList<InterfaceCandidate>();
+
+            for (TypeCandidate candidate : candidates)
+            {
+                knownTypes.put(candidate.getName(), candidate);
+                if (candidate.isAnnotatedWith(ModuleInfo.class))
+                {
+                    if (candidate instanceof ClassCandidate)
+                    {
+                        modules.add((ClassCandidate)candidate);
+                    }
+                    else
+                    {
+                        System.err.println("Type '" + candidate.getName() + "' has the @ModuleInfo annotation, but cannot be a module!");
+                    }
+                }
+                if (candidate.isAnnotatedWith(Service.class))
+                {
+                    if (candidate instanceof InterfaceCandidate)
+                    {
+                        services.add((InterfaceCandidate)candidate);
+                    }
+                    else
+                    {
+                        System.err.println("Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
+                    }
+                }
+            }
+
+            for (Iterator<ClassCandidate> iterator = modules.iterator(); iterator.hasNext(); )
+            {
+                final TypeCandidate module = iterator.next();
+                if (!implemented(module, Module.class))
+                {
+                    System.err.println("Type '" + module.getName() + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
+                    iterator.remove();
+                }
+            }
+
+            for (ClassCandidate module : modules)
+            {
+                result.add(new AsmModuleMetadata(module));
+            }
+
             return Collections.emptySet();
         }
         catch (IOException e)
@@ -64,15 +136,46 @@ public class AsmInformationLoader implements InformationLoader
         }
     }
 
+    private boolean implemented(TypeCandidate current, Class interfaceToCheck)
+    {
+        if (current == null)
+        {
+            return false;
+        }
+        if (current.hasInterface(interfaceToCheck))
+        {
+            return true;
+        }
+        for (final TypeReference anInterface : current.getImplementedInterfaces())
+        {
+            if (implemented(knownTypes.get(anInterface.getReferencedClass()), interfaceToCheck))
+            {
+                return true;
+            }
+        }
+        if (current instanceof ClassCandidate)
+        {
+            return implemented(knownTypes.get(((ClassCandidate)current).getExtendedClass().getReferencedClass()), interfaceToCheck);
+        }
+        return false;
+    }
+
     private List<InputStream> getStreams(File file) throws FileNotFoundException
     {
         List<InputStream> list = new ArrayList<InputStream>();
-        if (file.getName().endsWith(".class"))
+        if (file.isDirectory())
+        {
+            for (File aFile : file.listFiles())
+            {
+                list.addAll(getStreams(aFile));
+            }
+        }
+        else if (file.getName().endsWith(".class"))
         {
             list.add(new FileInputStream(file));
             return list;
         }
-        // TODO read JAR-File
+        // else TODO read JAR-File
         return list;
     }
 }

@@ -28,16 +28,19 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import org.junit.Assert;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 
 import static java.io.File.separatorChar;
 import static java.util.Arrays.asList;
 
-public class ASMModuleParserTest
+public class ASMModuleInfoParserTest
 {
-    private static final String TARGET_PATH = "target" + separatorChar + "test-classes";
+    public static final String TARGET_PATH = "target" + separatorChar + "test-classes";
 
     @SuppressWarnings("unchecked")
     public static <T> T getValue(Object o, String field) throws Exception
@@ -50,16 +53,23 @@ public class ASMModuleParserTest
     @Test
     public void testLoadCandidates() throws Exception
     {
+        TypeCandidate suchTestingModule = readCandidate(SuchTestingModule.class);
+        TypeCandidate muchService = readCandidate(MuchService.class);
+        TypeCandidate veryService = readCandidate(VeryService.class);
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>(asList(
-            readCandidate(SuchTestingModule.class),
-            readCandidate(MuchService.class),
-            readCandidate(VeryService.class)
+            suchTestingModule,
+            muchService,
+            veryService
         ));
 
         for (final TypeCandidate candidate : candidates)
         {
             System.out.println(candidate);
         }
+
+        Assert.assertTrue("Annotation not detected", suchTestingModule.isAnnotatedWith(ModuleInfo.class));
+        Assert.assertTrue("Annotation not detected", muchService.isAnnotatedWith(Service.class));
+        Assert.assertTrue("Annotation detected where no annotations are", veryService.getAnnotations().isEmpty());
     }
 
     private TypeCandidate readCandidate(Class clazz) throws IOException
@@ -79,8 +89,13 @@ public class ASMModuleParserTest
         return new ClassReader(new FileInputStream(new File(getPath(file))));
     }
 
-    private String getPath(String file)
+    public static String getPath(String file)
     {
-        return TARGET_PATH + separatorChar + getClass().getPackage().getName().replace('.', separatorChar) + separatorChar + file;
+        return getPath() + separatorChar + file;
+    }
+
+    public static String getPath()
+    {
+        return TARGET_PATH + separatorChar + ASMModuleInfoParserTest.class.getPackage().getName().replace('.', separatorChar);
     }
 }
