@@ -22,6 +22,10 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,14 +34,15 @@ import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
 import de.cubeisland.engine.modularity.asm.annotation.ChildAnnotation;
 import de.cubeisland.engine.modularity.asm.annotation.ClassAnnotation;
 import de.cubeisland.engine.modularity.asm.annotation.FieldAnnotation;
+import de.cubeisland.engine.modularity.asm.marker.Module;
+import de.cubeisland.engine.modularity.asm.marker.Service;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
 public class ASMModuleParser
 {
     private Type type;
-    private int classVersion;
-    private Type superType;
     private final Set<BaseAnnotation> annotations = new HashSet<BaseAnnotation>();
     private final Stack<BaseAnnotation> annotationStack = new Stack<BaseAnnotation>();
 
@@ -46,11 +51,10 @@ public class ASMModuleParser
         reader.accept(new ModuleClassVisitor(this), 0);
     }
 
-    public void beginNewTypeName(String name, int version, String superName)
+    public void beginNewTypeName(String name)
     {
+        System.out.println("Begin " + name);
         this.type = Type.getObjectType(name);
-        this.classVersion = version;
-        this.superType = (superName == null || superName.isEmpty()) ? null : Type.getObjectType(superName);
     }
 
     public void startClassAnnotation(String name)
@@ -123,5 +127,10 @@ public class ASMModuleParser
     public Set<BaseAnnotation> getAnnotations()
     {
         return annotations;
+    }
+
+    public static ASMModuleParser of(File file) throws IOException
+    {
+        return new ASMModuleParser(new ClassReader(new FileInputStream(file)));
     }
 }

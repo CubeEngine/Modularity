@@ -28,7 +28,7 @@ import de.cubeisland.engine.modularity.asm.marker.Module;
 @Module(value = "wow", loadAfter = {"no.thing", "a.lot"})
 public class SuchTestingModule
 {
-    @InjectedService
+    @InjectedService(required = false)
     private MuchService injectedService;
 
     @InjectedService

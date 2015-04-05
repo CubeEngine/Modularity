@@ -24,6 +24,7 @@ package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Stack;
 import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
@@ -50,12 +51,9 @@ public class ASMModuleParserTest
     }
 
     @Test
-    public void testAnnotation() throws Exception
+    public void testModule() throws Exception
     {
-        final String path = getPath("SuchTestingModule.class");
-        final FileInputStream stream = new FileInputStream(new File(path));
-        final ASMModuleParser parser = new ASMModuleParser(new ClassReader(stream));
-
+        final ASMModuleParser parser = new ASMModuleParser(classReaderFor("SuchTestingModule.class"));
         assertTrue(ASMModuleParserTest.<Stack>getValue(parser, "annotationStack").isEmpty());
 
         int i = 0;
@@ -73,20 +71,28 @@ public class ASMModuleParserTest
             }
         }
         assertEquals("Not all tested annotations were found", 3, i);
+    }
 
-        final ASMModuleParser parser2 = new ASMModuleParser(new ClassReader(new FileInputStream(new File(getPath("MuchService.class")))));
-        assertTrue(ASMModuleParserTest.<Stack>getValue(parser2, "annotationStack").isEmpty());
+    @Test
+    public void testService() throws Exception
+    {
+        final ASMModuleParser parser = new ASMModuleParser(classReaderFor("MuchService.class"));
+        assertTrue(ASMModuleParserTest.<Stack>getValue(parser, "annotationStack").isEmpty());
 
-        i = 0;
-        for (final BaseAnnotation annotation : parser2.getAnnotations())
+        int i = 0;
+        for (final BaseAnnotation annotation : parser.getAnnotations())
         {
             if (annotation.getType().getClassName().equals(Service.class.getName()))
             {
                 i++;
             }
         }
-
         assertEquals("Not all tested annotations were found", 1, i);
+    }
+
+    private ClassReader classReaderFor(String file) throws IOException
+    {
+        return new ClassReader(new FileInputStream(new File(getPath(file))));
     }
 
     private String getPath(String file)

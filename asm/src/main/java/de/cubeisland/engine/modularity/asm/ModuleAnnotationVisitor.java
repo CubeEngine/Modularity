@@ -61,6 +61,7 @@ public class ModuleAnnotationVisitor extends AnnotationVisitor
         return new ModuleAnnotationVisitor(discoverer);
     }
 
+
     @Override
     public void visitEnd()
     {

@@ -23,7 +23,16 @@
 package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
 import de.cubeisland.engine.modularity.core.InformationLoader;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
@@ -32,6 +41,41 @@ public class AsmInformationLoader implements InformationLoader
     @Override
     public Set<DependencyInformation> loadInformation(File file)
     {
-        return null;
+        try
+        {
+            Set<DependencyInformation> set = new HashSet<DependencyInformation>();
+            for (InputStream stream : getStreams(file))
+            {
+                Set<BaseAnnotation> annotations = ASMModuleParser.of(file).getAnnotations();
+                if (!annotations.isEmpty())
+                {
+                    // TODO find Type
+                    // @Module + extends ModuleInterface at some point
+                    // @Service + Definition must be Interface
+                    // Serviceimpl?
+                    // Can a Module implement a Service?
+
+                    // TODO create DependencyInformation
+                }
+                // else no annotations => class is irrelevant
+            }
+            return set;
+        }
+        catch (IOException e)
+        {
+            return Collections.emptySet();
+        }
+    }
+
+    private List<InputStream> getStreams(File file) throws FileNotFoundException
+    {
+        List<InputStream> list = new ArrayList<InputStream>();
+        if (file.getName().endsWith(".class"))
+        {
+            list.add(new FileInputStream(file));
+            return list;
+        }
+        // TODO read JAR-File
+        return list;
     }
 }
