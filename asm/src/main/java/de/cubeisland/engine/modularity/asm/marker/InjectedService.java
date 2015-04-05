@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.marker;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,4 +31,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface InjectedService
 {
+    /**
+     * Returns true when required and false when optional
+     */
+    boolean required() default true;
 }

@@ -23,9 +23,12 @@
 package de.cubeisland.engine.modularity.asm;
 
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.TypePath;
 
 public class ModuleClassVisitor extends ClassVisitor
 {
@@ -40,6 +43,7 @@ public class ModuleClassVisitor extends ClassVisitor
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces)
     {
+        System.out.println("Begin " + name);
         this.discoverer.beginNewTypeName(name, version, superName);
     }
 
@@ -59,9 +63,7 @@ public class ModuleClassVisitor extends ClassVisitor
     @Override
     public void visitEnd()
     {
-        discoverer.end();
+        System.out.println("\n");
     }
-
-    // TODO implement dependency declaration through fields
 }
 

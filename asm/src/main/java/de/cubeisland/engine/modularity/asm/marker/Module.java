@@ -29,6 +29,9 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface Service
+public @interface Module
 {
+    String value();
+    String version() default "1.0.0";
+    String[] loadAfter() default {};
 }

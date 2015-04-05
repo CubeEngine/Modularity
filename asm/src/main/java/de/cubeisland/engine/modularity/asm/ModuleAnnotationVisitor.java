@@ -50,14 +50,14 @@ public class ModuleAnnotationVisitor extends AnnotationVisitor
     @Override
     public AnnotationVisitor visitArray(String name)
     {
-        discoverer.addAnnotationArray(name);
+        discoverer.startAnnotationArray(name);
         return new ModuleAnnotationVisitor(discoverer);
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String name, String desc)
     {
-        discoverer.addSubAnnotation(name, desc);
+        discoverer.startSubAnnotation(name, desc);
         return new ModuleAnnotationVisitor(discoverer);
     }
 

@@ -56,15 +56,27 @@ public class ASMModuleParser
     public void startClassAnnotation(String name)
     {
         BaseAnnotation annotation = new ClassAnnotation(Type.getType(name), this.type.getClassName());
-        this.annotations.add(annotation);
         push(annotation);
     }
 
     public void startFieldAnnotation(String name, String desc, String annotationName)
     {
         final FieldAnnotation annotation = new FieldAnnotation(Type.getType(annotationName), Type.getType(desc), name);
-        annotations.add(annotation);
         push(annotation);
+    }
+
+    public void startSubAnnotation(String name, String desc)
+    {
+        BaseAnnotation base = getLastAnnotation();
+        ChildAnnotation child = new ChildAnnotation(Type.getType(desc), base);
+        base.getData().addProperties(name, child.getData());
+        push(child);
+    }
+
+    public void startAnnotationArray(String name)
+    {
+        getLastAnnotation().getData().addProperty(name, new ArrayList<Object>());
+        push(getLastAnnotation());
     }
 
     private BaseAnnotation getLastAnnotation()
@@ -75,30 +87,29 @@ public class ASMModuleParser
     public void addAnnotationProperty(String name, Object value)
     {
         getLastAnnotation().getData().addProperty(name, value);
-        push(getLastAnnotation());
     }
 
-    public void addAnnotationArray(String name)
-    {
-        getLastAnnotation().getData().addProperty(name, new ArrayList<Object>());
-        push(getLastAnnotation());
-    }
 
-    public void addSubAnnotation(String name, String desc)
+    private String getStackSize()
     {
-        BaseAnnotation base = getLastAnnotation();
-        ChildAnnotation child = new ChildAnnotation(Type.getType(desc), base);
-        base.getData().addProperties(name, child.getData());
-        push(child);
+        String s = "";
+        for (int i = 0; i < annotationStack.size(); i++)
+        {
+            s += "  ";
+        }
+        return s;
     }
 
     private void push(BaseAnnotation a)
     {
         annotationStack.push(a);
+        System.out.println(getStackSize() + "push " + a.getType().getClassName());
     }
 
     private BaseAnnotation pop()
     {
+        System.out.println(getStackSize() + "pop " + annotationStack.peek().getType().getClassName());
+
         assert !annotationStack.empty() : "Trying to pop empty stack!";
 
         return annotationStack.pop();

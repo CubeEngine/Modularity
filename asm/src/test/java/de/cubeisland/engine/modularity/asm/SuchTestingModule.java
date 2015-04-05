@@ -22,9 +22,15 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-@TestModule(name = "wow")
+import de.cubeisland.engine.modularity.asm.marker.InjectedService;
+import de.cubeisland.engine.modularity.asm.marker.Module;
+
+@Module(value = "wow", loadAfter = {"no.thing", "a.lot"})
 public class SuchTestingModule
 {
     @InjectedService
-    private String injectedStringService;
+    private MuchService injectedService;
+
+    @InjectedService
+    private MuchService doubleTime;
 }

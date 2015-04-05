@@ -28,6 +28,9 @@ import java.lang.reflect.Field;
 import java.util.Stack;
 import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
 import de.cubeisland.engine.modularity.asm.annotation.FieldAnnotation;
+import de.cubeisland.engine.modularity.asm.marker.InjectedService;
+import de.cubeisland.engine.modularity.asm.marker.Module;
+import de.cubeisland.engine.modularity.asm.marker.Service;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 
@@ -49,7 +52,7 @@ public class ASMModuleParserTest
     @Test
     public void testAnnotation() throws Exception
     {
-        final String path = TARGET_PATH + separatorChar + getClass().getPackage().getName().replace('.', separatorChar) + separatorChar + "SuchTestingModule.class";
+        final String path = getPath("SuchTestingModule.class");
         final FileInputStream stream = new FileInputStream(new File(path));
         final ASMModuleParser parser = new ASMModuleParser(new ClassReader(stream));
 
@@ -58,18 +61,36 @@ public class ASMModuleParserTest
         int i = 0;
         for (final BaseAnnotation annotation : parser.getAnnotations())
         {
-            if (annotation.getType().getClassName().equals(TestModule.class.getName()))
+            if (annotation.getType().getClassName().equals(Module.class.getName()))
             {
                 i++;
-                assertEquals("wow", annotation.getData().getProperties().get("name"));
+                assertEquals("wow", annotation.getData().getProperties().get("value"));
             }
             else if (annotation.getType().getClassName().equals(InjectedService.class.getName()) && annotation instanceof FieldAnnotation)
             {
                 i++;
-                assertEquals(String.class.getName(), ((FieldAnnotation)annotation).getFieldType().getClassName());
+                assertEquals(MuchService.class.getName(), ((FieldAnnotation)annotation).getFieldType().getClassName());
+            }
+        }
+        assertEquals("Not all tested annotations were found", 3, i);
+
+        final ASMModuleParser parser2 = new ASMModuleParser(new ClassReader(new FileInputStream(new File(getPath("MuchService.class")))));
+        assertTrue(ASMModuleParserTest.<Stack>getValue(parser2, "annotationStack").isEmpty());
+
+        i = 0;
+        for (final BaseAnnotation annotation : parser2.getAnnotations())
+        {
+            if (annotation.getType().getClassName().equals(Service.class.getName()))
+            {
+                i++;
             }
         }
 
-        assertEquals("Not all tested annotations were found", 2, i);
+        assertEquals("Not all tested annotations were found", 1, i);
+    }
+
+    private String getPath(String file)
+    {
+        return TARGET_PATH + separatorChar + getClass().getPackage().getName().replace('.', separatorChar) + separatorChar + file;
     }
 }
