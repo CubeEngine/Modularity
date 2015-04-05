@@ -22,29 +22,26 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.TypePath;
+
+import static de.cubeisland.engine.modularity.asm.ModuleClassVisitor.visit;
 
 public class ModuleFieldVisitor extends FieldVisitor
 {
-    private final String name;
-    private final String desc;
-    private final ASMModuleParser discoverer;
+    private final FieldCandidate candidate;
 
-    public ModuleFieldVisitor(String name, String desc, ASMModuleParser discoverer)
+    public ModuleFieldVisitor(FieldCandidate candidate)
     {
         super(Opcodes.ASM5);
-        this.name = name;
-        this.desc = desc;
-        this.discoverer = discoverer;
+        this.candidate = candidate;
     }
 
     @Override
-    public AnnotationVisitor visitAnnotation(String annotationName, boolean runtimeVisible)
+    public AnnotationVisitor visitAnnotation(String name, boolean runtimeVisible)
     {
-        discoverer.startFieldAnnotation(name, desc, annotationName);
-        return new ModuleAnnotationVisitor(discoverer);
+        return visit(candidate, name);
     }
 }

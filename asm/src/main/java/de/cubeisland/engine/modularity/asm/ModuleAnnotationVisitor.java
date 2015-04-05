@@ -22,49 +22,88 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.util.ArrayList;
+import java.util.List;
+import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
 
+import static de.cubeisland.engine.modularity.asm.ModuleClassVisitor.refForType;
+
 public class ModuleAnnotationVisitor extends AnnotationVisitor
 {
-    private final ASMModuleParser discoverer;
+    private final AnnotationCandidate candidate;
 
-    public ModuleAnnotationVisitor(ASMModuleParser discoverer)
+    public ModuleAnnotationVisitor(AnnotationCandidate candidate)
     {
         super(Opcodes.ASM5);
-        this.discoverer = discoverer;
+        this.candidate = candidate;
     }
 
     @Override
     public void visit(String name, Object value)
     {
-        this.discoverer.addAnnotationProperty(name, value);
+        this.candidate.addProperty(name, value);
     }
 
     @Override
     public void visitEnum(String name, String desc, String value)
     {
-        this.discoverer.addAnnotationProperty(name, new EnumHolder(desc, value));
+        this.candidate.addProperty(name, new EnumHolder(desc, value));
     }
 
     @Override
     public AnnotationVisitor visitArray(String name)
     {
-        discoverer.startAnnotationArray(name);
-        return new ModuleAnnotationVisitor(discoverer);
+        ArrayList<Object> list = new ArrayList<Object>();
+        candidate.addProperty(name, list);
+        return new AnnotationArrayVisitor(list);
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String name, String desc)
     {
-        discoverer.startSubAnnotation(name, desc);
-        return new ModuleAnnotationVisitor(discoverer);
+        AnnotationCandidate value = new AnnotationCandidate(refForType(desc));
+        candidate.addProperty(name, value);
+        return new ModuleAnnotationVisitor(value);
     }
 
-
-    @Override
-    public void visitEnd()
+    private class AnnotationArrayVisitor extends AnnotationVisitor
     {
-        discoverer.end();
+        private final List<Object> list;
+
+        public AnnotationArrayVisitor(List<Object> list)
+        {
+            super(Opcodes.ASM5);
+            this.list = list;
+        }
+
+        @Override
+        public void visit(String name, Object value)
+        {
+            list.add(value);
+        }
+
+        @Override
+        public void visitEnum(String name, String desc, String value)
+        {
+            list.add(new EnumHolder(desc, value));
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String name, String desc)
+        {
+            AnnotationCandidate candidate = new AnnotationCandidate(refForType(desc));
+            list.add(candidate);
+            return new ModuleAnnotationVisitor(candidate);
+        }
+
+        @Override
+        public AnnotationVisitor visitArray(String name)
+        {
+            ArrayList<Object> list = new ArrayList<Object>();
+            this.list.add(list);
+            return new AnnotationArrayVisitor(list);
+        }
     }
 }

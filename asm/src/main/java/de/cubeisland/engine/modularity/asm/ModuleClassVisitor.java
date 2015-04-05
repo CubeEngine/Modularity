@@ -22,47 +22,214 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.Candidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.TypePath;
+import org.objectweb.asm.Type;
+
+import static org.objectweb.asm.Opcodes.*;
 
 public class ModuleClassVisitor extends ClassVisitor
 {
-    private final ASMModuleParser discoverer;
+    private TypeCandidate candidate;
 
-    public ModuleClassVisitor(ASMModuleParser discoverer)
+    public ModuleClassVisitor()
     {
         super(Opcodes.ASM5);
-        this.discoverer = discoverer;
+    }
+
+    public TypeCandidate getCandidate()
+    {
+        return this.candidate;
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces)
     {
-        this.discoverer.beginNewTypeName(name);
+        final String typeName = Type.getObjectType(name).getClassName();
+        final int modifiers = parseClassModifiers(access);
+        final Set<TypeReference> interfaceReferences = refsForTypes(interfaces);
+
+        if (check(access, ACC_INTERFACE))
+        {
+            candidate = new InterfaceCandidate(typeName, modifiers, interfaceReferences);
+        }
+        else if (check(access, ACC_ANNOTATION))
+        {}
+        else if (check(access, ACC_ENUM))
+        {}
+        else
+        {
+            candidate = new ClassCandidate(typeName, modifiers, interfaceReferences, refForObjectType(superName));
+        }
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String name, boolean visible)
     {
-        discoverer.startClassAnnotation(name);
-        return new ModuleAnnotationVisitor(this.discoverer);
+        if (candidate == null)
+        {
+            return super.visitAnnotation(name, visible);
+        }
+        return visit(candidate, name);
     }
 
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value)
     {
-        return new ModuleFieldVisitor(name, desc, discoverer);
+        if (candidate == null)
+        {
+            return super.visitField(access, name, desc, signature, value);
+        }
+        FieldCandidate fieldCandidate = new FieldCandidate(candidate.newReference(), name, parseFieldModifiers(access), refForType(desc), value);
+        candidate.addField(fieldCandidate);
+        return new ModuleFieldVisitor(fieldCandidate);
     }
 
     @Override
-    public void visitEnd()
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions)
     {
-        System.out.println("\n");
+        if (candidate == null)
+        {
+            return super.visitMethod(access, name, desc, signature, exceptions);
+        }
+
+
+        final TypeReference self = candidate.newReference();
+        final int modifiers = parseMethodModifiers(access);
+        final TypeReference returnType = refForReturnType(desc);
+        final List<TypeReference> params = refsForParams(desc);
+
+        MethodCandidate method;
+        if (candidate instanceof ClassCandidate && name.equals("<init>") && returnType.getReferencedClass().equals("void"))
+        {
+            method = new ConstructorCandidate(self, name, modifiers, params);
+            ((ClassCandidate)candidate).addConstructor((ConstructorCandidate)method);
+        }
+        else
+        {
+            method = new MethodCandidate(self, name, modifiers, returnType, params);
+            candidate.addMethod(method);
+        }
+        return new ModuleMethodVisitor(method);
+    }
+
+    static List<TypeReference> refsForParams(String desc)
+    {
+        List<TypeReference> refs = new ArrayList<TypeReference>();
+
+        for (final Type type : Type.getArgumentTypes(desc))
+        {
+            refs.add(new TypeReference(type.getClassName()));
+        }
+
+        return refs;
+    }
+
+    static ModuleAnnotationVisitor visit(Candidate candidate, String name)
+    {
+        AnnotationCandidate annotation = new AnnotationCandidate(refForType(name));
+        candidate.addAnnotation(annotation);
+        return new ModuleAnnotationVisitor(annotation);
+    }
+
+    static TypeReference refForReturnType(String desc)
+    {
+        return new TypeReference(Type.getReturnType(desc).getClassName());
+    }
+
+    static TypeReference refForType(String name)
+    {
+        return new TypeReference(Type.getType(name).getClassName());
+    }
+
+    static TypeReference refForObjectType(String name)
+    {
+        return new TypeReference(Type.getObjectType(name).getClassName());
+    }
+
+    static Set<TypeReference> refsForTypes(String[] names)
+    {
+        Set<TypeReference> references = new HashSet<TypeReference>();
+        for (final String name : names)
+        {
+            references.add(refForObjectType(name));
+        }
+        return references;
+    }
+
+    static boolean check(int set, int flag)
+    {
+        return (set & flag) == flag;
+    }
+
+    static int add(int set, int flag, int modifiers, int mod)
+    {
+        if (check(set, flag))
+        {
+            return modifiers | mod;
+        }
+        return modifiers;
+    }
+
+    static Integer parseFieldModifiers(int access)
+    {
+        int m = parseModifiers(access);
+
+        m = add(access, ACC_TRANSIENT, m, Modifier.TRANSIENT);
+
+        return m;
+    }
+
+    static int parseClassModifiers(int access)
+    {
+        int m = parseModifiers(access);
+
+        m = add(access, ACC_ABSTRACT, m, Modifier.ABSTRACT);
+
+        return m;
+    }
+
+    static int parseMethodModifiers(int access)
+    {
+        int m = parseModifiers(access);
+
+        m = add(access, ACC_NATIVE, m, Modifier.NATIVE);
+        m = add(access, ACC_ABSTRACT, m, Modifier.ABSTRACT);
+        m = add(access, ACC_SYNCHRONIZED, m, Modifier.SYNCHRONIZED);
+
+        return m;
+    }
+
+    static int parseModifiers(int access)
+    {
+        int m = 0;
+
+        // access
+        m = add(access, ACC_PRIVATE, m, Modifier.PRIVATE);
+        m = add(access, ACC_PROTECTED, m, Modifier.PROTECTED);
+        m = add(access, ACC_PUBLIC, m, Modifier.PUBLIC);
+
+        m = add(access, ACC_STATIC, m, Modifier.STATIC);
+        m = add(access, ACC_FINAL, m, Modifier.FINAL);
+
+        return m;
     }
 }
 

@@ -26,17 +26,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Stack;
-import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
-import de.cubeisland.engine.modularity.asm.annotation.FieldAnnotation;
-import de.cubeisland.engine.modularity.asm.marker.InjectedService;
-import de.cubeisland.engine.modularity.asm.marker.Module;
-import de.cubeisland.engine.modularity.asm.marker.Service;
+import java.util.HashSet;
+import java.util.Set;
+import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 
 import static java.io.File.separatorChar;
-import static org.junit.Assert.*;
+import static java.util.Arrays.asList;
 
 public class ASMModuleParserTest
 {
@@ -51,43 +48,30 @@ public class ASMModuleParserTest
     }
 
     @Test
-    public void testModule() throws Exception
+    public void testLoadCandidates() throws Exception
     {
-        final ASMModuleParser parser = new ASMModuleParser(classReaderFor("SuchTestingModule.class"));
-        assertTrue(ASMModuleParserTest.<Stack>getValue(parser, "annotationStack").isEmpty());
+        Set<TypeCandidate> candidates = new HashSet<TypeCandidate>(asList(
+            readCandidate(SuchTestingModule.class),
+            readCandidate(MuchService.class),
+            readCandidate(VeryService.class)
+        ));
 
-        int i = 0;
-        for (final BaseAnnotation annotation : parser.getAnnotations())
+        for (final TypeCandidate candidate : candidates)
         {
-            if (annotation.getType().getClassName().equals(Module.class.getName()))
-            {
-                i++;
-                assertEquals("wow", annotation.getData().getProperties().get("value"));
-            }
-            else if (annotation.getType().getClassName().equals(InjectedService.class.getName()) && annotation instanceof FieldAnnotation)
-            {
-                i++;
-                assertEquals(MuchService.class.getName(), ((FieldAnnotation)annotation).getFieldType().getClassName());
-            }
+            System.out.println(candidate);
         }
-        assertEquals("Not all tested annotations were found", 3, i);
     }
 
-    @Test
-    public void testService() throws Exception
+    private TypeCandidate readCandidate(Class clazz) throws IOException
     {
-        final ASMModuleParser parser = new ASMModuleParser(classReaderFor("MuchService.class"));
-        assertTrue(ASMModuleParserTest.<Stack>getValue(parser, "annotationStack").isEmpty());
+        ModuleClassVisitor v = new ModuleClassVisitor();
+        classReaderFor(clazz).accept(v, 0);
+        return v.getCandidate();
+    }
 
-        int i = 0;
-        for (final BaseAnnotation annotation : parser.getAnnotations())
-        {
-            if (annotation.getType().getClassName().equals(Service.class.getName()))
-            {
-                i++;
-            }
-        }
-        assertEquals("Not all tested annotations were found", 1, i);
+    private ClassReader classReaderFor(Class clazz) throws IOException
+    {
+        return classReaderFor(clazz.getSimpleName() + ".class");
     }
 
     private ClassReader classReaderFor(String file) throws IOException

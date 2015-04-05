@@ -32,4 +32,14 @@ public class EnumHolder
         this.desc = desc;
         this.value = value;
     }
+
+    public String getDesc()
+    {
+        return desc;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
 }

@@ -32,9 +32,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import de.cubeisland.engine.modularity.asm.annotation.BaseAnnotation;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.InformationLoader;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import org.objectweb.asm.ClassReader;
 
 public class AsmInformationLoader implements InformationLoader
 {
@@ -43,23 +45,18 @@ public class AsmInformationLoader implements InformationLoader
     {
         try
         {
-            Set<DependencyInformation> set = new HashSet<DependencyInformation>();
+            Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
             for (InputStream stream : getStreams(file))
             {
-                Set<BaseAnnotation> annotations = ASMModuleParser.of(file).getAnnotations();
-                if (!annotations.isEmpty())
+                ModuleClassVisitor classVisitor = new ModuleClassVisitor();
+                new ClassReader(stream).accept(classVisitor, 0);
+                TypeCandidate candidate = classVisitor.getCandidate();
+                if (candidate != null)
                 {
-                    // TODO find Type
-                    // @Module + extends ModuleInterface at some point
-                    // @Service + Definition must be Interface
-                    // Serviceimpl?
-                    // Can a Module implement a Service?
-
-                    // TODO create DependencyInformation
+                    candidates.add(candidate);
                 }
-                // else no annotations => class is irrelevant
             }
-            return set;
+            return Collections.emptySet();
         }
         catch (IOException e)
         {
