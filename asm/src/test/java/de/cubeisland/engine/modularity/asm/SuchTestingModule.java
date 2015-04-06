@@ -24,13 +24,45 @@ package de.cubeisland.engine.modularity.asm;
 
 import de.cubeisland.engine.modularity.asm.marker.InjectedService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-@ModuleInfo(value = "wow", loadAfter = {"no.thing", "a.lot"})
-public class SuchTestingModule
+@ModuleInfo(name = "wow", loadAfter = {"no.thing", "a.lot"})
+public class SuchTestingModule implements Module
 {
     @InjectedService(required = false)
     private MuchService injectedService;
 
     @InjectedService
     private MuchService doubleTime;
+
+    @Override
+    public void onLoad()
+    {
+        
+    }
+
+    @Override
+    public void onEnable()
+    {
+
+    }
+
+    @Override
+    public void onDisable()
+    {
+
+    }
+
+    @Override
+    public void onUnload()
+    {
+
+    }
+
+    @Override
+    public ModuleMetadata getInformation()
+    {
+        return null;
+    }
 }

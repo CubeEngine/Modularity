@@ -74,7 +74,7 @@ public class ASMModuleInfoParserTest
 
     private TypeCandidate readCandidate(Class clazz) throws IOException
     {
-        ModuleClassVisitor v = new ModuleClassVisitor();
+        ModuleClassVisitor v = new ModuleClassVisitor(new File(getPath(clazz.getSimpleName() + ".class")));
         classReaderFor(clazz).accept(v, 0);
         return v.getCandidate();
     }
