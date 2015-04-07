@@ -22,58 +22,106 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.marker.Injected;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class AsmModuleMetadata implements ModuleMetadata
 {
-    public AsmModuleMetadata(ClassCandidate module)
+    private final String identifier;
+    private final String name;
+    private final String description;
+    private final String version;
+    private final Set<String> loadAfter;
+    private final Set<String> authors = null; // TODO
+
+    public AsmModuleMetadata(ClassCandidate candiate)
     {
-        // TODO implement stuffs pls
+        identifier = candiate.getName();
+        AnnotationCandidate moduleInfo = candiate.getAnnotation(ModuleInfo.class);
+        this.name = moduleInfo.property("name");
+        this.version = moduleInfo.property("version");
+        this.description = moduleInfo.property("description");
+        List<String> loadAfter = moduleInfo.property("loadAfter");
+        this.loadAfter = new LinkedHashSet<String>(loadAfter);
+
+        // Search dependencies:
+        for (FieldCandidate field : candiate.getFields())
+        {
+            if (field.isAnnotatedWith(Injected.class))
+            {
+                Boolean req = field.getAnnotation(Injected.class).property("required");
+                if (req)
+                {
+                    addRequiredDependency(field);
+                }
+                else
+                {
+                    addOptionaldDependency(field);
+                }
+            }
+        }
+
+    }
+
+    private void addOptionaldDependency(FieldCandidate field)
+    {
+        // TODO implement me
+    }
+
+    private void addRequiredDependency(FieldCandidate field)
+    {
+        // TODO implement me
     }
 
     public String getIdentifier()
     {
-        return null;
+        return identifier;
     }
 
     public String getName()
     {
-        return null;
+        return name;
     }
 
     public String getDescription()
     {
-        return null;
+        return description;
     }
 
     public Set<String> getAuthors()
     {
-        return null;
+        return authors;
     }
 
     @Override
     public ClassLoader getClassLoader()
     {
-        return null;
+        return null; // TODO
     }
 
     @Override
     public Set<String> loadAfter()
     {
-        return null;
+        return loadAfter;
     }
 
     @Override
     public Set<String> requiredDependencies()
     {
-        return null;
+        return null; // TODO
     }
 
     @Override
     public Set<String> optionalDependencies()
     {
-        return null;
+        return null; // TODO
     }
 }

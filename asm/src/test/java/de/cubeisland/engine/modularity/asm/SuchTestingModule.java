@@ -22,7 +22,7 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import de.cubeisland.engine.modularity.asm.marker.InjectedService;
+import de.cubeisland.engine.modularity.asm.marker.Injected;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
@@ -30,16 +30,16 @@ import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 @ModuleInfo(name = "wow", loadAfter = {"no.thing", "a.lot"})
 public class SuchTestingModule implements Module
 {
-    @InjectedService(required = false)
-    private MuchService injectedService;
+    @Injected(required = false)
+    private MuchService anOptionalService;
 
-    @InjectedService
-    private MuchService doubleTime;
+    @Injected
+    private SuchTestingModule aRequiredModule;
 
     @Override
     public void onLoad()
     {
-        
+
     }
 
     @Override

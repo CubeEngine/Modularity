@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)
-public @interface InjectedService
+public @interface Injected
 {
     /**
      * Returns true when required and false when optional
