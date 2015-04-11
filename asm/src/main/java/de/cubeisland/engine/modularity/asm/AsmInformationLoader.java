@@ -34,7 +34,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.zip.ZipException;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
@@ -127,6 +131,16 @@ public class AsmInformationLoader implements InformationLoader
             {
                 result.add(new AsmModuleMetadata(module));
             }
+
+            String sourceVersion = "unknown-unknown";
+            try
+            {
+                JarFile jarFile = new JarFile(file);
+                sourceVersion = jarFile.getManifest().getMainAttributes().getValue("sourceVersion");
+                System.out.println("Found SourceVersion in Manifest: "  + sourceVersion); // TODO include in Metadata
+            }
+            catch (ZipException ignored)
+            {}
 
             return Collections.emptySet();
         }

@@ -38,7 +38,17 @@ import static org.junit.Assert.assertTrue;
 public class AsmInformationLoaderTest
 {
     @Test
-    public void testStuff()
+    public void testJar()
+    {
+        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("src/test/resources/test.jar"));
+        for (DependencyInformation info : infos)
+        {
+            // TODO sourceVersion check
+        }
+    }
+
+    @Test
+    public void testFolder()
     {
         Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File(getPath()));
 

@@ -32,7 +32,9 @@ import java.lang.annotation.Target;
 public @interface ModuleInfo
 {
     String name();
+    String description();
     String version() default "1.0.0";
     // TODO inject source version via maven plugin somehow
     String[] loadAfter() default {};
+    String[] authors(); // TODO do we want this here? or separate annotation
 }

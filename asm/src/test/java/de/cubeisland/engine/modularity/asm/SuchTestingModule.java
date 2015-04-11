@@ -27,7 +27,7 @@ import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-@ModuleInfo(name = "wow", loadAfter = {"no.thing", "a.lot"})
+@ModuleInfo(name = "wow", description = "just testing", loadAfter = {"no.thing", "a.lot"}, authors = {})
 public class SuchTestingModule implements Module
 {
     @Injected(required = false)
