@@ -33,4 +33,8 @@ public interface DependencyInformation
     Set<String> requiredDependencies();
 
     Set<String> optionalDependencies();
+
+    String getSourceVersion();
+
+    String getVersion();
 }

@@ -38,6 +38,7 @@ public abstract class TypeCandidate extends Candidate
     private final Map<String, MethodCandidate> methods = new HashMap<String, MethodCandidate>();
     private final File sourceFile;
     private final int modifiers;
+    private String sourceVersion;
 
     public TypeCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces)
     {
@@ -47,10 +48,14 @@ public abstract class TypeCandidate extends Candidate
         this.interfaces = unmodifiableSet(interfaces);
     }
 
-    public static String simpleName(String name)
+    public String getSourceVersion()
     {
-        String[] parts = name.split("\\.");
-        return parts[parts.length - 1];
+        return sourceVersion;
+    }
+
+    public void setSourceVersion(String sourceVersion)
+    {
+        this.sourceVersion = sourceVersion;
     }
 
     public File getSourceFile()
@@ -61,6 +66,12 @@ public abstract class TypeCandidate extends Candidate
     public String getSimpleName()
     {
         return simpleName(getName());
+    }
+
+    public static String simpleName(String name)
+    {
+        String[] parts = name.split("\\.");
+        return parts[parts.length - 1];
     }
 
     public boolean hasInterface(Class interfaze)
@@ -80,19 +91,9 @@ public abstract class TypeCandidate extends Candidate
         return false;
     }
 
-    public Set<TypeReference> getImplementedInterfaces()
-    {
-        return interfaces;
-    }
-
     public void addField(FieldCandidate candidate)
     {
         this.fields.put(candidate.getName(), candidate);
-    }
-
-    public Set<FieldCandidate> getFields()
-    {
-        return new HashSet<FieldCandidate>(fields.values());
     }
 
     public FieldCandidate getField(String name)
@@ -103,11 +104,6 @@ public abstract class TypeCandidate extends Candidate
     public void addMethod(MethodCandidate candidate)
     {
         this.methods.put(candidate.getName(), candidate);
-    }
-
-    public Set<MethodCandidate> getMethods()
-    {
-        return new HashSet<MethodCandidate>(methods.values());
     }
 
     public MethodCandidate getMethod(String name)
@@ -124,8 +120,6 @@ public abstract class TypeCandidate extends Candidate
     {
         return modifiers;
     }
-
-    protected abstract String typeName();
 
     @Override
     public boolean equals(Object o)
@@ -237,5 +231,22 @@ public abstract class TypeCandidate extends Candidate
         }
 
         return s.append("\n}").toString();
+    }
+
+    protected abstract String typeName();
+
+    public Set<TypeReference> getImplementedInterfaces()
+    {
+        return interfaces;
+    }
+
+    public Set<FieldCandidate> getFields()
+    {
+        return new HashSet<FieldCandidate>(fields.values());
+    }
+
+    public Set<MethodCandidate> getMethods()
+    {
+        return new HashSet<MethodCandidate>(methods.values());
     }
 }

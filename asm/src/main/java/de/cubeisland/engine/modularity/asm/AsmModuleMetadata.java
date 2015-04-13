@@ -22,7 +22,6 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +40,7 @@ public class AsmModuleMetadata implements ModuleMetadata
     private final String version;
     private final Set<String> loadAfter;
     private final Set<String> authors = null; // TODO
+    private final String sourceVersion;
 
     public AsmModuleMetadata(ClassCandidate candiate)
     {
@@ -51,6 +51,7 @@ public class AsmModuleMetadata implements ModuleMetadata
         this.description = moduleInfo.property("description");
         List<String> loadAfter = moduleInfo.property("loadAfter");
         this.loadAfter = new LinkedHashSet<String>(loadAfter);
+        this.sourceVersion = candiate.getSourceVersion();
 
         // Search dependencies:
         for (FieldCandidate field : candiate.getFields())
@@ -123,5 +124,17 @@ public class AsmModuleMetadata implements ModuleMetadata
     public Set<String> optionalDependencies()
     {
         return null; // TODO
+    }
+
+    @Override
+    public String getSourceVersion()
+    {
+        return sourceVersion;
+    }
+
+    @Override
+    public String getVersion()
+    {
+        return version;
     }
 }

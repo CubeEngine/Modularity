@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,7 +39,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
@@ -127,22 +130,22 @@ public class AsmInformationLoader implements InformationLoader
                 }
             }
 
-            for (ClassCandidate module : modules)
-            {
-                result.add(new AsmModuleMetadata(module));
-            }
-
             String sourceVersion = "unknown-unknown";
             try
             {
                 JarFile jarFile = new JarFile(file);
                 sourceVersion = jarFile.getManifest().getMainAttributes().getValue("sourceVersion");
-                System.out.println("Found SourceVersion in Manifest: "  + sourceVersion); // TODO include in Metadata
             }
             catch (ZipException ignored)
             {}
 
-            return Collections.emptySet();
+            for (ClassCandidate module : modules)
+            {
+                module.setSourceVersion(sourceVersion);
+                result.add(new AsmModuleMetadata(module));
+            }
+
+            return result;
         }
         catch (IOException e)
         {
@@ -174,7 +177,7 @@ public class AsmInformationLoader implements InformationLoader
         return false;
     }
 
-    private List<InputStream> getStreams(File file) throws FileNotFoundException
+    private List<InputStream> getStreams(File file) throws IOException
     {
         List<InputStream> list = new ArrayList<InputStream>();
         if (file.isDirectory())
@@ -189,7 +192,18 @@ public class AsmInformationLoader implements InformationLoader
             list.add(new FileInputStream(file));
             return list;
         }
-        // else TODO read JAR-File
+        else
+        {
+            ZipFile zipFile = new ZipFile(file);
+            for (Enumeration<? extends ZipEntry> entries = zipFile.entries(); entries.hasMoreElements(); )
+            {
+                ZipEntry entry = entries.nextElement();
+                if (entry.getName().endsWith(".class"))
+                {
+                    list.add(zipFile.getInputStream(entry));
+                }
+            }
+        }
         return list;
     }
 }
