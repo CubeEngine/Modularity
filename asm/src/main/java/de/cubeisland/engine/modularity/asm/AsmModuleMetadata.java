@@ -39,7 +39,7 @@ public class AsmModuleMetadata implements ModuleMetadata
     private final String description;
     private final String version;
     private final Set<String> loadAfter;
-    private final Set<String> authors = null; // TODO
+    private final Set<String> authors = null; // TODO from maven?
     private final String sourceVersion;
 
     public AsmModuleMetadata(ClassCandidate candiate)

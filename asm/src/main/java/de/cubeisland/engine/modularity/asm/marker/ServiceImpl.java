@@ -28,28 +28,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks the annotated class as module to be loaded by Modularity
+ * Marks the annotated class as an implementation for a service-interface
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface ModuleInfo
+public @interface ServiceImpl
 {
     /**
-     * Returns the name of the module
+     * Returns the implemented Interface
      *
-     * @return the name of the module
+     * @return the implemented Interface
      */
-    String name();
+    Class value();
 
     /**
-     * Returns a short description o the module
+     * Returns the revision of the implemented service
      *
-     * @return the description
+     * @return the revision of the implemented service
      */
-    String description();
-
-// TODO get version from pom instead?
-    String version() default "1.0.0";
-
-    String[] loadAfter() default {};
+    int revision() default 1;
 }

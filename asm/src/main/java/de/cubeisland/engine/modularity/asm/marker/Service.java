@@ -27,9 +27,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marks the annotated interface as a service to be implemented
+ */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface Service
 {
+    /**
+     * Returns the revision of the implemented service
+     *
+     * @return the revision of the implemented service
+     */
     int revision() default 1;
 }
