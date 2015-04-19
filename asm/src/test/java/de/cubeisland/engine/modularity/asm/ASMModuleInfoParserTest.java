@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import org.junit.Assert;
 import org.junit.Test;
@@ -69,7 +70,7 @@ public class ASMModuleInfoParserTest
 
         Assert.assertTrue("Annotation not detected", suchTestingModule.isAnnotatedWith(ModuleInfo.class));
         Assert.assertTrue("Annotation not detected", muchService.isAnnotatedWith(Service.class));
-        Assert.assertTrue("Annotation detected where no annotations are", veryService.getAnnotations().isEmpty());
+        Assert.assertTrue("Annotation not detected", veryService.isAnnotatedWith(ServiceImpl.class));
     }
 
     private TypeCandidate readCandidate(Class clazz) throws IOException

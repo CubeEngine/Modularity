@@ -28,13 +28,13 @@ public interface DependencyInformation
 {
     String getIdentifier();
 
-    ClassLoader getClassLoader();
+    String getSourceVersion();
+
+    String getVersion();
 
     Set<String> requiredDependencies();
 
     Set<String> optionalDependencies();
 
-    String getSourceVersion();
-
-    String getVersion();
+    ClassLoader getClassLoader();
 }

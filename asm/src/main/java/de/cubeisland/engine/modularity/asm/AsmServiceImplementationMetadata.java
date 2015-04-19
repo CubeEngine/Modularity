@@ -20,33 +20,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.marker;
+package de.cubeisland.engine.modularity.asm;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 
 /**
- * Marks the annotated class as module to be loaded by Modularity
+ * Created by ANSELM on 19.04.2015.
  */
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface ModuleInfo
+public class AsmServiceImplementationMetadata extends AsmDependencyInformation implements ServiceImplementationMetadata
 {
-    /**
-     * Returns the name of the module
-     *
-     * @return the name of the module
-     */
-    String name();
+    public AsmServiceImplementationMetadata(ClassCandidate candidate)
+    {
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields());
+    }
 
-    /**
-     * Returns a short description o the module
-     *
-     * @return the description
-     */
-    String description();
 
-    String[] loadAfter() default {};
 }

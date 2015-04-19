@@ -27,26 +27,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Marks the annotated class as module to be loaded by Modularity
- */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface ModuleInfo
+public @interface Version
 {
     /**
-     * Returns the name of the module
-     *
-     * @return the name of the module
+     * Returns true when required and false when optional
      */
-    String name();
-
-    /**
-     * Returns a short description o the module
-     *
-     * @return the description
-     */
-    String description();
-
-    String[] loadAfter() default {};
+    String value();
 }

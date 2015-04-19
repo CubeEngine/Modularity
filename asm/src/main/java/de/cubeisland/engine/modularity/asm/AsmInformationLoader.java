@@ -44,6 +44,8 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
@@ -65,8 +67,6 @@ public class AsmInformationLoader implements InformationLoader
         {
             information.addAll(loadInformation(file));
         }
-
-        // TODO search for service impl
 
         return information;
     }
@@ -92,9 +92,13 @@ public class AsmInformationLoader implements InformationLoader
 
             List<ClassCandidate> modules = new ArrayList<ClassCandidate>();
             List<InterfaceCandidate> services = new ArrayList<InterfaceCandidate>();
+            List<ClassCandidate> servicesImpl = new ArrayList<ClassCandidate>();
+
+            String sourceVersion = getSourceVersion(file);
 
             for (TypeCandidate candidate : candidates)
             {
+                candidate.setSourceVersion(sourceVersion);
                 knownTypes.put(candidate.getName(), candidate);
                 if (candidate.isAnnotatedWith(ModuleInfo.class))
                 {
@@ -118,6 +122,25 @@ public class AsmInformationLoader implements InformationLoader
                         System.err.println("Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
                     }
                 }
+                if (candidate.isAnnotatedWith(ServiceImpl.class))
+                {
+                    if (candidate instanceof ClassCandidate)
+                    {
+                        servicesImpl.add((ClassCandidate)candidate);
+                    }
+                    else
+                    {
+                        System.err.println("Type '" + candidate.getName() + "' has the @ServiceImpl annotation, but cannot be a service-implementation!");
+                    }
+                }
+                if (candidate.isAnnotatedWith(Version.class))
+                {
+                    candidate.setVersion((String)candidate.getAnnotation(Version.class).property("value"));
+                }
+                else
+                {
+                    // TODO get version info from maven version?
+                }
             }
 
             for (Iterator<ClassCandidate> iterator = modules.iterator(); iterator.hasNext(); )
@@ -130,19 +153,19 @@ public class AsmInformationLoader implements InformationLoader
                 }
             }
 
-            String sourceVersion = "unknown-unknown";
-            try
-            {
-                JarFile jarFile = new JarFile(file);
-                sourceVersion = jarFile.getManifest().getMainAttributes().getValue("sourceVersion");
-            }
-            catch (ZipException ignored)
-            {}
-
             for (ClassCandidate module : modules)
             {
-                module.setSourceVersion(sourceVersion);
                 result.add(new AsmModuleMetadata(module));
+            }
+
+            for (InterfaceCandidate service : services)
+            {
+                result.add(new AsmServiceDefinitionMetadata(service));
+            }
+
+            for (ClassCandidate serviceImpl : servicesImpl)
+            {
+                result.add(new AsmServiceImplementationMetadata(serviceImpl));
             }
 
             return result;
@@ -151,6 +174,19 @@ public class AsmInformationLoader implements InformationLoader
         {
             return Collections.emptySet();
         }
+    }
+
+    private String getSourceVersion(File file) throws IOException
+    {
+        String sourceVersion = "unknown-unknown";
+        try
+        {
+            JarFile jarFile = new JarFile(file);
+            sourceVersion = jarFile.getManifest().getMainAttributes().getValue("sourceVersion");
+        }
+        catch (ZipException ignored)
+        {}
+        return sourceVersion;
     }
 
     private boolean implemented(TypeCandidate current, Class interfaceToCheck)

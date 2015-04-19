@@ -22,6 +22,11 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
+
+@ServiceImpl(MuchService.class)
+@Version("1")
 public class VeryService implements MuchService
 {
     private String stripper = "wow";

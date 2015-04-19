@@ -32,59 +32,21 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-public class AsmModuleMetadata implements ModuleMetadata
+public class AsmModuleMetadata extends AsmDependencyInformation implements ModuleMetadata
 {
-    private final String identifier;
     private final String name;
     private final String description;
-    private final String version;
     private final Set<String> loadAfter;
     private final Set<String> authors = null; // TODO from maven?
-    private final String sourceVersion;
 
     public AsmModuleMetadata(ClassCandidate candiate)
     {
-        identifier = candiate.getName();
+        super(candiate.getName(), candiate.getVersion(), candiate.getSourceVersion(), candiate.getFields());
         AnnotationCandidate moduleInfo = candiate.getAnnotation(ModuleInfo.class);
         this.name = moduleInfo.property("name");
-        this.version = moduleInfo.property("version");
         this.description = moduleInfo.property("description");
         List<String> loadAfter = moduleInfo.property("loadAfter");
         this.loadAfter = new LinkedHashSet<String>(loadAfter);
-        this.sourceVersion = candiate.getSourceVersion();
-
-        // Search dependencies:
-        for (FieldCandidate field : candiate.getFields())
-        {
-            if (field.isAnnotatedWith(Injected.class))
-            {
-                Boolean req = field.getAnnotation(Injected.class).property("required");
-                if (req)
-                {
-                    addRequiredDependency(field);
-                }
-                else
-                {
-                    addOptionaldDependency(field);
-                }
-            }
-        }
-
-    }
-
-    private void addOptionaldDependency(FieldCandidate field)
-    {
-        // TODO implement me
-    }
-
-    private void addRequiredDependency(FieldCandidate field)
-    {
-        // TODO implement me
-    }
-
-    public String getIdentifier()
-    {
-        return identifier;
     }
 
     public String getName()
@@ -103,38 +65,9 @@ public class AsmModuleMetadata implements ModuleMetadata
     }
 
     @Override
-    public ClassLoader getClassLoader()
-    {
-        return null; // TODO
-    }
-
-    @Override
     public Set<String> loadAfter()
     {
         return loadAfter;
     }
 
-    @Override
-    public Set<String> requiredDependencies()
-    {
-        return null; // TODO
-    }
-
-    @Override
-    public Set<String> optionalDependencies()
-    {
-        return null; // TODO
-    }
-
-    @Override
-    public String getSourceVersion()
-    {
-        return sourceVersion;
-    }
-
-    @Override
-    public String getVersion()
-    {
-        return version;
-    }
 }

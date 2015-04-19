@@ -38,7 +38,8 @@ public abstract class TypeCandidate extends Candidate
     private final Map<String, MethodCandidate> methods = new HashMap<String, MethodCandidate>();
     private final File sourceFile;
     private final int modifiers;
-    private String sourceVersion;
+    private String sourceVersion = "unknown-unknown";
+    private String version = "unknown";
 
     public TypeCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces)
     {
@@ -53,9 +54,19 @@ public abstract class TypeCandidate extends Candidate
         return sourceVersion;
     }
 
+    public String getVersion()
+    {
+        return version;
+    }
+
     public void setSourceVersion(String sourceVersion)
     {
         this.sourceVersion = sourceVersion;
+    }
+
+    public void setVersion(String version)
+    {
+        this.version = version;
     }
 
     public File getSourceFile()

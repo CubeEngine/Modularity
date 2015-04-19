@@ -41,7 +41,7 @@ public class AsmInformationLoaderTest
     public void testJar()
     {
         Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("src/test/resources/test.jar"));
-        assertEquals(1, infos.size());
+        assertEquals(3, infos.size());
         for (DependencyInformation info : infos)
         {
             assertEquals("branch-somehashvalue", info.getSourceVersion());
