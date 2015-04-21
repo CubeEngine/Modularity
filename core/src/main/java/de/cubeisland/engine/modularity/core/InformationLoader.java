@@ -28,5 +28,12 @@ import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public interface InformationLoader
 {
+    /**
+     * Loads DependencyInformation from given file or directory
+     *
+     * @param file the file or directory to load from
+     *
+     * @return the DependencyInformation found
+     */
     Set<DependencyInformation> loadInformation(File file);
 }

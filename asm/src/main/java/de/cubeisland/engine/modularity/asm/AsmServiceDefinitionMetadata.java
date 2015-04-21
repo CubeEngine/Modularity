@@ -25,7 +25,6 @@ package de.cubeisland.engine.modularity.asm;
 import java.util.Collections;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 
 public class AsmServiceDefinitionMetadata extends AsmDependencyInformation implements ServiceDefinitionMetadata

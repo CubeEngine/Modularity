@@ -25,11 +25,9 @@ package de.cubeisland.engine.modularity.asm;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import de.cubeisland.engine.modularity.asm.marker.Injected;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class AsmModuleMetadata extends AsmDependencyInformation implements ModuleMetadata

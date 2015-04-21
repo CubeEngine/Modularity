@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static de.cubeisland.engine.modularity.asm.ASMModuleInfoParserTest.getPath;
