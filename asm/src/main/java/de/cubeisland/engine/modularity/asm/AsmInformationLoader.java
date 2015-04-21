@@ -47,6 +47,7 @@ import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor;
 import de.cubeisland.engine.modularity.core.InformationLoader;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;

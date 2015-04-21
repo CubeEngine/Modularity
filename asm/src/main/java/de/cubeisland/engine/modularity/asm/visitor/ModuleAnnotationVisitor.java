@@ -20,15 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import de.cubeisland.engine.modularity.asm.meta.EnumHolder;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
-
-import static de.cubeisland.engine.modularity.asm.ModuleClassVisitor.refForType;
 
 public class ModuleAnnotationVisitor extends AnnotationVisitor
 {
@@ -63,7 +62,7 @@ public class ModuleAnnotationVisitor extends AnnotationVisitor
     @Override
     public AnnotationVisitor visitAnnotation(String name, String desc)
     {
-        AnnotationCandidate value = new AnnotationCandidate(refForType(desc));
+        AnnotationCandidate value = new AnnotationCandidate(ModuleClassVisitor.refForType(desc));
         candidate.addProperty(name, value);
         return new ModuleAnnotationVisitor(value);
     }
@@ -93,7 +92,7 @@ public class ModuleAnnotationVisitor extends AnnotationVisitor
         @Override
         public AnnotationVisitor visitAnnotation(String name, String desc)
         {
-            AnnotationCandidate candidate = new AnnotationCandidate(refForType(desc));
+            AnnotationCandidate candidate = new AnnotationCandidate(ModuleClassVisitor.refForType(desc));
             list.add(candidate);
             return new ModuleAnnotationVisitor(candidate);
         }

@@ -32,6 +32,7 @@ import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor;
 import org.junit.Assert;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;

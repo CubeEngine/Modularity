@@ -20,14 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.visitor;
 
 import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import static de.cubeisland.engine.modularity.asm.ModuleClassVisitor.visit;
+import static de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor.visit;
 
 public class ModuleMethodVisitor extends MethodVisitor
 {

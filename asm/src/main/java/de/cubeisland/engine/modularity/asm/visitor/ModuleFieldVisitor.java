@@ -20,26 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.visitor;
 
-public class EnumHolder
+import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
+
+import static de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor.visit;
+
+public class ModuleFieldVisitor extends FieldVisitor
 {
-    private String desc;
-    private String value;
+    private final FieldCandidate candidate;
 
-    public EnumHolder(String desc, String value)
+    public ModuleFieldVisitor(FieldCandidate candidate)
     {
-        this.desc = desc;
-        this.value = value;
+        super(Opcodes.ASM5);
+        this.candidate = candidate;
     }
 
-    public String getDesc()
+    @Override
+    public AnnotationVisitor visitAnnotation(String name, boolean runtimeVisible)
     {
-        return desc;
-    }
-
-    public String getValue()
-    {
-        return value;
+        return visit(candidate, name);
     }
 }
