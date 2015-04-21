@@ -68,7 +68,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
 
     private void addRequiredDependency(FieldCandidate field)
     {
-        optionalDependencies.add(field.getType().getReferencedClass());
+        requiredDependencies.add(field.getType().getReferencedClass());
     }
 
     public String getIdentifier()
