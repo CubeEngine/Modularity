@@ -26,4 +26,10 @@ import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public interface ServiceImplementationMetadata extends DependencyInformation
 {
+    /**
+     * Returns the name of the implemented Service
+     *
+     * @return the name of the implemented Service
+     */
+    String getServiceName();
 }

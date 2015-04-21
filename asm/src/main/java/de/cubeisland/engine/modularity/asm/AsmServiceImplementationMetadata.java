@@ -22,19 +22,47 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
+import org.objectweb.asm.Type;
 
 /**
  * Created by ANSELM on 19.04.2015.
  */
 public class AsmServiceImplementationMetadata extends AsmDependencyInformation implements ServiceImplementationMetadata
 {
+    private final String serviceName;
+
     public AsmServiceImplementationMetadata(ClassCandidate candidate)
     {
         super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields());
+        Type type = candidate.getAnnotation(ServiceImpl.class).property("value");
+        this.serviceName = type.getClassName();
+        ensureIsImplemented(candidate);
     }
 
+    private void ensureIsImplemented(ClassCandidate candidate)
+    {
+        boolean implemented = false;
+        for (TypeReference ref : candidate.getImplementedInterfaces())
+        {
+            if (ref.getReferencedClass().equals(serviceName))
+            {
+                implemented = true;
+            }
+        }
+        if (!implemented)
+        {
+            // TODO Proxy forwarding to methods? OR fancy mixin stuff?
+            throw new IllegalArgumentException("Given Class Candidate declares implementing a Service but is not!");
+        }
+    }
 
+    @Override
+    public String getServiceName()
+    {
+        return serviceName;
+    }
 }
