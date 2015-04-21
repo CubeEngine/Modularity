@@ -24,7 +24,6 @@ package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -35,9 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -72,33 +69,32 @@ public class AsmInformationLoader implements InformationLoader
     }
 
     @Override
-    public Set<DependencyInformation> loadInformation(File file)
+    public Set<DependencyInformation> loadInformation(File source)
     {
-        try
+        Set<DependencyInformation> result = new HashSet<DependencyInformation>();
+        if (source.isDirectory()) // if source is directory load each file
         {
-            Set<DependencyInformation> result = new HashSet<DependencyInformation>();
-
-            Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
-            for (InputStream stream : getStreams(file))
+            for (File file : source.listFiles())
             {
-                ModuleClassVisitor classVisitor = new ModuleClassVisitor(file);
-                new ClassReader(stream).accept(classVisitor, 0);
-                TypeCandidate candidate = classVisitor.getCandidate();
-                if (candidate != null)
+                // TODO configurable
+                if (!file.isDirectory()) // do not search recursively
                 {
-                    candidates.add(candidate);
+                    result.addAll(loadInformation(file));
                 }
             }
+            return result;
+        }
+        try
+        {
+            Set<TypeCandidate> candidates = getCandidates(source); // Get all candidates from source
 
+            // Sort candidates and add additional Information
             List<ClassCandidate> modules = new ArrayList<ClassCandidate>();
             List<InterfaceCandidate> services = new ArrayList<InterfaceCandidate>();
             List<ClassCandidate> servicesImpl = new ArrayList<ClassCandidate>();
 
-            String sourceVersion = getSourceVersion(file);
-
             for (TypeCandidate candidate : candidates)
             {
-                candidate.setSourceVersion(sourceVersion);
                 knownTypes.put(candidate.getName(), candidate);
                 if (candidate.isAnnotatedWith(ModuleInfo.class))
                 {
@@ -111,7 +107,7 @@ public class AsmInformationLoader implements InformationLoader
                         System.err.println("Type '" + candidate.getName() + "' has the @ModuleInfo annotation, but cannot be a module!");
                     }
                 }
-                if (candidate.isAnnotatedWith(Service.class))
+                else if (candidate.isAnnotatedWith(Service.class))
                 {
                     if (candidate instanceof InterfaceCandidate)
                     {
@@ -122,7 +118,7 @@ public class AsmInformationLoader implements InformationLoader
                         System.err.println("Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
                     }
                 }
-                if (candidate.isAnnotatedWith(ServiceImpl.class))
+                else if (candidate.isAnnotatedWith(ServiceImpl.class))
                 {
                     if (candidate instanceof ClassCandidate)
                     {
@@ -133,13 +129,15 @@ public class AsmInformationLoader implements InformationLoader
                         System.err.println("Type '" + candidate.getName() + "' has the @ServiceImpl annotation, but cannot be a service-implementation!");
                     }
                 }
+
+                // Version info:
                 if (candidate.isAnnotatedWith(Version.class))
                 {
                     candidate.setVersion((String)candidate.getAnnotation(Version.class).property("value"));
                 }
                 else
                 {
-                    // TODO get version info from maven version?
+                    // TODO get version info from maven version or version in manifest same as sourceversion
                 }
             }
 
@@ -172,8 +170,28 @@ public class AsmInformationLoader implements InformationLoader
         }
         catch (IOException e)
         {
+            // TODO log error
             return Collections.emptySet();
         }
+    }
+
+    private Set<TypeCandidate> getCandidates(File file) throws IOException
+    {
+        // TODO set classloader
+        String sourceVersion = getSourceVersion(file);
+        Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
+        for (InputStream stream : getStreams(file))
+        {
+            ModuleClassVisitor classVisitor = new ModuleClassVisitor(file);
+            new ClassReader(stream).accept(classVisitor, 0);
+            TypeCandidate candidate = classVisitor.getCandidate();
+            if (candidate != null)
+            {
+                candidate.setSourceVersion(sourceVersion);
+                candidates.add(candidate);
+            }
+        }
+        return candidates;
     }
 
     private String getSourceVersion(File file) throws IOException
@@ -216,14 +234,7 @@ public class AsmInformationLoader implements InformationLoader
     private List<InputStream> getStreams(File file) throws IOException
     {
         List<InputStream> list = new ArrayList<InputStream>();
-        if (file.isDirectory())
-        {
-            for (File aFile : file.listFiles())
-            {
-                list.addAll(getStreams(aFile));
-            }
-        }
-        else if (file.getName().endsWith(".class"))
+        if (file.getName().endsWith(".class"))
         {
             list.add(new FileInputStream(file));
             return list;
