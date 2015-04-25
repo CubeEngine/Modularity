@@ -22,6 +22,9 @@
  */
 package de.cubeisland.engine.modularity.asm.meta.candidate;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +134,15 @@ public class AnnotationCandidate extends Candidate
             {
                 // if not found get default from annotation
                 result = (T)Class.forName(this.getName()).getMethod(property).getDefaultValue();
+                if (result.getClass().isArray())
+                {
+                    ArrayList list = new ArrayList();
+                    for (int i = 0; i < Array.getLength(result); i++)
+                    {
+                        list.add(Array.get(result, i));
+                    }
+                    result = (T)list;
+                }
             }
             catch (ClassNotFoundException ignore)
             {

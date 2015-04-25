@@ -20,35 +20,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.info;
 
-import java.io.File;
-import java.util.Set;
-import de.cubeisland.engine.modularity.core.BasicModularity;
-import de.cubeisland.engine.modularity.core.Instance;
+import de.cubeisland.engine.modularity.asm.marker.Injected;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-public class AsmModularity extends BasicModularity
+@ModuleInfo(name = "complex", description = "just testing")
+public class ComplexModule implements Module
 {
-    public AsmModularity(File source)
+    @Injected(required = false)
+    private BasicService anOptionalService;
+    @Injected
+    private BasicService2 aRequiredService;
+
+    @Override
+    public void onLoad()
     {
-        super(new AsmInformationLoader());
-        load(source);
+
     }
 
     @Override
-    public Instance getNode(String identifier)
+    public void onEnable()
     {
-        return null;
+
     }
 
     @Override
-    public <T extends Instance> T getNode(Class<T> type)
+    public void onDisable()
     {
-        return null;
+
     }
 
     @Override
-    public Set<Instance> getNodes()
+    public void onUnload()
+    {
+
+    }
+
+    @Override
+    public ModuleMetadata getInformation()
     {
         return null;
     }

@@ -26,6 +26,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.info.BasicService;
+import de.cubeisland.engine.modularity.asm.info.BasicModule;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.junit.Test;
@@ -40,7 +42,7 @@ public class AsmInformationLoaderTest
     public void testJar()
     {
         Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("src/test/resources/test.jar"));
-        assertEquals(3, infos.size());
+        assertEquals(6, infos.size());
         for (DependencyInformation info : infos)
         {
             assertEquals("branch-somehashvalue", info.getSourceVersion());
@@ -50,21 +52,16 @@ public class AsmInformationLoaderTest
     @Test
     public void testFolder()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File(getPath()));
+        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File(getPath(BasicModule.class)));
 
         for (DependencyInformation info : infos)
         {
-            if (info.getIdentifier().equals(SuchTestingModule.class.getName()))
+            if (info.getIdentifier().equals(BasicModule.class.getName()))
             {
                 // SuchTestingModule:
                 assertTrue(info instanceof ModuleMetadata);
-                assertEquals("wow", ((ModuleMetadata)info).getName());
-                Iterator<String> actual = ((ModuleMetadata)info).loadAfter().iterator();
-                for (final String expected : Arrays.asList("no.thing", "a.lot"))
-                {
-                    assertEquals(expected, actual.next());
-                }
-                assertTrue(info.optionalDependencies().contains(MuchService.class.getName()));
+                assertEquals("basic", ((ModuleMetadata)info).getName());
+                assertTrue(info.optionalDependencies().contains(BasicService.class.getName()));
             }
 
         }

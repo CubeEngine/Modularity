@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
+import de.cubeisland.engine.modularity.asm.info.BasicService;
+import de.cubeisland.engine.modularity.asm.info.BasicModule;
+import de.cubeisland.engine.modularity.asm.info.BasicsServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
@@ -55,9 +58,9 @@ public class ASMModuleInfoParserTest
     @Test
     public void testLoadCandidates() throws Exception
     {
-        TypeCandidate suchTestingModule = readCandidate(SuchTestingModule.class);
-        TypeCandidate muchService = readCandidate(MuchService.class);
-        TypeCandidate veryService = readCandidate(VeryService.class);
+        TypeCandidate suchTestingModule = readCandidate(BasicModule.class);
+        TypeCandidate muchService = readCandidate(BasicService.class);
+        TypeCandidate veryService = readCandidate(BasicsServiceImpl.class);
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>(asList(
             suchTestingModule,
             muchService,
@@ -76,28 +79,28 @@ public class ASMModuleInfoParserTest
 
     private TypeCandidate readCandidate(Class clazz) throws IOException
     {
-        ModuleClassVisitor v = new ModuleClassVisitor(new File(getPath(clazz.getSimpleName() + ".class")));
+        ModuleClassVisitor v = new ModuleClassVisitor(new File(getPath(clazz, clazz.getSimpleName() + ".class")));
         classReaderFor(clazz).accept(v, 0);
         return v.getCandidate();
     }
 
     private ClassReader classReaderFor(Class clazz) throws IOException
     {
-        return classReaderFor(clazz.getSimpleName() + ".class");
+        return classReaderFor(clazz, clazz.getSimpleName() + ".class");
     }
 
-    private ClassReader classReaderFor(String file) throws IOException
+    private ClassReader classReaderFor(Class clazz, String file) throws IOException
     {
-        return new ClassReader(new FileInputStream(new File(getPath(file))));
+        return new ClassReader(new FileInputStream(new File(getPath(clazz, file))));
     }
 
-    public static String getPath(String file)
+    public static String getPath(Class clazz, String file)
     {
-        return getPath() + separatorChar + file;
+        return getPath(clazz) + separatorChar + file;
     }
 
-    public static String getPath()
+    public static String getPath(Class clazz)
     {
-        return TARGET_PATH + separatorChar + ASMModuleInfoParserTest.class.getPackage().getName().replace('.', separatorChar);
+        return TARGET_PATH + separatorChar + clazz.getPackage().getName().replace('.', separatorChar);
     }
 }

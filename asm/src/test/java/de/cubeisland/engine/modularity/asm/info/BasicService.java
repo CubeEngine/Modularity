@@ -20,12 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.info;
 
 import de.cubeisland.engine.modularity.asm.marker.Service;
 
 @Service
-public interface MuchService
+public interface BasicService
 {
     /**
      * Provides a stripped String

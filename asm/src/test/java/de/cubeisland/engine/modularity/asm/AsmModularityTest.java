@@ -33,6 +33,7 @@ public class AsmModularityTest
     @Test
     public void testModularity()
     {
-        new AsmModularity(new File("src/test/resources/"));
+        AsmModularity modularity = new AsmModularity(new File("src/test/resources/"));
+
     }
 }

@@ -20,32 +20,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.info;
 
 import de.cubeisland.engine.modularity.asm.marker.Injected;
-import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
-import de.cubeisland.engine.modularity.asm.marker.Version;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-@ServiceImpl(MuchService.class)
-@Version("1")
-public class VeryService implements MuchService
+@ModuleInfo(name = "basic", description = "just testing")
+public class BasicModule implements Module
 {
-    private String stripper = "wow";
+    @Injected(required = false)
+    private BasicService anOptionalService;
 
-    @Injected
-    public VeryService(SuchTestingModule module)
+    @Override
+    public void onLoad()
     {
+
     }
 
     @Override
-    public String provideString()
+    public void onEnable()
     {
-        return stripper;
+
     }
 
     @Override
-    public void stripString()
+    public void onDisable()
     {
-        stripper = stripper.trim();
+
+    }
+
+    @Override
+    public void onUnload()
+    {
+
+    }
+
+    @Override
+    public ModuleMetadata getInformation()
+    {
+        return null;
     }
 }

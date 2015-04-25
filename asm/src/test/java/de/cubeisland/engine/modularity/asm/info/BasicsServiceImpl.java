@@ -20,36 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.info;
 
-import java.io.File;
-import java.util.Set;
-import de.cubeisland.engine.modularity.core.BasicModularity;
-import de.cubeisland.engine.modularity.core.Instance;
+import de.cubeisland.engine.modularity.asm.marker.Injected;
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 
-public class AsmModularity extends BasicModularity
+@ServiceImpl(BasicService.class)
+@Version("1")
+public class BasicsServiceImpl implements BasicService
 {
-    public AsmModularity(File source)
+    private String stripper = "wow";
+
+    @Injected
+    public BasicsServiceImpl(BasicModule module)
     {
-        super(new AsmInformationLoader());
-        load(source);
     }
 
     @Override
-    public Instance getNode(String identifier)
+    public String provideString()
     {
-        return null;
+        return stripper;
     }
 
     @Override
-    public <T extends Instance> T getNode(Class<T> type)
+    public void stripString()
     {
-        return null;
-    }
-
-    @Override
-    public Set<Instance> getNodes()
-    {
-        return null;
+        stripper = stripper.trim();
     }
 }

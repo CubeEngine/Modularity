@@ -22,11 +22,15 @@
  */
 package de.cubeisland.engine.modularity.core;
 
+import java.io.File;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
 public interface Modularity
 {
+    void load(File source);
+
     InformationLoader getLoader();
 
     Instance getNode(String identifier);
@@ -38,4 +42,6 @@ public interface Modularity
     Set<Module> getModules();
 
     Set<ServiceContainer<?>> getServices();
+
+    Class<?> getClazz(DependencyInformation info, String name);
 }

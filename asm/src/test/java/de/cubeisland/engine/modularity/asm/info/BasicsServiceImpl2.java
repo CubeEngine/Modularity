@@ -20,46 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.asm.info;
 
-import java.util.Set;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer;
+import de.cubeisland.engine.modularity.asm.marker.Injected;
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 
-public class DefaultModularity implements Modularity
+@ServiceImpl(BasicService2.class)
+@Version("2")
+public class BasicsServiceImpl2 implements BasicService2
 {
-    @Override
-    public InformationLoader getLoader()
+    private String stripper = "wow";
+
+    @Injected
+    public BasicsServiceImpl2(ComplexModule module) // TODO when is this called? / when is the service injected into a Module?
     {
-        return null;
     }
 
     @Override
-    public Instance getNode(String identifier)
+    public String provideString()
     {
-        return null;
+        return stripper;
     }
 
     @Override
-    public <T extends Instance> T getNode(Class<T> type)
+    public void stripString()
     {
-        return null;
-    }
-
-    @Override
-    public Set<Instance> getNodes()
-    {
-        return null;
-    }
-
-    @Override
-    public Set<Module> getModules()
-    {
-        return null;
-    }
-
-    @Override
-    public Set<ServiceContainer<?>> getServices()
-    {
-        return null;
+        stripper = stripper.trim();
     }
 }
