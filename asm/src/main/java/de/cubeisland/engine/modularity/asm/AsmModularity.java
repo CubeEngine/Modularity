@@ -25,13 +25,17 @@ package de.cubeisland.engine.modularity.asm;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.InformationLoader;
 import de.cubeisland.engine.modularity.core.Instance;
 import de.cubeisland.engine.modularity.core.Modularity;
 import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
 public class AsmModularity implements Modularity
@@ -62,8 +66,39 @@ public class AsmModularity implements Modularity
             set.add(info);
         }
 
-        // TODO build dependency Graph
+        DependencyGraph graph = new DependencyGraph();
+        for (DependencyInformation info : infos)
+        {
+            graph.addNode(info);
+        }
 
+        Node root = graph.getRoot();
+        System.out.println("Core");
+        showChildren(root);
+
+        System.out.println("Unresolved Dependencies:");
+        for (Entry<String, List<Node>> entry : graph.getUnresolved().entrySet())
+        {
+            System.out.println(entry.getKey() + ":");
+            for (Node node : entry.getValue())
+            {
+                System.out.println("\t" + node.getInformation().getIdentifier());
+            }
+        }
+    }
+
+    private void showChildren(Node root)
+    {
+        for (Node node : root.getChildren())
+        {
+            System.out.print(node.getInformation().getIdentifier());
+            System.out.print("||\t");
+        }
+        System.out.println();
+        for (Node node : root.getChildren())
+        {
+            showChildren(node);
+        }
     }
 
     @Override

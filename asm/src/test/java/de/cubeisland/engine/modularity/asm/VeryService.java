@@ -22,6 +22,7 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import de.cubeisland.engine.modularity.asm.marker.Injected;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 
@@ -31,6 +32,8 @@ public class VeryService implements MuchService
 {
     private String stripper = "wow";
 
+    // TODO detect dependency from Constructor
+    @Injected
     public VeryService(SuchTestingModule module)
     {
     }

@@ -22,44 +22,17 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import java.io.File;
+import org.junit.Test;
 
-@ModuleInfo(name = "wow", description = "just testing", loadAfter = {"no.thing", "a.lot"})
-public class SuchTestingModule implements Module
+import static org.junit.Assert.*;
+
+public class AsmModularityTest
 {
-    @Injected(required = false)
-    private MuchService anOptionalService;
 
-    @Override
-    public void onLoad()
+    @Test
+    public void testModularity()
     {
-
-    }
-
-    @Override
-    public void onEnable()
-    {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
+        new AsmModularity(new File("src/test/resources/"));
     }
 }

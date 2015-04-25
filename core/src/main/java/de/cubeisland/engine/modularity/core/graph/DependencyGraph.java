@@ -22,15 +22,89 @@
  */
 package de.cubeisland.engine.modularity.core.graph;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class DependencyGraph
 {
-    private Set<DependencyInformation> nodes;
+    private Map<String, List<Node>> unresolved = new HashMap<String, List<Node>>();
+    private Map<String, Node> nodes = new HashMap<String, Node>();
+    private Node root = new Node();
 
-    public DependencyGraph()
+    public void addNode(DependencyInformation info)
     {
-        this.nodes = new HashSet<DependencyInformation>();
+        Node node = new Node(info);
+        // Resolve dependencies of node
+        boolean isDependent = false;
+        for (String id : info.requiredDependencies())
+        {
+            isDependent = true;
+            resolveDependency(node, id);
+        }
+        for (String id : info.optionalDependencies())
+        {
+            isDependent = true;
+            resolveDependency(node, id);
+        }
+        if (info instanceof ModuleMetadata)
+        {
+            for (String id : ((ModuleMetadata)info).loadAfter())
+            {
+                isDependent = true;
+                resolveDependency(node, id);
+            }
+        }
+
+        // Resolve dependencies to node
+        List<Node> dependents = unresolved.remove(info.getIdentifier());
+        if (dependents != null)
+        {
+            for (Node dependent : dependents)
+            {
+                node.addChild(dependent);
+            }
+        }
+
+        if (!isDependent)
+        {
+            root.addChild(node);
+        }
+
+        nodes.put(node.getInformation().getIdentifier(), node);
+    }
+
+    private void resolveDependency(Node node, String id)
+    {
+        Node dependency = nodes.get(id);
+        if (dependency == null)
+        {
+            List<Node> list = unresolved.get(id);
+            if (list == null)
+            {
+                list = new ArrayList<Node>();
+                unresolved.put(id, list);
+            }
+            list.add(node);
+        }
+        else
+        {
+            dependency.addChild(node);
+        }
+    }
+
+    public Node getRoot()
+    {
+        return root;
+    }
+
+    public Map<String, List<Node>> getUnresolved()
+    {
+        return unresolved;
     }
 }

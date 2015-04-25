@@ -22,24 +22,88 @@
  */
 package de.cubeisland.engine.modularity.core.graph;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by Phillip on 05.04.2015.
+ * A dependency node containing a set of DependencyInformation
  */
 public class Node
 {
-    private final DependencyInformation information;
     private final Set<Node> children = new HashSet<Node>();
+    private DependencyInformation information;
+
+    public Node()
+    {
+    }
 
     public Node(DependencyInformation information)
     {
         this.information = information;
     }
 
+    public void addChild(Node node)
+    {
+        detectCircularDepdency(this, node);
+        children.add(node);
+    }
+
+    private void detectCircularDepdency(Node node, Node check)
+    {
+        if (node.equals(check))
+        {
+            throw new IllegalArgumentException("Circular Dependency!");
+        }
+        for (Node child : node.children)
+        {
+            if (child.children.contains(check))
+            {
+                throw new IllegalArgumentException("Circular Dependency!");
+            }
+            detectCircularDepdency(child, check);
+        }
+    }
+
+    public Set<Node> getChildren()
+    {
+        return children;
+    }
+
     public DependencyInformation getInformation()
     {
         return information;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof Node))
+        {
+            return false;
+        }
+
+        final Node node = (Node)o;
+
+        if (information == null && ((Node)o).information == null)
+        {
+            return true;
+        }
+        if (information != null && node.information != null)
+        {
+            return information.getIdentifier().equals(node.information.getIdentifier());
+        }
+        return false;
+
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return information.getIdentifier().hashCode();
     }
 }
