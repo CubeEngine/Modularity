@@ -64,7 +64,6 @@ public class AsmInformationLoaderTest
                 {
                     assertEquals(expected, actual.next());
                 }
-                assertTrue(info.requiredDependencies().contains(SuchTestingModule.class.getName()));
                 assertTrue(info.optionalDependencies().contains(MuchService.class.getName()));
             }
 
