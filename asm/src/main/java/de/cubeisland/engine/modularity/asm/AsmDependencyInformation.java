@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.marker.Injected;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
@@ -51,24 +52,24 @@ public abstract class AsmDependencyInformation implements DependencyInformation
                 Boolean req = field.getAnnotation(Injected.class).property("required");
                 if (req)
                 {
-                    addRequiredDependency(field);
+                    addRequiredDependency(field.getType());
                 }
                 else
                 {
-                    addOptionaldDependency(field);
+                    addOptionaldDependency(field.getType());
                 }
             }
         }
     }
 
-    private void addOptionaldDependency(FieldCandidate field)
+    void addOptionaldDependency(TypeReference type)
     {
-        optionalDependencies.add(field.getType().getReferencedClass());
+        optionalDependencies.add(type.getReferencedClass());
     }
 
-    private void addRequiredDependency(FieldCandidate field)
+    void addRequiredDependency(TypeReference type)
     {
-        requiredDependencies.add(field.getType().getReferencedClass());
+        requiredDependencies.add(type.getReferencedClass());
     }
 
     public String getIdentifier()

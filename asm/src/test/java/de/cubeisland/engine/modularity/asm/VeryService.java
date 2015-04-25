@@ -32,7 +32,6 @@ public class VeryService implements MuchService
 {
     private String stripper = "wow";
 
-    // TODO detect dependency from Constructor
     @Injected
     public VeryService(SuchTestingModule module)
     {
