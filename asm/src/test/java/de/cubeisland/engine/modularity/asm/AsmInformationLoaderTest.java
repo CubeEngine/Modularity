@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
@@ -30,6 +31,7 @@ import de.cubeisland.engine.modularity.asm.info.BasicService;
 import de.cubeisland.engine.modularity.asm.info.BasicModule;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static de.cubeisland.engine.modularity.asm.ASMModuleInfoParserTest.getPath;
@@ -38,10 +40,17 @@ import static org.junit.Assert.assertTrue;
 
 public class AsmInformationLoaderTest
 {
+
+    @BeforeClass
+    public static void setup() throws IOException
+    {
+        AsmModularityTest.setup();
+    }
+
     @Test
     public void testJar()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("src/test/resources/test.jar"));
+        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("target/test-classes/test.jar"));
         assertEquals(6, infos.size());
         for (DependencyInformation info : infos)
         {

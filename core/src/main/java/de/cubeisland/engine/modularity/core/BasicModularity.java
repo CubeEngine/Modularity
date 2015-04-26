@@ -52,7 +52,7 @@ public abstract class BasicModularity implements Modularity
     }
 
     @Override
-    public void load(File source)
+    public BasicModularity load(File source)
     {
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         // TODO info when nothing was loaded
@@ -87,6 +87,7 @@ public abstract class BasicModularity implements Modularity
                 System.out.println("\t" + node.getInformation().getIdentifier());
             }
         }
+        return this;
     }
 
     private void showChildren(Node root, int depth)

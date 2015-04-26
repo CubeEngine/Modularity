@@ -23,17 +23,54 @@
 package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import de.cubeisland.engine.modularity.asm.info.BasicModule;
+import de.cubeisland.engine.modularity.core.Modularity;
+import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class AsmModularityTest
 {
 
+    public static final File TEST_JAR = new File("target/test-classes/test.jar");
+
+    @BeforeClass
+    public static void setup() throws IOException
+    {
+        String BASE_PATH = ASMModuleInfoParserTest.getPath(BasicModule.class);
+
+        JarOutputStream out = new JarOutputStream(new FileOutputStream(TEST_JAR));
+        out.putNextEntry(new JarEntry("de/cubeisland/engine/modularity/asm/info/"));
+        for (File file : new File(BASE_PATH).listFiles())
+        {
+            out.putNextEntry(new JarEntry("de/cubeisland/engine/modularity/asm/info/" + file.getName()));
+
+            RandomAccessFile f = new RandomAccessFile(file, "r");
+            byte[] b = new byte[(int)f.length()];
+            f.read(b);
+            out.write(b);
+            out.closeEntry();
+        }
+        out.putNextEntry(new JarEntry("META-INF/"));
+
+        out.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
+        RandomAccessFile f = new RandomAccessFile("src/test/resources/MANIFEST.MF", "r");
+        byte[] b = new byte[(int)f.length()];
+        f.read(b);
+        out.write(b);
+        out.closeEntry();
+
+        out.close();
+    }
+
     @Test
     public void testModularity()
     {
-        AsmModularity modularity = new AsmModularity(new File("src/test/resources/"));
+        Modularity modularity = new AsmModularity().load(new File("target/test-classes/"));
 
     }
 }

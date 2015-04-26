@@ -29,7 +29,7 @@ import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
 public interface Modularity
 {
-    void load(File source);
+    BasicModularity load(File source);
 
     InformationLoader getLoader();
 

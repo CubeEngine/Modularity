@@ -22,17 +22,15 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import java.io.File;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.BasicModularity;
 import de.cubeisland.engine.modularity.core.Instance;
 
 public class AsmModularity extends BasicModularity
 {
-    public AsmModularity(File source)
+    public AsmModularity()
     {
         super(new AsmInformationLoader());
-        load(source);
     }
 
     @Override

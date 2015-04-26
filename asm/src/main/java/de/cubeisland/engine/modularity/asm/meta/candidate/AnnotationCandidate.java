@@ -129,7 +129,6 @@ public class AnnotationCandidate extends Candidate
         T result = (T)properties.get(property);
         if (result == null)
         {
-            // TODO how do we want to handle this?
             try
             {
                 // if not found get default from annotation
