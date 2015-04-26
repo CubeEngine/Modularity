@@ -24,13 +24,17 @@ package de.cubeisland.engine.modularity.asm;
 
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.BasicModularity;
+import de.cubeisland.engine.modularity.core.InformationLoader;
 import de.cubeisland.engine.modularity.core.Instance;
 
 public class AsmModularity extends BasicModularity
 {
-    public AsmModularity()
+    private final AsmInformationLoader asmInformationLoader = new AsmInformationLoader(this);
+
+    @Override
+    public InformationLoader getLoader()
     {
-        super(new AsmInformationLoader());
+        return asmInformationLoader;
     }
 
     @Override

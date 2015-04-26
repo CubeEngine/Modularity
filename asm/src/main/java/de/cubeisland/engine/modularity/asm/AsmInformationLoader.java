@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +50,24 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor;
 import de.cubeisland.engine.modularity.core.InformationLoader;
+import de.cubeisland.engine.modularity.core.Modularity;
+import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.objectweb.asm.ClassReader;
 
 public class AsmInformationLoader implements InformationLoader
 {
     private final Map<String, TypeCandidate> knownTypes = new HashMap<String, TypeCandidate>();
+    private final Map<File, ModularityClassLoader> classLoaders = new HashMap<File, ModularityClassLoader>();
+
+    private final Modularity modularity;
+
+    public AsmInformationLoader(AsmModularity modularity)
+    {
+        this.modularity = modularity;
+    }
 
     public Set<DependencyInformation> loadInformation(Set<File> files)
     {
@@ -152,19 +164,45 @@ public class AsmInformationLoader implements InformationLoader
                 }
             }
 
+
+
+            ModularityClassLoader classLoader = null;
+            LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
+            if (source.getName().endsWith(".jar"))
+            {
+                classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies, null); // TODO parentClassLoader;
+            }
+            else
+            {
+                // TODO
+            }
+
             for (ClassCandidate module : modules)
             {
+                module.setClassLoader(classLoader);
                 result.add(new AsmModuleMetadata(module));
             }
 
             for (InterfaceCandidate service : services)
             {
+                service.setClassLoader(classLoader);
                 result.add(new AsmServiceDefinitionMetadata(service));
             }
 
             for (ClassCandidate serviceImpl : servicesImpl)
             {
+                serviceImpl.setClassLoader(classLoader);
                 result.add(new AsmServiceImplementationMetadata(serviceImpl));
+            }
+
+            for (DependencyInformation info : result)
+            {
+                dependencies.addAll(info.requiredDependencies());
+                dependencies.addAll(info.optionalDependencies());
+                if (info instanceof ModuleMetadata)
+                {
+                    dependencies.addAll(((ModuleMetadata)info).loadAfter());
+                }
             }
 
             return result;
@@ -254,4 +292,6 @@ public class AsmInformationLoader implements InformationLoader
         }
         return list;
     }
+
+
 }

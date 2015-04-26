@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 
 import static java.util.Collections.unmodifiableSet;
 
@@ -40,6 +41,8 @@ public abstract class TypeCandidate extends Candidate
     private final int modifiers;
     private String sourceVersion = "unknown-unknown";
     private String version = "unknown";
+
+    private ModularityClassLoader classLoader;
 
     public TypeCandidate(File sourceFile, String name, int modifiers, Set<TypeReference> interfaces)
     {
@@ -130,6 +133,16 @@ public abstract class TypeCandidate extends Candidate
     public int getModifiers()
     {
         return modifiers;
+    }
+
+    public ModularityClassLoader getClassLoader()
+    {
+        return classLoader;
+    }
+
+    public void setClassLoader(ModularityClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
     }
 
     @Override

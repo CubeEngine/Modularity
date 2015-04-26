@@ -35,21 +35,14 @@ import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
-// TODO actually instantiate the modules and servicimpls
 public abstract class BasicModularity implements Modularity
 {
-    private final InformationLoader loader;
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
     private final Set<DependencyInformation> infos = new HashSet<DependencyInformation>();
     private final Map<String, ModularityClassLoader> classLoaders = new HashMap<String, ModularityClassLoader>();
     private final DependencyGraph graph = new DependencyGraph();
 
     private final ServiceManager serviceManager = new ServiceManager();
-
-    public BasicModularity(InformationLoader loader)
-    {
-        this.loader = loader;
-    }
 
     @Override
     public BasicModularity load(File source)
@@ -90,6 +83,13 @@ public abstract class BasicModularity implements Modularity
         return this;
     }
 
+    @Override
+    public boolean start(String identifier)
+    {
+        // TODO actually instantiate the modules and servicimpls
+        return false;
+    }
+
     private void showChildren(Node root, int depth)
     {
         for (Node node : root.getChildren())
@@ -110,18 +110,14 @@ public abstract class BasicModularity implements Modularity
     }
 
     @Override
-    public Class<?> getClazz(DependencyInformation info, String name)
+    public Class<?> getClazz(Set<String> dependencies, String name)
     {
         if (name == null)
         {
             return null;
         }
         Set<String> checked = new HashSet<String>();
-        Class clazz = getClazz(name, checked, info.optionalDependencies());
-        if (clazz == null)
-        {
-            clazz = getClazz(name, checked, info.requiredDependencies());
-        }
+        Class clazz = getClazz(name, checked, dependencies);
         if (clazz == null)
         {
             clazz = getClazz(name, checked, classLoaders.keySet());
@@ -152,13 +148,6 @@ public abstract class BasicModularity implements Modularity
         }
         return null;
     }
-
-    @Override
-    public InformationLoader getLoader()
-    {
-        return loader;
-    }
-
 
     @Override
     public Set<ServiceContainer<?>> getServices()

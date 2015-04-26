@@ -29,7 +29,16 @@ import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
 public interface Modularity
 {
+    /**
+     * Loads a all DependencyInformation from given source
+     *
+     * @param source the source
+     *
+     * @return fluent interface
+     */
     BasicModularity load(File source);
+
+    boolean start(String identifier);
 
     InformationLoader getLoader();
 
@@ -43,5 +52,5 @@ public interface Modularity
 
     Set<ServiceContainer<?>> getServices();
 
-    Class<?> getClazz(DependencyInformation info, String name);
+    Class<?> getClazz(Set<String> dependencies, String name);
 }

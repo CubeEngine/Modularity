@@ -24,7 +24,10 @@ package de.cubeisland.engine.modularity.core;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
@@ -35,13 +38,13 @@ public class ModularityClassLoader extends URLClassLoader
 {
     private final Map<String, Class> classMap = new ConcurrentHashMap<String, Class>();
     private final Modularity modularity;
-    private final DependencyInformation info;
+    private final LinkedHashSet<String> dependencies;
 
-    public ModularityClassLoader(Modularity modularity, URL jarURL, DependencyInformation info, ClassLoader parent)
+    public ModularityClassLoader(Modularity modularity, URL jarURL, LinkedHashSet<String> dependencies, ClassLoader parent)
     {
         super(new URL[]{jarURL}, parent);
         this.modularity = modularity;
-        this.info = info;
+        this.dependencies = dependencies;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class ModularityClassLoader extends URLClassLoader
 
             if (clazz == null && global)
             {
-                clazz = modularity.getClazz(info, name);
+                clazz = modularity.getClazz(dependencies, name);
             }
 
             if (clazz == null)

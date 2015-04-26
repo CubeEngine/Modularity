@@ -50,7 +50,7 @@ public class AsmInformationLoaderTest
     @Test
     public void testJar()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File("target/test-classes/test.jar"));
+        Set<DependencyInformation> infos = new AsmInformationLoader(new AsmModularity()).loadInformation(new File("target/test-classes/test.jar"));
         assertEquals(6, infos.size());
         for (DependencyInformation info : infos)
         {
@@ -61,7 +61,7 @@ public class AsmInformationLoaderTest
     @Test
     public void testFolder()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader().loadInformation(new File(getPath(BasicModule.class)));
+        Set<DependencyInformation> infos = new AsmInformationLoader(new AsmModularity()).loadInformation(new File(getPath(BasicModule.class)));
 
         for (DependencyInformation info : infos)
         {
