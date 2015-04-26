@@ -39,7 +39,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
 
     public AsmServiceImplementationMetadata(ClassCandidate candidate)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields());
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getClassLoader());
         for (ConstructorCandidate constructor : candidate.getConstructors())
         {
             if (constructor.isAnnotatedWith(Injected.class))

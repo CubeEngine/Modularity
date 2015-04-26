@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.core.graph;
 
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 
 public interface DependencyInformation
 {
@@ -36,5 +37,5 @@ public interface DependencyInformation
 
     Set<String> optionalDependencies();
 
-    ClassLoader getClassLoader();
+    ModularityClassLoader getClassLoader();
 }

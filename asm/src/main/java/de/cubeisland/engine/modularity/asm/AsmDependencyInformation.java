@@ -28,6 +28,7 @@ import java.util.Set;
 import de.cubeisland.engine.modularity.asm.marker.Injected;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
+import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public abstract class AsmDependencyInformation implements DependencyInformation
@@ -35,14 +36,17 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private final String identifier;
     private final String version;
     private final String sourceVersion;
+    private final ModularityClassLoader classLoader;
     private final Set<String> requiredDependencies = new HashSet<String>();
     private final Set<String> optionalDependencies = new HashSet<String>();
 
-    public AsmDependencyInformation(String identifier, String version, String sourceVersion, Set<FieldCandidate> fields)
+    public AsmDependencyInformation(String identifier, String version, String sourceVersion, Set<FieldCandidate> fields,
+                                    ModularityClassLoader classLoader)
     {
         this.identifier = identifier;
         this.version = version;
         this.sourceVersion = sourceVersion;
+        this.classLoader = classLoader;
 
         // Search dependencies:
         for (FieldCandidate field : fields)
@@ -103,8 +107,8 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     }
 
     @Override
-    public ClassLoader getClassLoader()
+    public ModularityClassLoader getClassLoader()
     {
-        return null; // TODO
+        return classLoader;
     }
 }

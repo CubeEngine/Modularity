@@ -38,8 +38,7 @@ import de.cubeisland.engine.modularity.core.service.ServiceManager;
 public abstract class BasicModularity implements Modularity
 {
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
-    private final Set<DependencyInformation> infos = new HashSet<DependencyInformation>();
-    private final Map<String, ModularityClassLoader> classLoaders = new HashMap<String, ModularityClassLoader>();
+    private final Map<String, DependencyInformation> infos = new HashMap<String, DependencyInformation>();
     private final DependencyGraph graph = new DependencyGraph();
 
     private final ServiceManager serviceManager = new ServiceManager();
@@ -49,9 +48,9 @@ public abstract class BasicModularity implements Modularity
     {
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         // TODO info when nothing was loaded
-        infos.addAll(loaded);
         for (DependencyInformation info : loaded)
         {
+            infos.put(info.getIdentifier(), info);
             Set<DependencyInformation> set = infosByClassLoader.get(info.getClassLoader());
             if (set == null)
             {
@@ -61,7 +60,7 @@ public abstract class BasicModularity implements Modularity
             set.add(info);
         }
 
-        for (DependencyInformation info : infos)
+        for (DependencyInformation info : infos.values())
         {
             graph.addNode(info);
         }
@@ -120,7 +119,7 @@ public abstract class BasicModularity implements Modularity
         Class clazz = getClazz(name, checked, dependencies);
         if (clazz == null)
         {
-            clazz = getClazz(name, checked, classLoaders.keySet());
+            clazz = getClazz(name, checked, infos.keySet());
         }
         return clazz;
     }
@@ -136,7 +135,7 @@ public abstract class BasicModularity implements Modularity
             checked.add(dep);
             try
             {
-                ModularityClassLoader loader = classLoaders.get(dep);
+                ModularityClassLoader loader = infos.get(dep).getClassLoader();
                 if (loader != null)
                 {
                     return loader.findClass(name, false);

@@ -37,10 +37,10 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
     private final Set<String> loadAfter;
     private final Set<String> authors = null; // TODO from maven?
 
-    public AsmModuleMetadata(ClassCandidate candiate)
+    public AsmModuleMetadata(ClassCandidate candidate)
     {
-        super(candiate.getName(), candiate.getVersion(), candiate.getSourceVersion(), candiate.getFields());
-        AnnotationCandidate moduleInfo = candiate.getAnnotation(ModuleInfo.class);
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getClassLoader());
+        AnnotationCandidate moduleInfo = candidate.getAnnotation(ModuleInfo.class);
         this.name = moduleInfo.property("name");
         this.description = moduleInfo.property("description");
         List<String> loadAfter = moduleInfo.property("loadAfter");
