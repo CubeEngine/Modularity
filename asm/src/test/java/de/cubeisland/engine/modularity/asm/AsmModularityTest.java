@@ -30,8 +30,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.BasicModule;
 import de.cubeisland.engine.modularity.core.Modularity;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class AsmModularityTest
 {
@@ -71,6 +74,6 @@ public class AsmModularityTest
     public void testModularity()
     {
         Modularity modularity = new AsmModularity().load(new File("target/test-classes/"));
-
+        assertTrue(modularity.start(BasicModule.class.getName()));
     }
 }

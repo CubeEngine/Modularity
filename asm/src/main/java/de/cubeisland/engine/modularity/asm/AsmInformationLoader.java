@@ -170,7 +170,7 @@ public class AsmInformationLoader implements InformationLoader
             LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
             if (source.getName().endsWith(".jar"))
             {
-                classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies, null); // TODO parentClassLoader;
+                classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies, modularity.getClass().getClassLoader());
             }
             else
             {

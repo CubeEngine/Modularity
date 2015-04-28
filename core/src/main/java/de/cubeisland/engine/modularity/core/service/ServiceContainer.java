@@ -44,19 +44,24 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
+import de.cubeisland.engine.modularity.core.Instance;
 import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public class ServiceContainer<T>
+public class ServiceContainer<T> implements Instance
 {
     private final Class<T> interfaceClass;
+    private final DependencyInformation info;
+
     private final PriorityQueue<Implementation> implementations;
+
     private final T proxy;
     private final ServiceInvocationHandler invocationHandler;
-
     @SuppressWarnings("unchecked")
-    public ServiceContainer(Class<T> interfaceClass)
+    public ServiceContainer(Class<T> interfaceClass, DependencyInformation info)
     {
         this.interfaceClass = interfaceClass;
+        this.info = info;
         this.implementations = new PriorityQueue<Implementation>();
         this.invocationHandler = new ServiceInvocationHandler(this, this.implementations);
         this.proxy = (T)Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[]{interfaceClass},
@@ -127,6 +132,17 @@ public class ServiceContainer<T>
         return this;
     }
 
+    @Override
+    public DependencyInformation getInformation()
+    {
+        return info;
+    }
+
+    public DependencyInformation getInfo()
+    {
+        return info;
+    }
+
     static class Implementation implements Comparable<Implementation>
     {
         private final Object target;
@@ -159,14 +175,15 @@ public class ServiceContainer<T>
                 return priority.ordinal() < other.priority.ordinal() ? 1 : -1;
             }
         }
-    }
 
+
+    }
     public static enum Priority
     {
         LOWEST,
         LOWER,
         NORMAL,
         HIGHER,
-        HIGHEST
+        HIGHEST;
     }
 }

@@ -67,7 +67,7 @@ public class ServiceManager
             ServiceContainer<S> service = (ServiceContainer<S>)this.services.get(interfaceClass);
             if (service == null)
             {
-                this.services.put(interfaceClass, service = new ServiceContainer<S>(interfaceClass));
+                this.services.put(interfaceClass, service = new ServiceContainer<S>(interfaceClass, null)); // TODO
             }
             service.addImplementation(implementation, priority);
             return service;

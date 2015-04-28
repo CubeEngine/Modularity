@@ -23,6 +23,8 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +34,7 @@ import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.Node;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
@@ -40,6 +43,8 @@ public abstract class BasicModularity implements Modularity
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
     private final Map<String, DependencyInformation> infos = new HashMap<String, DependencyInformation>();
     private final DependencyGraph graph = new DependencyGraph();
+
+    private final Map<String, Instance> instances = new HashMap<String, Instance>();
 
     private final ServiceManager serviceManager = new ServiceManager();
 
@@ -85,9 +90,119 @@ public abstract class BasicModularity implements Modularity
     @Override
     public boolean start(String identifier)
     {
-        // TODO actually instantiate the modules and servicimpls
-        return false;
+        DependencyInformation info = infos.get(identifier);
+        if (info == null)
+        {
+            return false;
+        }
+        this.getStarted(info);
+        Set<DependencyInformation> infos = infosByClassLoader.get(info.getClassLoader());
+        if (infos != null)
+        {
+            for (DependencyInformation depInfo : infos)
+            {
+                if (depInfo != info)
+                {
+                    this.getStarted(depInfo);
+                }
+            }
+        }
+        return true;
     }
+
+    private Instance getStarted(DependencyInformation info)
+    {
+        Instance instance = instances.get(info.getIdentifier());
+        if (instance != null)
+        {
+            return instance;
+        }
+        Map<String, Instance> instances = new HashMap<String, Instance>();
+        for (String dep : info.requiredDependencies())
+        {
+            DependencyInformation dependency = infos.get(dep);
+            if (dependency == null)
+            {
+                throw new IllegalStateException("Missing required dependency to: " + dep); // TODO custom Exception
+            }
+            instances.put(dependency.getIdentifier(), getStarted(dependency));
+        }
+        for (String dep : info.optionalDependencies())
+        {
+            DependencyInformation dependency = infos.get(dep);
+            if (dependency == null)
+            {
+                // TODO debug message?
+            }
+            instances.put(dependency.getIdentifier(), getStarted(dependency));
+        }
+        return start(info, instances);
+    }
+
+    private Instance start(DependencyInformation info, Map<String, Instance> instances)
+    {
+        if (info instanceof ModuleMetadata)
+        {
+            try
+            {
+                Class<?> instanceClass = Class.forName(info.getIdentifier(), true, info.getClassLoader());
+                Constructor<?> instanceConstructor = null;
+                for (Constructor<?> constructor : instanceClass.getConstructors())
+                {
+                    boolean ok = true;
+                    for (Class<?> depdendency : constructor.getParameterTypes())
+                    {
+                        ok = ok && instances.containsKey(depdendency.getName());
+                        // TODO what if it was optional?
+                    }
+                    if (ok)
+                    {
+                        instanceConstructor = constructor;
+                        break;
+                    }
+                }
+                if (instanceConstructor == null)
+                {
+                    // TODO error
+                }
+
+                Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
+                Object[] parameters = new Object[parameterTypes.length];
+                for (int i = 0; i < parameterTypes.length; i++)
+                {
+                    final Class<?> type = parameterTypes[i];
+                    parameters[i] = instances.get(type.getName());
+                }
+                instanceConstructor.setAccessible(true);
+                Instance result = (Instance)instanceConstructor.newInstance(parameters);
+                this.instances.put(info.getIdentifier(), result);
+                return result;
+            }
+            catch (ClassNotFoundException e)
+            {
+                // TODO error
+            }
+            catch (InvocationTargetException e)
+            {
+                // TODO error
+            }
+            catch (InstantiationException e)
+            {
+                // TODO error
+            }
+            catch (IllegalAccessException e)
+            {
+                // TODO error
+            }
+            return null;
+        }
+        else
+        {
+            // TODO services
+            return null;
+        }
+    }
+
 
     private void showChildren(Node root, int depth)
     {
