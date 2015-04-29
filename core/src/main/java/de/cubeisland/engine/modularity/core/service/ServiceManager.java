@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer.Priority;
 
 public class ServiceManager
@@ -54,6 +55,13 @@ public class ServiceManager
         return this.registerService(interfaceClass, implementation, Priority.NORMAL);
     }
 
+    public <S> ServiceContainer<S> registerService(DependencyInformation info, Class<S> interfaceClass)
+    {
+        ServiceContainer<S> service = new ServiceContainer<S>(interfaceClass, info);
+        this.services.put(interfaceClass, service);
+        return service;
+    }
+
     @SuppressWarnings("unchecked")
     public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation, Priority priority)
     {
@@ -67,9 +75,13 @@ public class ServiceManager
             ServiceContainer<S> service = (ServiceContainer<S>)this.services.get(interfaceClass);
             if (service == null)
             {
-                this.services.put(interfaceClass, service = new ServiceContainer<S>(interfaceClass, null)); // TODO
+                System.out.println("Service Interface not registered");
+                throw new IllegalArgumentException(); // TODO
             }
-            service.addImplementation(implementation, priority);
+            if (implementation != null)
+            {
+                service.addImplementation(implementation, priority);
+            }
             return service;
         }
     }

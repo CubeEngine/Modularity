@@ -22,21 +22,20 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
+
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class BasicModularity implements Modularity
 {
@@ -115,6 +114,13 @@ public abstract class BasicModularity implements Modularity
         Instance instance = instances.get(info.getIdentifier());
         if (instance != null)
         {
+            if (instance instanceof ServiceContainer)
+            {
+                if (((ServiceContainer) instance).getImplementations().isEmpty())
+                {
+                    // TODO find ServiceImpl
+                }
+            }
             return instance;
         }
         Map<String, Instance> instances = new HashMap<String, Instance>();
@@ -141,66 +147,86 @@ public abstract class BasicModularity implements Modularity
 
     private Instance start(DependencyInformation info, Map<String, Instance> instances)
     {
-        if (info instanceof ModuleMetadata)
+        try
         {
-            try
-            {
-                Class<?> instanceClass = Class.forName(info.getIdentifier(), true, info.getClassLoader());
-                Constructor<?> instanceConstructor = null;
-                for (Constructor<?> constructor : instanceClass.getConstructors())
-                {
-                    boolean ok = true;
-                    for (Class<?> depdendency : constructor.getParameterTypes())
-                    {
-                        ok = ok && instances.containsKey(depdendency.getName());
-                        // TODO what if it was optional?
-                    }
-                    if (ok)
-                    {
-                        instanceConstructor = constructor;
-                        break;
-                    }
-                }
-                if (instanceConstructor == null)
-                {
-                    // TODO error
-                }
+            System.out.println("Start " + info.getIdentifier());
 
-                Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
-                Object[] parameters = new Object[parameterTypes.length];
-                for (int i = 0; i < parameterTypes.length; i++)
+            Class<?> instanceClass = Class.forName(info.getIdentifier(), true, info.getClassLoader());
+            if (info instanceof ServiceDefinitionMetadata)
+            {
+                serviceManager.registerService(info, instanceClass);
+                ServiceContainer<?> service = serviceManager.getService(instanceClass);
+                this.instances.put(info.getIdentifier(), service);
+                return service;
+            }
+
+            Constructor<?> instanceConstructor = null;
+            for (Constructor<?> constructor : instanceClass.getConstructors())
+            {
+                boolean ok = true;
+                for (Class<?> depdendency : constructor.getParameterTypes())
                 {
-                    final Class<?> type = parameterTypes[i];
-                    parameters[i] = instances.get(type.getName());
+                    ok = ok && instances.containsKey(depdendency.getName());
+                    // TODO what if it was optional?
                 }
-                instanceConstructor.setAccessible(true);
-                Instance result = (Instance)instanceConstructor.newInstance(parameters);
-                this.instances.put(info.getIdentifier(), result);
-                return result;
+                if (ok)
+                {
+                    instanceConstructor = constructor;
+                    break;
+                }
             }
-            catch (ClassNotFoundException e)
+            if (instanceConstructor == null)
             {
+                System.out.println(info.getIdentifier() + " has no Constructor");
                 // TODO error
             }
-            catch (InvocationTargetException e)
+
+            Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
+            Object[] parameters = new Object[parameterTypes.length];
+            for (int i = 0; i < parameterTypes.length; i++)
             {
-                // TODO error
+                final Class<?> type = parameterTypes[i];
+                Instance instance = instances.get(type.getName());
+                if (instance instanceof ServiceContainer)
+                {
+                    parameters[i] = ((ServiceContainer) instance).getImplementation();
+                }
+                else
+                {
+                    parameters[i] = instance;
+                }
             }
-            catch (InstantiationException e)
+            instanceConstructor.setAccessible(true);
+            Object instance = instanceConstructor.newInstance(parameters);
+
+            if (info instanceof ModuleMetadata)
             {
-                // TODO error
+                this.instances.put(info.getIdentifier(), (Instance) instance);
+                return (Instance) instance;
             }
-            catch (IllegalAccessException e)
+            else if (info instanceof ServiceImplementationMetadata)
             {
-                // TODO error
+                Class serviceClass = Class.forName(((ServiceImplementationMetadata) info).getServiceName(), true, info.getClassLoader());
+                serviceManager.registerService(serviceClass, instance);
+                ServiceContainer service = serviceManager.getService(serviceClass);
+                this.instances.put(service.getInfo().getIdentifier(), service);
+                return service;
             }
-            return null;
-        }
-        else
+        } catch (ClassNotFoundException e)
         {
-            // TODO services
-            return null;
+            // TODO error
+        } catch (InvocationTargetException e)
+        {
+            // TODO error
+        } catch (InstantiationException e)
+        {
+            // TODO error
+        } catch (IllegalAccessException e)
+        {
+            // TODO error
         }
+        System.out.println("An error occurred!");
+        return null;
     }
 
 
@@ -255,8 +281,7 @@ public abstract class BasicModularity implements Modularity
                 {
                     return loader.findClass(name, false);
                 }
-            }
-            catch (ClassNotFoundException ignored)
+            } catch (ClassNotFoundException ignored)
             {
             }
         }

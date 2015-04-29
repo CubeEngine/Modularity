@@ -40,10 +40,8 @@
 package de.cubeisland.engine.modularity.core.service;
 
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.PriorityQueue;
+import java.util.*;
+
 import de.cubeisland.engine.modularity.core.Instance;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
