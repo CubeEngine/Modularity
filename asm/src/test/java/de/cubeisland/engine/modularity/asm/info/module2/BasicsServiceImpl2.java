@@ -20,21 +20,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info;
+package de.cubeisland.engine.modularity.asm.info.module2;
 
-import de.cubeisland.engine.modularity.asm.marker.Service;
+import javax.inject.Inject;
+import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 
-@Service
-public interface BasicService
+@ServiceImpl(BasicService2.class)
+@Version("2")
+public class BasicsServiceImpl2 implements BasicService2
 {
-    /**
-     * Provides a stripped String
-     * @return the String
-     */
-    String provideString();
+    private String stripper = "wow";
+    private ComplexModule module;
 
-    /**
-     * Strips a String and stores it for later use
-     */
-    void stripString();
+    @Inject
+    public BasicsServiceImpl2(ComplexModule module)
+    {
+        this.module = module;
+    }
+
+    @Override
+    public String provideString()
+    {
+        return stripper;
+    }
+
+    @Override
+    public void stripString()
+    {
+        stripper = stripper.trim();
+    }
 }

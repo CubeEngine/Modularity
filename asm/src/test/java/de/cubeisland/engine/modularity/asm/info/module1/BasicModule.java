@@ -20,32 +20,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info;
+package de.cubeisland.engine.modularity.asm.info.module1;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
-import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
-import de.cubeisland.engine.modularity.asm.marker.Version;
+import javax.inject.Inject;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.Optional;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-@ServiceImpl(BasicService2.class)
-@Version("2")
-public class BasicsServiceImpl2 implements BasicService2
+@ModuleInfo(name = "basic", description = "just testing")
+public class BasicModule implements Module
 {
-    private String stripper = "wow";
+    @Inject @Optional private BasicService anOptionalService;
 
-    @Injected
-    public BasicsServiceImpl2(ComplexModule module) // TODO when is this called? / when is the service injected into a Module?
+    @Override
+    public void onLoad()
     {
+
     }
 
     @Override
-    public String provideString()
+    public void onEnable()
     {
-        return stripper;
+
     }
 
     @Override
-    public void stripString()
+    public void onDisable()
     {
-        stripper = stripper.trim();
+
+    }
+
+    @Override
+    public void onUnload()
+    {
+
+    }
+
+    @Override
+    public ModuleMetadata getInformation()
+    {
+        return null;
     }
 }

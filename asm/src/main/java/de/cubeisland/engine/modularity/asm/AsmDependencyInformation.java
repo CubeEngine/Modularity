@@ -25,10 +25,12 @@ package de.cubeisland.engine.modularity.asm;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import de.cubeisland.engine.modularity.asm.marker.Injected;
+import javax.inject.Inject;
+import javax.swing.text.html.Option;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
+import de.cubeisland.engine.modularity.core.Optional;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public abstract class AsmDependencyInformation implements DependencyInformation
@@ -51,16 +53,15 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         // Search dependencies:
         for (FieldCandidate field : fields)
         {
-            if (field.isAnnotatedWith(Injected.class))
+            if (field.isAnnotatedWith(Inject.class))
             {
-                Boolean req = field.getAnnotation(Injected.class).property("required");
-                if (req)
+                if (field.isAnnotatedWith(Optional.class))
                 {
-                    addRequiredDependency(field.getType());
+                    addOptionaldDependency(field.getType());
                 }
                 else
                 {
-                    addOptionaldDependency(field.getType());
+                    addRequiredDependency(field.getType());
                 }
             }
         }

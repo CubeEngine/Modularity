@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import de.cubeisland.engine.modularity.asm.info.BasicModule;
+import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
+import de.cubeisland.engine.modularity.asm.info.module2.ComplexModule;
 import de.cubeisland.engine.modularity.core.Modularity;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,41 +39,59 @@ import static org.junit.Assert.assertTrue;
 public class AsmModularityTest
 {
 
-    public static final File TEST_JAR = new File("target/test-classes/test.jar");
+    public static final File JAR_TARGET_DIR = new File("target/test-classes/");
+    public static final File CLASS_SOURCE_DIR = new File("target/test-classes/de/cubeisland/engine/modularity/asm/info/");
 
     @BeforeClass
     public static void setup() throws IOException
     {
-        String BASE_PATH = ASMModuleInfoParserTest.getPath(BasicModule.class);
-
-        JarOutputStream out = new JarOutputStream(new FileOutputStream(TEST_JAR));
-        out.putNextEntry(new JarEntry("de/cubeisland/engine/modularity/asm/info/"));
-        for (File file : new File(BASE_PATH).listFiles())
+        for (File dir : CLASS_SOURCE_DIR.listFiles())
         {
-            out.putNextEntry(new JarEntry("de/cubeisland/engine/modularity/asm/info/" + file.getName()));
+            if (dir.isDirectory())
+            {
+                JarOutputStream out = new JarOutputStream(new FileOutputStream(JAR_TARGET_DIR + "/" + dir.getName() + ".jar"));
+                String pack = "de/cubeisland/engine/modularity/asm/info/" + dir.getName() + "/";
+                out.putNextEntry(new JarEntry(pack));
+                for (File file : dir.listFiles())
+                {
+                    out.putNextEntry(new JarEntry(pack + file.getName()));
 
-            RandomAccessFile f = new RandomAccessFile(file, "r");
-            byte[] b = new byte[(int)f.length()];
-            f.read(b);
-            out.write(b);
-            out.closeEntry();
+                    RandomAccessFile f = new RandomAccessFile(file, "r");
+                    byte[] b = new byte[(int)f.length()];
+                    f.read(b);
+                    out.write(b);
+                    out.closeEntry();
+                }
+                out.putNextEntry(new JarEntry("META-INF/"));
+                out.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
+                RandomAccessFile f = new RandomAccessFile("src/test/resources/" + dir.getName() + ".MF", "r");
+                byte[] b = new byte[(int)f.length()];
+                f.read(b);
+                out.write(b);
+                out.closeEntry();
+
+                out.close();
+            }
         }
-        out.putNextEntry(new JarEntry("META-INF/"));
-
-        out.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
-        RandomAccessFile f = new RandomAccessFile("src/test/resources/MANIFEST.MF", "r");
-        byte[] b = new byte[(int)f.length()];
-        f.read(b);
-        out.write(b);
-        out.closeEntry();
-
-        out.close();
     }
 
     @Test
     public void testModularity()
     {
         Modularity modularity = new AsmModularity().load(new File("target/test-classes/"));
+
+        assertTrue(modularity.start(ComplexModule.class.getName()));
+
         assertTrue(modularity.start(BasicModule.class.getName()));
+
+
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

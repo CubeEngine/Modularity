@@ -22,7 +22,7 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
+import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
@@ -42,7 +42,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
         super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getClassLoader());
         for (ConstructorCandidate constructor : candidate.getConstructors())
         {
-            if (constructor.isAnnotatedWith(Injected.class))
+            if (constructor.isAnnotatedWith(Inject.class))
             {
                 for (TypeReference reference : constructor.getParameterTypes())
                 {

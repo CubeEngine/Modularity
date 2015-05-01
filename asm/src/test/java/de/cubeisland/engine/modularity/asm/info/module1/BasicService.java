@@ -20,46 +20,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info;
+package de.cubeisland.engine.modularity.asm.info.module1;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.asm.marker.Service;
 
-@ModuleInfo(name = "basic", description = "just testing")
-public class BasicModule implements Module
+@Service
+public interface BasicService
 {
-    @Injected(required = false)
-    private BasicService anOptionalService;
+    /**
+     * Provides a stripped String
+     * @return the String
+     */
+    String provideString();
 
-    @Override
-    public void onLoad()
-    {
-
-    }
-
-    @Override
-    public void onEnable()
-    {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
-    }
+    /**
+     * Strips a String and stores it for later use
+     */
+    void stripString();
 }

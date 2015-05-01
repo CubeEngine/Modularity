@@ -20,20 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info;
+package de.cubeisland.engine.modularity.asm.info.module2;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
+import javax.inject.Inject;
+import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.Optional;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 @ModuleInfo(name = "complex", description = "just testing")
 public class ComplexModule implements Module
 {
-    @Injected(required = false)
-    private BasicService anOptionalService;
-    @Injected
-    private BasicService2 aRequiredService;
+    @Inject @Optional private BasicService anOptionalService;
+    @Inject private BasicService2 aRequiredService;
 
     @Override
     public void onLoad()

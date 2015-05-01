@@ -20,9 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info;
+package de.cubeisland.engine.modularity.asm.info.module1;
 
-import de.cubeisland.engine.modularity.asm.marker.Injected;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 
@@ -31,11 +30,6 @@ import de.cubeisland.engine.modularity.asm.marker.Version;
 public class BasicsServiceImpl implements BasicService
 {
     private String stripper = "wow";
-
-    @Injected
-    public BasicsServiceImpl(BasicModule module)
-    {
-    }
 
     @Override
     public String provideString()

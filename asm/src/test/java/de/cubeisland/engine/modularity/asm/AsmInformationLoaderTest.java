@@ -24,11 +24,9 @@ package de.cubeisland.engine.modularity.asm;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Set;
-import de.cubeisland.engine.modularity.asm.info.BasicService;
-import de.cubeisland.engine.modularity.asm.info.BasicModule;
+import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
+import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.junit.BeforeClass;
