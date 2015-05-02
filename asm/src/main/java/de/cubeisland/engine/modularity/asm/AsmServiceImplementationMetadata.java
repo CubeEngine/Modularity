@@ -42,6 +42,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
 
         Type type = candidate.getAnnotation(ServiceImpl.class).property("value");
         this.serviceName = type.getClassName();
+        addRequiredDependency(new TypeReference(serviceName));
         ensureIsImplemented(candidate);
     }
 

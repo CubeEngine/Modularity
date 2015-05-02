@@ -54,7 +54,10 @@ public abstract class BasicModularity implements Modularity
     public BasicModularity load(File source)
     {
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
-        // TODO info when nothing was loaded
+        if (loaded.isEmpty())
+        {
+            System.out.println("No DependencyInformation could be extracted from target source!"); // TODO
+        }
         for (DependencyInformation info : loaded)
         {
             infos.put(info.getIdentifier(), info);
@@ -128,61 +131,63 @@ public abstract class BasicModularity implements Modularity
         {
             Map<String, Instance> instances = collectDependencies(info);
             result = start(info, instances);
-            show("Search for impls:", null);
-            for (Instance instance : instances.values())
-            {
-                if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
-                {
-                    for (DependencyInformation impl : infos.values())
-                    {
-                        if (impl instanceof ServiceImplementationMetadata)
-                        {
-                            if (((ServiceImplementationMetadata)impl).getServiceName().equals(
-                                ((ServiceContainer)instance).getInterface().getName()))
-                            {
-                                start(impl, collectDependencies(impl));
-                            }
-                        }
-                    }
-                }
-            }
+            startServiceImplementations(instances);
         }
         else
         {
             show("- get", info);
-
         }
         depth--;
         return result;
     }
 
+    private void startServiceImplementations(Map<String, Instance> instances)
+    {
+        show("Search for impls:", null);
+        for (Instance instance : instances.values())
+        {
+            if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
+            {
+                for (DependencyInformation impl : infos.values())
+                {
+                    if (impl instanceof ServiceImplementationMetadata
+                        && ((ServiceImplementationMetadata)impl).getServiceName().equals(((ServiceContainer)instance).getInterface().getName()))
+                    {
+                        start(impl, collectDependencies(impl));
+                    }
+                }
+            }
+        }
+    }
+
     private Map<String, Instance> collectDependencies(DependencyInformation info)
     {
         show("Collect dependencies of", info);
-        Map<String, Instance> instances = new HashMap<String, Instance>();
-        for (String dep : info.requiredDependencies())
-        {
-            DependencyInformation dependency = infos.get(dep);
-            if (dependency == null)
-            {
-                throw new IllegalStateException("Missing required dependency to: " + dep); // TODO custom Exception
-            }
-            instances.put(dependency.getIdentifier(), getStarted(dependency));
-        }
-        for (String dep : info.optionalDependencies())
-        {
-            DependencyInformation dependency = infos.get(dep);
-            if (dependency == null)
-            {
-                // TODO debug message?
-            }
-            instances.put(dependency.getIdentifier(), getStarted(dependency));
-        }
-
-        return instances;
+        Map<String, Instance> result = new HashMap<String, Instance>();
+        collectDependencies(info.requiredDependencies(), result, true);
+        collectDependencies(info.optionalDependencies(), result, false);
+        return result;
     }
 
-    private Instance start(DependencyInformation info, Map<String, Instance> instances)
+    private void collectDependencies(Set<String> deps, Map<String, Instance> collected, boolean required)
+    {
+        for (String dep : deps)
+        {
+            DependencyInformation dependency = infos.get(dep);
+            if (dependency == null)
+            {
+                if (required)
+                {
+                    throw new IllegalStateException("Missing required dependency to: " + dep); // TODO custom Exception
+                }
+                System.out.println("Missing optional dependency to: " + dep);
+                continue;
+            }
+            collected.put(dependency.getIdentifier(), getStarted(dependency));
+        }
+    }
+
+    private Instance start(DependencyInformation info, Map<String, Instance> deps)
     {
         try
         {
@@ -197,65 +202,13 @@ public abstract class BasicModularity implements Modularity
                 return service;
             }
 
-            Constructor<?> instanceConstructor = null;
-            for (Constructor<?> constructor : instanceClass.getConstructors())
-            {
-                boolean ok = true;
-                for (Class<?> depdendency : constructor.getParameterTypes())
-                {
-                    ok = ok && instances.containsKey(depdendency.getName());
-                    // TODO what if it was optional?
-                }
-                if (ok)
-                {
-                    instanceConstructor = constructor;
-                    break;
-                }
-            }
-            if (instanceConstructor == null)
-            {
-                System.out.println(info.getIdentifier() + " has no Constructor");
-                // TODO error
-            }
-
-            Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
-            Object[] parameters = new Object[parameterTypes.length];
-            for (int i = 0; i < parameterTypes.length; i++)
-            {
-                final Class<?> type = parameterTypes[i];
-                Instance instance = instances.get(type.getName());
-                if (instance instanceof ServiceContainer)
-                {
-                    parameters[i] = ((ServiceContainer)instance).getImplementation();
-                }
-                else
-                {
-                    parameters[i] = instance;
-                }
-            }
-            instanceConstructor.setAccessible(true);
-            Object instance = instanceConstructor.newInstance(parameters);
+            Constructor<?> constructor = getConstructor(info, deps, instanceClass);
+            Object instance = constructor.newInstance(getConstructorParams(deps, constructor));
 
             if (info instanceof ModuleMetadata)
             {
                 this.instances.put(info.getIdentifier(), (Instance)instance);
-                for (Field field : instance.getClass().getDeclaredFields())
-                {
-                    if (field.isAnnotationPresent(Inject.class))
-                    {
-                        Object toSet = instances.get(field.getType().getName());
-                        if (toSet == null)
-                        {
-                            throw new IllegalStateException();
-                        }
-                        if (toSet instanceof ServiceContainer)
-                        {
-                            toSet = ((ServiceContainer)toSet).getImplementation();
-                        }
-                        field.setAccessible(true);
-                        field.set(instance, toSet);
-                    }
-                }
+                injectDependencies(deps, instance);
 
                 return (Instance)instance;
             }
@@ -290,7 +243,75 @@ public abstract class BasicModularity implements Modularity
         return null;
     }
 
+    private void injectDependencies(Map<String, Instance> deps, Object instance) throws IllegalAccessException
+    {
+        for (Field field : instance.getClass().getDeclaredFields())
+        {
+            if (field.isAnnotationPresent(Inject.class))
+            {
+                Object toSet = deps.get(field.getType().getName());
+                if (toSet == null)
+                {
+                    throw new IllegalStateException();
+                }
+                if (toSet instanceof ServiceContainer)
+                {
+                    toSet = ((ServiceContainer)toSet).getImplementation();
+                }
+                field.setAccessible(true);
+                field.set(instance, toSet);
+            }
+        }
+    }
+
+    private Object[] getConstructorParams(Map<String, Instance> deps, Constructor<?> instanceConstructor)
+    {
+        Object[] parameters;
+        Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
+        parameters = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++)
+        {
+            final Class<?> type = parameterTypes[i];
+            Instance instance = deps.get(type.getName());
+            if (instance instanceof ServiceContainer)
+            {
+                parameters[i] = ((ServiceContainer)instance).getImplementation();
+            }
+            else
+            {
+                parameters[i] = instance;
+            }
+        }
+        return parameters;
+    }
+
+    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Instance> deps, Class<?> instanceClass)
+    {
+        Constructor<?> instanceConstructor = null;
+        for (Constructor<?> constructor : instanceClass.getConstructors())
+        {
+            boolean ok = true;
+            for (Class<?> dep : constructor.getParameterTypes())
+            {
+                ok = ok && deps.containsKey(dep.getName());
+                // TODO what if it was optional?
+            }
+            if (ok)
+            {
+                instanceConstructor = constructor;
+                break;
+            }
+        }
+        if (instanceConstructor == null)
+        {
+            throw new IllegalStateException(info.getIdentifier() + " has no usable Constructor");// TODO error
+        }
+        instanceConstructor.setAccessible(true);
+        return instanceConstructor;
+    }
+
     private int depth = -1;
+
     private void show(String show, DependencyInformation clazz)
     {
         for (int i1 = 0; i1 < depth; i1++)
