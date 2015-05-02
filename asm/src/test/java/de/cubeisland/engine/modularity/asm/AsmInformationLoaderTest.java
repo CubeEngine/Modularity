@@ -75,7 +75,7 @@ public class AsmInformationLoaderTest
 
         for (DependencyInformation info : infos)
         {
-            if (info.getIdentifier().equals(BasicModule.class.getName()))
+            if (info.getClassName().equals(BasicModule.class.getName()))
             {
                 // SuchTestingModule:
                 assertTrue(info instanceof ModuleMetadata);

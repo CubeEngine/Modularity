@@ -37,6 +37,8 @@ public interface DependencyInformation
      */
     String getIdentifier();
 
+    String getClassName();
+
     /**
      * Returns the source version if available
      *

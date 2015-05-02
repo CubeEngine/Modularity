@@ -24,11 +24,8 @@ package de.cubeisland.engine.modularity.core.graph;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class DependencyGraph
@@ -62,7 +59,7 @@ public class DependencyGraph
         }
 
         // Resolve dependencies to node
-        List<Node> dependents = unresolved.remove(info.getIdentifier());
+        List<Node> dependents = unresolved.remove(info.getClassName());
         if (dependents != null)
         {
             for (Node dependent : dependents)
@@ -76,7 +73,7 @@ public class DependencyGraph
             root.addChild(node);
         }
 
-        nodes.put(node.getInformation().getIdentifier(), node);
+        nodes.put(node.getInformation().getClassName(), node);
     }
 
     private void resolveDependency(Node node, String id)

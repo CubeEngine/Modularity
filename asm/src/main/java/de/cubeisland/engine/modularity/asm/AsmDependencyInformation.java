@@ -26,7 +26,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.Maybe;
@@ -57,11 +59,11 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             {
                 if (Maybe.class.getName().equals(field.getType().getReferencedClass()))
                 {
-                    addOptionaldDependency(field.getType().getGenericType());
+                    addOptionaldDependency(field.getType().getGenericType(), field.getAnnotation(Version.class));
                 }
                 else
                 {
-                    addRequiredDependency(field.getType());
+                    addRequiredDependency(field.getType(), field.getAnnotation(Version.class));
                 }
             }
         }
@@ -72,23 +74,41 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             {
                 for (TypeReference reference : constructor.getParameterTypes())
                 {
-                    addRequiredDependency(reference);
+                    addRequiredDependency(reference, null); // TODO version
+                    // TODO optional
                 }
             }
         }
     }
 
-    void addOptionaldDependency(TypeReference type)
+    void addOptionaldDependency(TypeReference type, AnnotationCandidate version)
     {
-        optionalDependencies.add(type.getReferencedClass());
+        optionalDependencies.add(getIdentifier(type, version));
     }
 
-    void addRequiredDependency(TypeReference type)
+    private String getIdentifier(TypeReference type, AnnotationCandidate version)
     {
-        requiredDependencies.add(type.getReferencedClass());
+        String identifier = type.getReferencedClass();
+        if (version != null)
+        {
+            identifier += ":" + version.property("value").toString();
+        }
+        return identifier;
     }
 
+    void addRequiredDependency(TypeReference type, AnnotationCandidate version)
+    {
+        requiredDependencies.add(getIdentifier(type, version));
+    }
+
+    @Override
     public String getIdentifier()
+    {
+        return identifier + ":" + getVersion();
+    }
+
+    @Override
+    public String getClassName()
     {
         return identifier;
     }

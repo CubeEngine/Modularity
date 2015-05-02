@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.asm;
 
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
@@ -42,7 +43,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
 
         Type type = candidate.getAnnotation(ServiceImpl.class).property("value");
         this.serviceName = type.getClassName();
-        addRequiredDependency(new TypeReference(serviceName));
+        addRequiredDependency(new TypeReference(serviceName), candidate.getAnnotation(Version.class));
         ensureIsImplemented(candidate);
     }
 

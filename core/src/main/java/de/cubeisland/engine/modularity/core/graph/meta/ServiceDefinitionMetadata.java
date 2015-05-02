@@ -26,4 +26,5 @@ import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public interface ServiceDefinitionMetadata extends DependencyInformation
 {
+
 }

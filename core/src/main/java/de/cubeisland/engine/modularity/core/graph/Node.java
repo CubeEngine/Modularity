@@ -94,7 +94,7 @@ public class Node
         }
         if (information != null && node.information != null)
         {
-            return information.getIdentifier().equals(node.information.getIdentifier());
+            return information.getClassName().equals(node.information.getClassName());
         }
         return false;
 
@@ -103,6 +103,6 @@ public class Node
     @Override
     public int hashCode()
     {
-        return information.getIdentifier().hashCode();
+        return information.getClassName().hashCode();
     }
 }
