@@ -22,32 +22,19 @@
  */
 package de.cubeisland.engine.modularity.asm.info.module2;
 
-import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
-import de.cubeisland.engine.modularity.asm.marker.Version;
+import de.cubeisland.engine.modularity.asm.marker.Service;
 
-@ServiceImpl(BasicService2.class)
-@Version("2")
-public class BasicsServiceImpl2 implements BasicService2
+@Service
+public interface ComplexService
 {
-    private String stripper = "wow";
-    private ComplexModule module;
+    /**
+     * Provides a stripped String
+     * @return the String
+     */
+    String provideString();
 
-    @Inject
-    public BasicsServiceImpl2(ComplexModule module)
-    {
-        this.module = module;
-    }
-
-    @Override
-    public String provideString()
-    {
-        return stripper;
-    }
-
-    @Override
-    public void stripString()
-    {
-        stripper = stripper.trim();
-    }
+    /**
+     * Strips a String and stores it for later use
+     */
+    void stripString();
 }

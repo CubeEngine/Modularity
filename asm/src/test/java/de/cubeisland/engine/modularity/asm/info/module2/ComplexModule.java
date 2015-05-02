@@ -33,7 +33,7 @@ import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 public class ComplexModule implements Module
 {
     @Inject @Optional private BasicService anOptionalService;
-    @Inject private BasicService2 aRequiredService;
+    @Inject private ComplexService aRequiredService;
 
     @Override
     public void onLoad()
