@@ -380,6 +380,7 @@ public abstract class BasicModularity implements Modularity
             {
                 name = "[" + name + "]";
             }
+            name += " " + clazz.getVersion();
         }
         System.out.println(show + " " + name);
     }

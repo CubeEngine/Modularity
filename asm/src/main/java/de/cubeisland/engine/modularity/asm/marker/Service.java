@@ -33,11 +33,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface Service
-{
-    /**
-     * Returns the revision of the implemented service
-     *
-     * @return the revision of the implemented service
-     */
-    int revision() default 1;
-}
+{}

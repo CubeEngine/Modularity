@@ -25,6 +25,7 @@ package de.cubeisland.engine.modularity.asm.info.module3;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.Optional;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;

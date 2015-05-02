@@ -116,7 +116,8 @@ public class AsmInformationLoader implements InformationLoader
                     }
                     else
                     {
-                        System.err.println("Type '" + candidate.getName() + "' has the @ModuleInfo annotation, but cannot be a module!");
+                        System.err.println("Type '" + candidate.getName()
+                                               + "' has the @ModuleInfo annotation, but cannot be a module!");
                     }
                 }
                 else if (candidate.isAnnotatedWith(Service.class))
@@ -127,7 +128,8 @@ public class AsmInformationLoader implements InformationLoader
                     }
                     else
                     {
-                        System.err.println("Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
+                        System.err.println(
+                            "Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
                     }
                 }
                 else if (candidate.isAnnotatedWith(ServiceImpl.class))
@@ -138,18 +140,9 @@ public class AsmInformationLoader implements InformationLoader
                     }
                     else
                     {
-                        System.err.println("Type '" + candidate.getName() + "' has the @ServiceImpl annotation, but cannot be a service-implementation!");
+                        System.err.println("Type '" + candidate.getName()
+                                               + "' has the @ServiceImpl annotation, but cannot be a service-implementation!");
                     }
-                }
-
-                // Version info:
-                if (candidate.isAnnotatedWith(Version.class))
-                {
-                    candidate.setVersion((String)candidate.getAnnotation(Version.class).property("value"));
-                }
-                else
-                {
-                    // TODO get version info from maven version or version in manifest same as sourceversion
                 }
             }
 
@@ -158,18 +151,18 @@ public class AsmInformationLoader implements InformationLoader
                 final TypeCandidate module = iterator.next();
                 if (!implemented(module, Module.class))
                 {
-                    System.err.println("Type '" + module.getName() + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
+                    System.err.println("Type '" + module.getName()
+                                           + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
                     iterator.remove();
                 }
             }
-
-
 
             ModularityClassLoader classLoader = null;
             LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
             if (source.getName().endsWith(".jar"))
             {
-                classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies, modularity.getClass().getClassLoader());
+                classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies,
+                                                        modularity.getClass().getClassLoader());
             }
             else
             {
@@ -215,8 +208,8 @@ public class AsmInformationLoader implements InformationLoader
 
     private Set<TypeCandidate> getCandidates(File file) throws IOException
     {
-        // TODO set classloader
-        String sourceVersion = getSourceVersion(file);
+        String sourceVersion = getManifestInfo(file, "sourceVersion", "unknown-unknown");
+        String version = getManifestInfo(file, "version", "1.0.0");
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
         for (InputStream stream : getStreams(file))
         {
@@ -226,23 +219,31 @@ public class AsmInformationLoader implements InformationLoader
             if (candidate != null)
             {
                 candidate.setSourceVersion(sourceVersion);
+                // Version info:
+                if (candidate.isAnnotatedWith(Version.class))
+                {
+                    version = candidate.getAnnotation(Version.class).property("value");
+                }
+                candidate.setVersion(version);
+
                 candidates.add(candidate);
             }
         }
         return candidates;
     }
 
-    private String getSourceVersion(File file) throws IOException
+    private String getManifestInfo(File file, String key, String def) throws IOException
     {
-        String sourceVersion = "unknown-unknown";
+        String result = def;
         try
         {
             JarFile jarFile = new JarFile(file);
-            sourceVersion = jarFile.getManifest().getMainAttributes().getValue("sourceVersion");
+            result = jarFile.getManifest().getMainAttributes().getValue(key);
         }
         catch (ZipException ignored)
-        {}
-        return sourceVersion;
+        {
+        }
+        return result;
     }
 
     private boolean implemented(TypeCandidate current, Class interfaceToCheck)
@@ -264,7 +265,8 @@ public class AsmInformationLoader implements InformationLoader
         }
         if (current instanceof ClassCandidate)
         {
-            return implemented(knownTypes.get(((ClassCandidate)current).getExtendedClass().getReferencedClass()), interfaceToCheck);
+            return implemented(knownTypes.get(((ClassCandidate)current).getExtendedClass().getReferencedClass()),
+                               interfaceToCheck);
         }
         return false;
     }
@@ -291,6 +293,4 @@ public class AsmInformationLoader implements InformationLoader
         }
         return list;
     }
-
-
 }

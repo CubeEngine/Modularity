@@ -1,7 +1,2 @@
 Manifest-Version: 1.0
 sourceVersion: branch-somehashvalue
-Archiver-Version: Plexus Archiver
-Built-By: ANSELM
-Created-By: Apache Maven 3.2.3
-Build-Jdk: 1.8.0_25
-

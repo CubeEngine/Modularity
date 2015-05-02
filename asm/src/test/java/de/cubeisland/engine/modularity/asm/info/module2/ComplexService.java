@@ -23,8 +23,10 @@
 package de.cubeisland.engine.modularity.asm.info.module2;
 
 import de.cubeisland.engine.modularity.asm.marker.Service;
+import de.cubeisland.engine.modularity.asm.marker.Version;
 
 @Service
+@Version("3")
 public interface ComplexService
 {
     /**
