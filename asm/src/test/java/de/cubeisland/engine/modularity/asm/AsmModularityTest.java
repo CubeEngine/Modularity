@@ -30,6 +30,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
 import de.cubeisland.engine.modularity.asm.info.module2.ComplexModule;
+import de.cubeisland.engine.modularity.core.BasicModularity;
 import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,9 +43,12 @@ public class AsmModularityTest
     public static final File JAR_TARGET_DIR = new File("target/test-classes/");
     public static final File CLASS_SOURCE_DIR = new File("target/test-classes/de/cubeisland/engine/modularity/asm/info/");
 
+    private static Modularity modularity;
+
     @BeforeClass
     public static void setup() throws IOException
     {
+        modularity = new AsmModularity().load(new File("target/test-classes/"));
         for (File dir : CLASS_SOURCE_DIR.listFiles())
         {
             if (dir.isDirectory())
@@ -76,22 +80,14 @@ public class AsmModularityTest
     }
 
     @Test
-    public void testModularity()
+    public void testBasicModule()
     {
-        Modularity modularity = new AsmModularity().load(new File("target/test-classes/"));
-
-        assertTrue(modularity.start(ComplexModule.class.getName()));
-
         assertTrue(modularity.start(BasicModule.class.getName()));
+    }
 
-
-        try
-        {
-            Thread.sleep(1000);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
+    @Test
+    public void testComplexModule()
+    {
+        assertTrue(modularity.start(ComplexModule.class.getName()));
     }
 }
