@@ -28,11 +28,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.FIELD})
 public @interface Version
 {
     /**
      * Returns true when required and false when optional
      */
-    String value();
+    int value();
 }

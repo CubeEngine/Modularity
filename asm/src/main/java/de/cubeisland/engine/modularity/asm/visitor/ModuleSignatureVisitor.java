@@ -20,52 +20,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info.module3;
+package de.cubeisland.engine.modularity.asm.visitor;
 
-import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.signature.SignatureVisitor;
 
-@ModuleInfo(name = "basic2", description = "just testing")
-public class BasicModule2 implements Module
+public class ModuleSignatureVisitor extends SignatureVisitor
 {
-    private BasicService service;
+    private boolean nextType = false;
+    private TypeReference type;
 
-    @Inject
-    public BasicModule2(BasicService service)
+    public ModuleSignatureVisitor(TypeReference type)
     {
-        this.service = service;
+        super(Opcodes.ASM5);
+        this.type = type;
     }
 
     @Override
-    public void onLoad()
+    public void visitClassType(String name)
     {
-
+        if (nextType)
+        {
+            type.setGenericType(ModuleClassVisitor.refForObjectType(name));
+        }
     }
 
     @Override
-    public void onEnable()
+    public SignatureVisitor visitTypeArgument(char wildcard)
     {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
+        nextType = true;
+        return super.visitTypeArgument(wildcard);
     }
 }

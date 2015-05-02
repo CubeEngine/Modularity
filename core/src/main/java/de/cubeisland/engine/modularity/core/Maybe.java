@@ -20,52 +20,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info.module3;
+package de.cubeisland.engine.modularity.core;
 
-import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
-
-@ModuleInfo(name = "basic2", description = "just testing")
-public class BasicModule2 implements Module
+public interface Maybe<T>
 {
-    private BasicService service;
+    /**
+     * Returns a T if available
+     *
+     * @return maybe returns a T
+     */
+    T value();
 
-    @Inject
-    public BasicModule2(BasicService service)
-    {
-        this.service = service;
-    }
-
-    @Override
-    public void onLoad()
-    {
-
-    }
-
-    @Override
-    public void onEnable()
-    {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
-    }
+    /**
+     * Returns whether a T is available
+     *
+     * @return whether a T is available
+     */
+    boolean isAvailable();
 }

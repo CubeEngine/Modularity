@@ -27,7 +27,7 @@ import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 
 @ServiceImpl(ComplexService.class)
-@Version("2")
+@Version(3)
 public class ComplexServiceImpl implements ComplexService
 {
     private String stripper = "wow";

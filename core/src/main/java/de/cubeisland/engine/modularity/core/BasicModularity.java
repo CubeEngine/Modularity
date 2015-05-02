@@ -26,6 +26,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -237,14 +238,24 @@ public abstract class BasicModularity implements Modularity
         {
             if (field.isAnnotationPresent(Inject.class))
             {
-                Object toSet = deps.get(field.getType().getName());
-                if (toSet == null)
+                Class<?> type = field.getType();
+                boolean maybe = Maybe.class.equals(type);
+                if (maybe)
+                {
+                    type = (Class)((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
+                }
+                Object toSet = deps.get(type.getName());
+                if (!maybe && toSet == null)
                 {
                     throw new IllegalStateException();
                 }
                 if (toSet instanceof ServiceContainer)
                 {
                     toSet = ((ServiceContainer)toSet).getImplementation();
+                }
+                if (maybe)
+                {
+                    toSet = new SettableMaybe(toSet); // TODO save to be able to provide/remove module later
                 }
                 field.setAccessible(true);
                 field.set(instance, toSet);

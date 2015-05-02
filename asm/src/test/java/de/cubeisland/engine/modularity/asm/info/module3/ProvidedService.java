@@ -26,7 +26,7 @@ import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 
 @Service
-@Version("1")
+@Version(1)
 public interface ProvidedService
 {
     /**

@@ -26,7 +26,7 @@ import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 
 @ServiceImpl(ProvidedService.class)
-@Version("2")
+@Version(1)
 public class ProvidedServiceImpl implements ProvidedService
 {
     public static String stripper = "wow";

@@ -26,6 +26,8 @@ public class TypeReference
 {
     private final String referencedClass;
 
+    private TypeReference genericType;
+
     public TypeReference(String referencedClass)
     {
         this.referencedClass = referencedClass;
@@ -68,5 +70,15 @@ public class TypeReference
     public int hashCode()
     {
         return referencedClass != null ? referencedClass.hashCode() : 0;
+    }
+
+    public void setGenericType(TypeReference genericType)
+    {
+        this.genericType = genericType;
+    }
+
+    public TypeReference getGenericType()
+    {
+        return genericType;
     }
 }

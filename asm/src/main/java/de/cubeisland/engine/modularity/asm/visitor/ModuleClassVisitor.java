@@ -43,6 +43,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.signature.SignatureReader;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -102,6 +103,10 @@ public class ModuleClassVisitor extends ClassVisitor
         }
         FieldCandidate fieldCandidate = new FieldCandidate(candidate.newReference(), name, parseFieldModifiers(access), refForType(desc), value);
         candidate.addField(fieldCandidate);
+        if (signature != null)
+        {
+            new SignatureReader(signature).acceptType(new ModuleSignatureVisitor(fieldCandidate.getType()));
+        }
         return new ModuleFieldVisitor(fieldCandidate);
     }
 
@@ -112,7 +117,6 @@ public class ModuleClassVisitor extends ClassVisitor
         {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
-
 
         final TypeReference self = candidate.newReference();
         final int modifiers = parseMethodModifiers(access);

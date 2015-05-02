@@ -1,2 +1,3 @@
 Manifest-Version: 1.0
 sourceVersion: branch-somehashvalue
+version: 1.2.3

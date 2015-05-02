@@ -209,7 +209,7 @@ public class AsmInformationLoader implements InformationLoader
     private Set<TypeCandidate> getCandidates(File file) throws IOException
     {
         String sourceVersion = getManifestInfo(file, "sourceVersion", "unknown-unknown");
-        String version = getManifestInfo(file, "version", "1.0.0");
+        String version = getManifestInfo(file, "version", "unknown");
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
         for (InputStream stream : getStreams(file))
         {
@@ -222,7 +222,7 @@ public class AsmInformationLoader implements InformationLoader
                 // Version info:
                 if (candidate.isAnnotatedWith(Version.class))
                 {
-                    version = candidate.getAnnotation(Version.class).property("value");
+                    version = candidate.getAnnotation(Version.class).property("value").toString();
                 }
                 candidate.setVersion(version);
 
@@ -242,6 +242,10 @@ public class AsmInformationLoader implements InformationLoader
         }
         catch (ZipException ignored)
         {
+        }
+        if (result == null)
+        {
+            result = def;
         }
         return result;
     }

@@ -26,12 +26,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
-import javax.swing.text.html.Option;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
+import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
-import de.cubeisland.engine.modularity.core.Optional;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public abstract class AsmDependencyInformation implements DependencyInformation
@@ -56,9 +55,9 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         {
             if (field.isAnnotatedWith(Inject.class))
             {
-                if (field.isAnnotatedWith(Optional.class))
+                if (Maybe.class.getName().equals(field.getType().getReferencedClass()))
                 {
-                    addOptionaldDependency(field.getType());
+                    addOptionaldDependency(field.getType().getGenericType());
                 }
                 else
                 {

@@ -22,13 +22,34 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Optional
+public final class SettableMaybe<T> implements Maybe<T>
 {
+    private T value;
+
+    public SettableMaybe()
+    {
+        this(null);
+    }
+
+    public SettableMaybe(T value)
+    {
+        this.value = value;
+    }
+
+    @Override
+    public T value()
+    {
+        return value;
+    }
+
+    @Override
+    public boolean isAvailable()
+    {
+        return value != null;
+    }
+
+    void provide(T value)
+    {
+        this.value = value;
+    }
 }

@@ -40,11 +40,4 @@ public @interface ServiceImpl
      * @return the implemented Interface
      */
     Class value();
-
-    /**
-     * Returns the revision of the implemented service
-     *
-     * @return the revision of the implemented service
-     */
-    int revision() default 1;
 }

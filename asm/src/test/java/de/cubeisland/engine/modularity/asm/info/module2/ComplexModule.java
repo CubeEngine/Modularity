@@ -25,16 +25,14 @@ package de.cubeisland.engine.modularity.asm.info.module2;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.asm.marker.Version;
+import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.Optional;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 @ModuleInfo(name = "complex", description = "just testing")
-@Version("3")
 public class ComplexModule implements Module
 {
-    @Inject @Optional private BasicService anOptionalService;
+    @Inject private Maybe<BasicService> anOptionalService;
     @Inject private ComplexService aRequiredService;
 
     @Override
