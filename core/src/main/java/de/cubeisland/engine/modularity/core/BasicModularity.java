@@ -143,7 +143,7 @@ public abstract class BasicModularity implements Modularity
 
     private void startServiceImplementations(Map<String, Instance> instances)
     {
-        show("Search for impls:", null);
+        show("Search for impls <", null);
         for (Instance instance : instances.values())
         {
             if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
@@ -151,6 +151,7 @@ public abstract class BasicModularity implements Modularity
                 startServiceImplementation((ServiceContainer)instance);
             }
         }
+        show(">", null);
     }
 
     private void startServiceImplementation(ServiceContainer instance)
