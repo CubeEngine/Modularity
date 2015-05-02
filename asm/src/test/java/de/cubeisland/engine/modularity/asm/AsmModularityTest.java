@@ -31,12 +31,14 @@ import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
 import de.cubeisland.engine.modularity.asm.info.module2.ComplexModule;
 import de.cubeisland.engine.modularity.asm.info.module3.BasicModule2;
-import de.cubeisland.engine.modularity.core.BasicModularity;
+import de.cubeisland.engine.modularity.asm.info.module3.ProvidedService;
+import de.cubeisland.engine.modularity.asm.info.module3.ProvidedServiceImpl;
 import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class AsmModularityTest
 {
@@ -83,18 +85,20 @@ public class AsmModularityTest
     @Test
     public void testBasicModule()
     {
-        assertTrue(modularity.start(BasicModule.class.getName()));
+        assertNotNull(modularity.getStarted(BasicModule.class));
     }
 
     @Test
     public void testComplexModule()
     {
-        assertTrue(modularity.start(ComplexModule.class.getName()));
+        assertNotNull(modularity.getStarted(ComplexModule.class));
     }
 
     @Test
     public void testBasicModule2()
     {
-        assertTrue(modularity.start(BasicModule2.class.getName()));
+        assertNotNull(modularity.getStarted(BasicModule2.class)); // Starts Module
+        assertNotNull(modularity.getStarted(ProvidedService.class)); // Starts Service + Impl
+        assertNull(modularity.getStarted(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
 }

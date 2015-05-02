@@ -38,18 +38,6 @@ public class AsmModularity extends BasicModularity
     }
 
     @Override
-    public Instance getNode(String identifier)
-    {
-        return null;
-    }
-
-    @Override
-    public <T extends Instance> T getNode(Class<T> type)
-    {
-        return null;
-    }
-
-    @Override
     public Set<Instance> getNodes()
     {
         return null;

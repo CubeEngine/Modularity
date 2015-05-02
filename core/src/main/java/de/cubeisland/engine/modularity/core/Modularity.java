@@ -44,7 +44,7 @@ public interface Modularity
      *
      * @return true if the module was loaded
      */
-    boolean start(String identifier);
+    Object getStarted(String identifier);
 
     /**
      * Returns the InformationLoader
@@ -53,9 +53,7 @@ public interface Modularity
      */
     InformationLoader getLoader();
 
-    Instance getNode(String identifier);
-
-    <T extends Instance> T getNode(Class<T> type);
+    <T> T getStarted(Class<T> type);
 
     Set<Instance> getNodes();
 

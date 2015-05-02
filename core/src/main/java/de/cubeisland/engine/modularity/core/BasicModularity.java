@@ -33,8 +33,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-import de.cubeisland.engine.modularity.core.graph.Node;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
@@ -75,47 +73,22 @@ public abstract class BasicModularity implements Modularity
             graph.addNode(info);
         }
 
-        /*
-        Node root = graph.getRoot();
-
-        showChildren(root, 0);
-        System.out.println("\n");
-        System.out.println("Unresolved Dependencies:");
-        for (Entry<String, List<Node>> entry : graph.getUnresolved().entrySet())
-        {
-            System.out.println(entry.getKey() + ":");
-            for (Node node : entry.getValue())
-            {
-                System.out.println("\t" + node.getInformation().getIdentifier());
-            }
-        }
-        */
         return this;
     }
 
     @Override
-    public boolean start(String identifier)
+    public Object getStarted(String identifier)
     {
-        System.out.println("Starting " + identifier + "...");
         DependencyInformation info = infos.get(identifier);
-        if (info == null)
+        if (info == null || info instanceof ServiceImplementationMetadata) // Not found OR Implementation
         {
-            return false;
+            return null;
         }
-        this.getStarted(info);
+        System.out.println("Starting " + identifier + "...");
+        Instance started = this.getStarted(info);
         System.out.println("done.\n");
-        Set<DependencyInformation> infos = infosByClassLoader.get(info.getClassLoader());
-        if (infos != null)
-        {
-            for (DependencyInformation depInfo : infos)
-            {
-                if (depInfo != info)
-                {
-                    this.getStarted(depInfo);
-                }
-            }
-        }
-        return true;
+
+        return started instanceof ServiceContainer ? ((ServiceContainer)started).getImplementation() : started;
     }
 
     private Instance getStarted(DependencyInformation info)
@@ -131,6 +104,7 @@ public abstract class BasicModularity implements Modularity
         {
             Map<String, Instance> instances = collectDependencies(info);
             result = start(info, instances);
+            instances.put(info.getIdentifier(), result);
             startServiceImplementations(instances);
         }
         else
@@ -151,7 +125,8 @@ public abstract class BasicModularity implements Modularity
                 for (DependencyInformation impl : infos.values())
                 {
                     if (impl instanceof ServiceImplementationMetadata
-                        && ((ServiceImplementationMetadata)impl).getServiceName().equals(((ServiceContainer)instance).getInterface().getName()))
+                        && ((ServiceImplementationMetadata)impl).getServiceName().equals(
+                        ((ServiceContainer)instance).getInterface().getName()))
                     {
                         start(impl, collectDependencies(impl));
                     }
@@ -192,35 +167,34 @@ public abstract class BasicModularity implements Modularity
         try
         {
             show("Start", info);
-
             Class<?> instanceClass = Class.forName(info.getIdentifier(), true, info.getClassLoader());
+            Instance instance;
             if (info instanceof ServiceDefinitionMetadata)
             {
                 serviceManager.registerService(info, instanceClass);
-                ServiceContainer<?> service = serviceManager.getService(instanceClass);
-                this.instances.put(info.getIdentifier(), service);
-                return service;
+                instance = serviceManager.getService(instanceClass);
             }
-
-            Constructor<?> constructor = getConstructor(info, deps, instanceClass);
-            Object instance = constructor.newInstance(getConstructorParams(deps, constructor));
-
-            if (info instanceof ModuleMetadata)
+            else // Module or ServiceImpl
             {
-                this.instances.put(info.getIdentifier(), (Instance)instance);
-                injectDependencies(deps, instance);
-
-                return (Instance)instance;
+                Constructor<?> constructor = getConstructor(info, deps, instanceClass);
+                Object created = constructor.newInstance(getConstructorParams(deps, constructor));
+                injectDependencies(deps, created);
+                if (info instanceof ServiceImplementationMetadata)
+                {
+                    Class serviceClass = Class.forName(((ServiceImplementationMetadata)info).getServiceName(), true,
+                                                       info.getClassLoader());
+                    serviceManager.registerService(serviceClass, created);
+                    return serviceManager.getService(serviceClass);
+                }
+                instance = (Instance)created;
             }
-            else if (info instanceof ServiceImplementationMetadata)
+            if (instance == null)
             {
-                Class serviceClass = Class.forName(((ServiceImplementationMetadata)info).getServiceName(), true,
-                                                   info.getClassLoader());
-                serviceManager.registerService(serviceClass, instance);
-                ServiceContainer service = serviceManager.getService(serviceClass);
-                this.instances.put(service.getInfo().getIdentifier(), service);
-                return service;
+                throw new IllegalStateException();
             }
+
+            this.instances.put(info.getIdentifier(), instance);
+            return instance;
         }
         catch (ClassNotFoundException e)
         {
@@ -285,7 +259,8 @@ public abstract class BasicModularity implements Modularity
         return parameters;
     }
 
-    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Instance> deps, Class<?> instanceClass)
+    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Instance> deps,
+                                          Class<?> instanceClass)
     {
         Constructor<?> instanceConstructor = null;
         for (Constructor<?> constructor : instanceClass.getConstructors())
@@ -311,57 +286,6 @@ public abstract class BasicModularity implements Modularity
     }
 
     private int depth = -1;
-
-    private void show(String show, DependencyInformation clazz)
-    {
-        for (int i1 = 0; i1 < depth; i1++)
-        {
-            System.out.print("\t");
-        }
-        String name = clazz == null ? "" : clazz.getIdentifier();
-        name = name.substring(name.lastIndexOf(".") + 1);
-        if (clazz != null)
-        {
-            String id = clazz.getIdentifier();
-            if (clazz instanceof ServiceImplementationMetadata)
-            {
-                id = ((ServiceImplementationMetadata)clazz).getServiceName();
-            }
-            Instance instance = instances.get(id);
-            if (instance != null)
-            {
-                if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
-                {
-                    name = "[" + name + "]";
-                }
-            }
-            else
-            {
-                name = "[" + name + "]";
-            }
-        }
-        System.out.println(show + " " + name);
-    }
-
-
-    private void showChildren(Node root, int depth)
-    {
-        for (Node node : root.getChildren())
-        {
-            for (int i = 0; i < depth; i++)
-            {
-                System.out.print("  ");
-            }
-            System.out.println(node.getInformation().getIdentifier());
-        }
-        for (Node node : root.getChildren())
-        {
-            if (!node.getChildren().isEmpty())
-            {
-                showChildren(node, depth + 1);
-            }
-        }
-    }
 
     @Override
     public Class<?> getClazz(String name, Set<String> dependencies)
@@ -413,5 +337,43 @@ public abstract class BasicModularity implements Modularity
     public Set<Module> getModules()
     {
         return null; // TODO
+    }
+
+    private void show(String show, DependencyInformation clazz)
+    {
+        for (int i1 = 0; i1 < depth; i1++)
+        {
+            System.out.print("\t");
+        }
+        String name = clazz == null ? "" : clazz.getIdentifier();
+        name = name.substring(name.lastIndexOf(".") + 1);
+        if (clazz != null)
+        {
+            String id = clazz.getIdentifier();
+            if (clazz instanceof ServiceImplementationMetadata)
+            {
+                id = ((ServiceImplementationMetadata)clazz).getServiceName();
+            }
+            Instance instance = instances.get(id);
+            if (instance != null)
+            {
+                if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
+                {
+                    name = "[" + name + "]";
+                }
+            }
+            else
+            {
+                name = "[" + name + "]";
+            }
+        }
+        System.out.println(show + " " + name);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getStarted(Class<T> type)
+    {
+        return (T)getStarted(type.getName());
     }
 }
