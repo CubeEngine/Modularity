@@ -30,6 +30,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
 import de.cubeisland.engine.modularity.asm.info.module2.ComplexModule;
+import de.cubeisland.engine.modularity.asm.info.module3.BasicModule2;
 import de.cubeisland.engine.modularity.core.BasicModularity;
 import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
@@ -89,5 +90,11 @@ public class AsmModularityTest
     public void testComplexModule()
     {
         assertTrue(modularity.start(ComplexModule.class.getName()));
+    }
+
+    @Test
+    public void testBasicModule2()
+    {
+        assertTrue(modularity.start(BasicModule2.class.getName()));
     }
 }

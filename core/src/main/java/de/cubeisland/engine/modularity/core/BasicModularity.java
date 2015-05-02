@@ -343,7 +343,7 @@ public abstract class BasicModularity implements Modularity
     }
 
     @Override
-    public Class<?> getClazz(Set<String> dependencies, String name)
+    public Class<?> getClazz(String name, Set<String> dependencies)
     {
         if (name == null)
         {

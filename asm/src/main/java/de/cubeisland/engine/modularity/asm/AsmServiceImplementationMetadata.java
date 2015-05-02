@@ -22,11 +22,9 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 import org.objectweb.asm.Type;
 
@@ -39,17 +37,8 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
 
     public AsmServiceImplementationMetadata(ClassCandidate candidate)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getClassLoader());
-        for (ConstructorCandidate constructor : candidate.getConstructors())
-        {
-            if (constructor.isAnnotatedWith(Inject.class))
-            {
-                for (TypeReference reference : constructor.getParameterTypes())
-                {
-                    addRequiredDependency(reference);
-                }
-            }
-        }
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(),
+              candidate.getConstructors(), candidate.getClassLoader());
 
         Type type = candidate.getAnnotation(ServiceImpl.class).property("value");
         this.serviceName = type.getClassName();

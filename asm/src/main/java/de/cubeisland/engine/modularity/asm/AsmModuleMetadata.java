@@ -39,7 +39,7 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
 
     public AsmModuleMetadata(ClassCandidate candidate)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getClassLoader());
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getConstructors(), candidate.getClassLoader());
         AnnotationCandidate moduleInfo = candidate.getAnnotation(ModuleInfo.class);
         this.name = moduleInfo.property("name");
         this.description = moduleInfo.property("description");

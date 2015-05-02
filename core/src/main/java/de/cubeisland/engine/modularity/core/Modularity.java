@@ -24,7 +24,6 @@ package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 import java.util.Set;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 
 public interface Modularity
@@ -38,8 +37,20 @@ public interface Modularity
      */
     BasicModularity load(File source);
 
+    /**
+     * Attempts to start a Module with given identifier.
+     *
+     * @param identifier the identifier
+     *
+     * @return true if the module was loaded
+     */
     boolean start(String identifier);
 
+    /**
+     * Returns the InformationLoader
+     *
+     * @return the InformationLoader
+     */
     InformationLoader getLoader();
 
     Instance getNode(String identifier);
@@ -52,5 +63,13 @@ public interface Modularity
 
     Set<ServiceContainer<?>> getServices();
 
-    Class<?> getClazz(Set<String> dependencies, String name);
+    /**
+     * Returns the loaded class with given name. Searching first in the ClassLoaders of the dependencies.
+     *
+     * @param name         the name of the class to load
+     * @param dependencies the dependencies
+     *
+     * @return the loaded class or null if not found
+     */
+    Class<?> getClazz(String name, Set<String> dependencies);
 }

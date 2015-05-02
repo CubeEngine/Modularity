@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.swing.text.html.Option;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.Optional;
@@ -43,7 +44,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private final Set<String> optionalDependencies = new HashSet<String>();
 
     public AsmDependencyInformation(String identifier, String version, String sourceVersion, Set<FieldCandidate> fields,
-                                    ModularityClassLoader classLoader)
+                                    Set<ConstructorCandidate> constructors, ModularityClassLoader classLoader)
     {
         this.identifier = identifier;
         this.version = version;
@@ -62,6 +63,17 @@ public abstract class AsmDependencyInformation implements DependencyInformation
                 else
                 {
                     addRequiredDependency(field.getType());
+                }
+            }
+        }
+
+        for (ConstructorCandidate constructor : constructors)
+        {
+            if (constructor.isAnnotatedWith(Inject.class))
+            {
+                for (TypeReference reference : constructor.getParameterTypes())
+                {
+                    addRequiredDependency(reference);
                 }
             }
         }

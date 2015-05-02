@@ -20,19 +20,53 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.info.module3;
 
-import java.util.Collections;
-import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
+import javax.inject.Inject;
+import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
+import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.Optional;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-public class AsmServiceDefinitionMetadata extends AsmDependencyInformation implements ServiceDefinitionMetadata
+@ModuleInfo(name = "complex", description = "just testing")
+public class BasicModule2 implements Module
 {
-    public AsmServiceDefinitionMetadata(InterfaceCandidate candidate)
+    private BasicService service;
+
+    @Inject
+    public BasicModule2(BasicService service)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), Collections.<FieldCandidate>emptySet(),
-              Collections.<ConstructorCandidate>emptySet(), candidate.getClassLoader());
+        this.service = service;
+    }
+
+    @Override
+    public void onLoad()
+    {
+
+    }
+
+    @Override
+    public void onEnable()
+    {
+
+    }
+
+    @Override
+    public void onDisable()
+    {
+
+    }
+
+    @Override
+    public void onUnload()
+    {
+
+    }
+
+    @Override
+    public ModuleMetadata getInformation()
+    {
+        return null;
     }
 }

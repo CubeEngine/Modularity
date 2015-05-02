@@ -60,7 +60,6 @@ import org.objectweb.asm.ClassReader;
 public class AsmInformationLoader implements InformationLoader
 {
     private final Map<String, TypeCandidate> knownTypes = new HashMap<String, TypeCandidate>();
-    private final Map<File, ModularityClassLoader> classLoaders = new HashMap<File, ModularityClassLoader>();
 
     private final Modularity modularity;
 

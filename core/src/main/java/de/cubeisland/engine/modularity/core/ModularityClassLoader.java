@@ -24,12 +24,9 @@ package de.cubeisland.engine.modularity.core;
 
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 /**
  * The ClassLoader for a single file
@@ -67,7 +64,7 @@ public class ModularityClassLoader extends URLClassLoader
 
             if (clazz == null && global)
             {
-                clazz = modularity.getClazz(dependencies, name);
+                clazz = modularity.getClazz(name, dependencies);
             }
 
             if (clazz == null)
@@ -82,6 +79,12 @@ public class ModularityClassLoader extends URLClassLoader
     @Override
     public URL getResource(String name)
     {
-        return super.getResource(name); // TODO
+        // This method got overridden to first search through the current ClassLoader
+        URL url = findResource(name);
+        if (url == null)
+        {
+            return super.getResource(name);
+        }
+        return url;
     }
 }
