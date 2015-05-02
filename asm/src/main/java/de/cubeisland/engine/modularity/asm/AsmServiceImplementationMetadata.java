@@ -58,7 +58,6 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
         }
         if (!implemented)
         {
-            // TODO Proxy forwarding to methods? OR fancy mixin stuff?
             throw new IllegalArgumentException("Given Class Candidate declares implementing a Service but is not!");
         }
     }

@@ -47,6 +47,7 @@ public abstract class BasicModularity implements Modularity
     private final Map<String, Instance> instances = new HashMap<String, Instance>();
 
     private final ServiceManager serviceManager = new ServiceManager();
+    // TODO external Service Provider / (no interface)
 
     @Override
     public BasicModularity load(File source)

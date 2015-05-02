@@ -25,13 +25,33 @@ package de.cubeisland.engine.modularity.core.graph.meta;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
+/**
+ * Describes metadata for a module
+ */
 public interface ModuleMetadata extends DependencyInformation
 {
+    /**
+     * Returns the name
+     *
+     * @return the name
+     */
     String getName();
 
+    /**
+     * Returns a short description
+     * @return the description
+     */
     String getDescription();
 
+    /**
+     * Returns the authors
+     * @return the authors
+     */
     Set<String> getAuthors();
 
+    /**
+     * Returns the identifiers of other modules which should be started before this one
+     * @return the modules to load before
+     */
     Set<String> loadAfter();
 }

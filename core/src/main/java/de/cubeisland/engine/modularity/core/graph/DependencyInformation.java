@@ -25,17 +25,50 @@ package de.cubeisland.engine.modularity.core.graph;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 
+/**
+ * Describes basic DependencyInformation
+ */
 public interface DependencyInformation
 {
+    /**
+     * Returns the identifier, which also is the class
+     *
+     * @return the identifier
+     */
     String getIdentifier();
 
+    /**
+     * Returns the source version if available
+     *
+     * @return the source version or null
+     */
     String getSourceVersion();
 
+    /**
+     * Returns the version
+     *
+     * @return the version
+     */
     String getVersion();
 
+    /**
+     * Returns a set of required dependencies
+     *
+     * @return the required dependencies
+     */
     Set<String> requiredDependencies();
 
+    /**
+     * Returns a set of optional dependencies
+     *
+     * @return the optional dependencies
+     */
     Set<String> optionalDependencies();
 
+    /**
+     * Returns the responsible ModularityClassLoader
+     *
+     * @return the ModularityClassLoader
+     */
     ModularityClassLoader getClassLoader();
 }
