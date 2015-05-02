@@ -29,7 +29,7 @@ import de.cubeisland.engine.modularity.asm.marker.Version;
 @Version("2")
 public class ProvidedServiceImpl implements ProvidedService
 {
-    private String stripper = "wow";
+    public static String stripper = "wow";
 
     @Override
     public String provideString()

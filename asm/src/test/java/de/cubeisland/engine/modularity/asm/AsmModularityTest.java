@@ -37,6 +37,7 @@ import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -98,7 +99,9 @@ public class AsmModularityTest
     public void testBasicModule2()
     {
         assertNotNull(modularity.getStarted(BasicModule2.class)); // Starts Module
-        assertNotNull(modularity.getStarted(ProvidedService.class)); // Starts Service + Impl
+        ProvidedService started = modularity.getStarted(ProvidedService.class);  // Starts Service + Impl
+        assertNotNull(started);
+        assertEquals(ProvidedServiceImpl.stripper, started.provideString());
         assertNull(modularity.getStarted(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
 }

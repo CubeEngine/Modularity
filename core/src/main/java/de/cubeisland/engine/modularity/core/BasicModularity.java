@@ -85,10 +85,19 @@ public abstract class BasicModularity implements Modularity
             return null;
         }
         System.out.println("Starting " + identifier + "...");
-        Instance started = this.getStarted(info);
-        System.out.println("done.\n");
 
-        return started instanceof ServiceContainer ? ((ServiceContainer)started).getImplementation() : started;
+        Instance instance = this.getStarted(info);
+        Object result = instance;
+        if (instance instanceof ServiceContainer)
+        {
+            if (!((ServiceContainer)instance).hasImplementations())
+            {
+                startServiceImplementation((ServiceContainer)instance);
+            }
+            result = ((ServiceContainer)instance).getImplementation();
+        }
+        System.out.println("done.\n");
+        return result;
     }
 
     private Instance getStarted(DependencyInformation info)
@@ -104,7 +113,6 @@ public abstract class BasicModularity implements Modularity
         {
             Map<String, Instance> instances = collectDependencies(info);
             result = start(info, instances);
-            instances.put(info.getIdentifier(), result);
             startServiceImplementations(instances);
         }
         else
@@ -122,15 +130,20 @@ public abstract class BasicModularity implements Modularity
         {
             if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
             {
-                for (DependencyInformation impl : infos.values())
-                {
-                    if (impl instanceof ServiceImplementationMetadata
-                        && ((ServiceImplementationMetadata)impl).getServiceName().equals(
-                        ((ServiceContainer)instance).getInterface().getName()))
-                    {
-                        start(impl, collectDependencies(impl));
-                    }
-                }
+                startServiceImplementation((ServiceContainer)instance);
+            }
+        }
+    }
+
+    private void startServiceImplementation(ServiceContainer instance)
+    {
+        for (DependencyInformation impl : infos.values())
+        {
+            if (impl instanceof ServiceImplementationMetadata
+                && ((ServiceImplementationMetadata)impl).getServiceName().equals(
+                instance.getInterface().getName()))
+            {
+                start(impl, collectDependencies(impl));
             }
         }
     }
