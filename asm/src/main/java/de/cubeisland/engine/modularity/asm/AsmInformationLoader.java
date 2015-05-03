@@ -232,7 +232,7 @@ public class AsmInformationLoader implements InformationLoader
         return candidates;
     }
 
-    private String getManifestInfo(File file, String key, String def) throws IOException
+    public static String getManifestInfo(File file, String key, String def) throws IOException
     {
         String result = def;
         try

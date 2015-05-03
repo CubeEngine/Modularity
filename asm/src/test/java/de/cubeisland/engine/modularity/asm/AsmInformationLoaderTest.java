@@ -80,7 +80,7 @@ public class AsmInformationLoaderTest
                 // SuchTestingModule:
                 assertTrue(info instanceof ModuleMetadata);
                 assertEquals("basic", ((ModuleMetadata)info).getName());
-                assertTrue(info.optionalDependencies().contains(BasicService.class.getName()));
+                assertTrue(info.optionalDependencies().contains(BasicService.class.getName() + ":1"));
             }
 
         }
