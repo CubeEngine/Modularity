@@ -24,7 +24,10 @@ package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
+import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
+import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
 public interface Modularity
 {
@@ -70,4 +73,8 @@ public interface Modularity
      * @return the loaded class or null if not found
      */
     Class<?> getClazz(String name, Set<String> dependencies);
+
+    DependencyGraph getGraph();
+
+    ServiceManager getServiceManager();
 }

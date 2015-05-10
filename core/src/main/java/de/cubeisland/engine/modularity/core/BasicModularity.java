@@ -38,6 +38,7 @@ import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
+import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
@@ -56,6 +57,7 @@ public abstract class BasicModularity implements Modularity
     @Override
     public BasicModularity load(File source)
     {
+
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         if (loaded.isEmpty())
         {
@@ -63,6 +65,10 @@ public abstract class BasicModularity implements Modularity
         }
         for (DependencyInformation info : loaded)
         {
+            if (!(info instanceof ServiceImplementationMetadata))
+            {
+                graph.addNode(info);
+            }
             if (info instanceof ModuleMetadata)
             {
                 modules.put(info.getClassName(), (ModuleMetadata)info);
@@ -85,12 +91,6 @@ public abstract class BasicModularity implements Modularity
             }
             set.add(info);
         }
-
-        for (DependencyInformation info : modules.values())
-        {
-            graph.addNode(info);
-        }
-
         return this;
     }
 
@@ -104,21 +104,21 @@ public abstract class BasicModularity implements Modularity
         }
         System.out.println("Starting " + identifier + "...");
 
-        Instance instance = this.getStarted(info);
+        Object instance = this.getStarted(info);
         Object result = instance;
-        if (instance instanceof ServiceContainer)
+        if (instance instanceof ProxyServiceContainer)
         {
-            if (!((ServiceContainer)instance).hasImplementations())
+            if (!((ProxyServiceContainer)instance).hasImplementations())
             {
-                startServiceImplementation((ServiceContainer)instance);
+                startServiceImplementation((ProxyServiceContainer)instance);
             }
-            result = ((ServiceContainer)instance).getImplementation();
+            result = ((ProxyServiceContainer)instance).getImplementation();
         }
         System.out.println("done.\n");
         return result;
     }
 
-    private Instance getStarted(DependencyInformation info)
+    private Object getStarted(DependencyInformation info)
     {
         depth++;
         String identifier = info.getClassName();
@@ -126,10 +126,10 @@ public abstract class BasicModularity implements Modularity
         {
             identifier = ((ServiceImplementationMetadata)info).getServiceName();
         }
-        Instance result = instances.get(identifier);
+        Object result = instances.get(identifier);
         if (result == null)
         {
-            Map<String, Instance> instances = collectDependencies(info);
+            Map<String, Object> instances = collectDependencies(info);
             result = start(info, instances);
             startServiceImplementations(instances);
         }
@@ -141,28 +141,27 @@ public abstract class BasicModularity implements Modularity
         return result;
     }
 
-    private void startServiceImplementations(Map<String, Instance> instances)
+    private void startServiceImplementations(Map<String, Object> instances)
     {
         show("Search for impls <", null);
-        for (Instance instance : instances.values())
+        for (Object instance : instances.values())
         {
-            if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
+            if (instance instanceof ProxyServiceContainer && !((ProxyServiceContainer)instance).hasImplementations())
             {
-                startServiceImplementation((ServiceContainer)instance);
+                startServiceImplementation((ProxyServiceContainer)instance);
             }
         }
         show(">", null);
     }
 
-    private void startServiceImplementation(ServiceContainer instance)
+    private void startServiceImplementation(ProxyServiceContainer instance)
     {
         for (TreeMap<Integer, DependencyInformation> map : services.values())
         {
             for (DependencyInformation impl : map.values())
             {
                 if (impl instanceof ServiceImplementationMetadata
-                    && ((ServiceImplementationMetadata)impl).getServiceName().equals(
-                    instance.getInterface().getName()))
+                    && ((ServiceImplementationMetadata)impl).getServiceName().equals(instance.getInterface().getName()))
                 {
                     start(impl, collectDependencies(impl));
                 }
@@ -170,16 +169,16 @@ public abstract class BasicModularity implements Modularity
         }
     }
 
-    private Map<String, Instance> collectDependencies(DependencyInformation info)
+    private Map<String, Object> collectDependencies(DependencyInformation info)
     {
         show("Collect dependencies of", info);
-        Map<String, Instance> result = new HashMap<String, Instance>();
+        Map<String, Object> result = new HashMap<String, Object>();
         collectDependencies(info.requiredDependencies(), result, true);
         collectDependencies(info.optionalDependencies(), result, false);
         return result;
     }
 
-    private void collectDependencies(Set<String> deps, Map<String, Instance> collected, boolean required)
+    private void collectDependencies(Set<String> deps, Map<String, Object> collected, boolean required)
     {
         for (String dep : deps)
         {
@@ -199,10 +198,10 @@ public abstract class BasicModularity implements Modularity
 
     private DependencyInformation getDependencyInformation(String dependencyString)
     {
-        DependencyInformation result = modules.get(dependencyString);
-        if (result != null)
+        ModuleMetadata meta = modules.get(dependencyString);
+        if (meta != null)
         {
-            return result;
+            return meta;
         }
         int versionAt = dependencyString.indexOf(':');
         Integer version = null;
@@ -217,26 +216,26 @@ public abstract class BasicModularity implements Modularity
         {
             if (version == null)
             {
-                result = services.lastEntry().getValue();
+                return services.lastEntry().getValue();
             }
             else
             {
-                result = services.get(version);
+                return services.get(version);
             }
         }
-        return result;
+        return null;
     }
 
-    private Instance start(DependencyInformation info, Map<String, Instance> deps)
+    private Object start(DependencyInformation info, Map<String, Object> deps)
     {
         try
         {
             show("Start", info);
             Class<?> instanceClass = Class.forName(info.getClassName(), true, info.getClassLoader());
-            Instance instance;
+            Object instance;
             if (info instanceof ServiceDefinitionMetadata)
             {
-                serviceManager.registerService(info, instanceClass);
+                serviceManager.registerService(instanceClass, info);
                 instance = serviceManager.getService(instanceClass);
             }
             else // Module or ServiceImpl
@@ -251,14 +250,18 @@ public abstract class BasicModularity implements Modularity
                     serviceManager.registerService(serviceClass, created);
                     return serviceManager.getService(serviceClass);
                 }
-                instance = (Instance)created;
+                instance = created;
             }
             if (instance == null)
             {
                 throw new IllegalStateException();
             }
 
-            this.instances.put(info.getClassName(), instance);
+            if (instance instanceof Instance)
+            {
+                this.instances.put(info.getClassName(), (Instance)instance);
+            }
+
             return instance;
         }
         catch (ClassNotFoundException e)
@@ -282,7 +285,7 @@ public abstract class BasicModularity implements Modularity
         return null;
     }
 
-    private void injectDependencies(Map<String, Instance> deps, Object instance) throws IllegalAccessException
+    private void injectDependencies(Map<String, Object> deps, Object instance) throws IllegalAccessException
     {
         for (Field field : instance.getClass().getDeclaredFields())
         {
@@ -299,9 +302,9 @@ public abstract class BasicModularity implements Modularity
                 {
                     throw new IllegalStateException();
                 }
-                if (toSet instanceof ServiceContainer)
+                if (toSet instanceof ProxyServiceContainer)
                 {
-                    toSet = ((ServiceContainer)toSet).getImplementation();
+                    toSet = ((ProxyServiceContainer)toSet).getImplementation();
                 }
                 if (maybe)
                 {
@@ -313,7 +316,7 @@ public abstract class BasicModularity implements Modularity
         }
     }
 
-    private Object[] getConstructorParams(Map<String, Instance> deps, Constructor<?> instanceConstructor)
+    private Object[] getConstructorParams(Map<String, Object> deps, Constructor<?> instanceConstructor)
     {
         Object[] parameters;
         Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
@@ -321,7 +324,7 @@ public abstract class BasicModularity implements Modularity
         for (int i = 0; i < parameterTypes.length; i++)
         {
             final Class<?> type = parameterTypes[i];
-            Instance instance = deps.get(type.getName());
+            Object instance = deps.get(type.getName());
             if (instance instanceof ServiceContainer)
             {
                 parameters[i] = ((ServiceContainer)instance).getImplementation();
@@ -334,7 +337,7 @@ public abstract class BasicModularity implements Modularity
         return parameters;
     }
 
-    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Instance> deps,
+    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Object> deps,
                                           Class<?> instanceClass)
     {
         Constructor<?> instanceConstructor = null;
@@ -378,6 +381,18 @@ public abstract class BasicModularity implements Modularity
         return clazz;
     }
 
+    @Override
+    public DependencyGraph getGraph()
+    {
+        return this.graph;
+    }
+
+    @Override
+    public ServiceManager getServiceManager()
+    {
+        return this.serviceManager;
+    }
+
     private Class<?> getClazz(String name, Set<String> checked, Set<String> strings)
     {
         for (String dep : strings)
@@ -389,10 +404,10 @@ public abstract class BasicModularity implements Modularity
             checked.add(dep);
             try
             {
-                ModularityClassLoader loader = modules.get(dep).getClassLoader();
-                if (loader != null)
+                DependencyInformation info = getDependencyInformation(dep);
+                if (info != null)
                 {
-                    return loader.findClass(name, false);
+                    return info.getClassLoader().findClass(name, false);
                 }
             }
             catch (ClassNotFoundException ignored)
@@ -437,7 +452,7 @@ public abstract class BasicModularity implements Modularity
             Instance instance = instances.get(id);
             if (instance != null)
             {
-                if (instance instanceof ServiceContainer && !((ServiceContainer)instance).hasImplementations())
+                if (instance instanceof ProxyServiceContainer && !((ProxyServiceContainer)instance).hasImplementations())
                 {
                     name = "[" + name + "]";
                 }

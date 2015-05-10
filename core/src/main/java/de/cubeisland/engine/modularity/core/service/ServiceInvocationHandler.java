@@ -43,14 +43,14 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.PriorityQueue;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer.Implementation;
+import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Implementation;
 
 class ServiceInvocationHandler implements InvocationHandler
 {
-    private final ServiceContainer<?> service;
+    private final ProxyServiceContainer<?> service;
     private final PriorityQueue<Implementation> implementations;
 
-    public ServiceInvocationHandler(ServiceContainer<?> service, PriorityQueue<Implementation> implementations)
+    public ServiceInvocationHandler(ProxyServiceContainer<?> service, PriorityQueue<Implementation> implementations)
     {
         this.service = service;
         this.implementations = implementations;

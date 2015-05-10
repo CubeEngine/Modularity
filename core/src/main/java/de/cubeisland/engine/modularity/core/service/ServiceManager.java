@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer.Priority;
+import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
 
 public class ServiceManager
 {
@@ -50,33 +50,29 @@ public class ServiceManager
         return this.getService(service).getImplementation();
     }
 
+    public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, DependencyInformation info)
+    {
+        ProxyServiceContainer<S> service = new ProxyServiceContainer<S>(interfaceClass, info);
+        this.services.put(interfaceClass, service);
+        return service;
+    }
+
     public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation)
     {
         return this.registerService(interfaceClass, implementation, Priority.NORMAL);
     }
 
-    public <S> ServiceContainer<S> registerService(DependencyInformation info, Class<S> interfaceClass)
-    {
-        ServiceContainer<S> service = new ServiceContainer<S>(interfaceClass, info);
-        this.services.put(interfaceClass, service);
-        return service;
-    }
-
     @SuppressWarnings("unchecked")
     public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation, Priority priority)
     {
-        if (!interfaceClass.isInterface())
-        {
-            throw new IllegalArgumentException("Services have to be interfaces!");
-        }
-
         synchronized (this.services)
         {
             ServiceContainer<S> service = (ServiceContainer<S>)this.services.get(interfaceClass);
-            if (service == null)
+            if (service == null || !interfaceClass.isInterface())
             {
-                System.out.println("Service Interface not registered");
-                throw new IllegalArgumentException(); // TODO
+                ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(interfaceClass, implementation);
+                services.put(interfaceClass, container);
+                return container;
             }
             if (implementation != null)
             {
@@ -115,7 +111,7 @@ public class ServiceManager
         {
             for (ServiceContainer<?> service : this.services.values())
             {
-                service.removeImplementations(module);
+                service.removeImplementations(module.getClass().getClassLoader());
             }
         }
     }
@@ -131,10 +127,10 @@ public class ServiceManager
     @SuppressWarnings("unchecked")
     public <T> boolean isImplemented(Class<T> serviceInterface)
     {
-        ServiceContainer<T> service;
+        ProxyServiceContainer<T> service;
         synchronized (this.services)
         {
-            service = (ServiceContainer<T>)this.services.get(serviceInterface);
+            service = (ProxyServiceContainer<T>)this.services.get(serviceInterface);
         }
         return service != null && service.hasImplementations();
     }

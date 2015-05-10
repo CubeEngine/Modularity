@@ -37,9 +37,7 @@ import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class AsmModularityTest
 {
@@ -52,7 +50,6 @@ public class AsmModularityTest
     @BeforeClass
     public static void setup() throws IOException
     {
-        modularity = new AsmModularity().load(new File("target/test-classes/"));
         for (File dir : CLASS_SOURCE_DIR.listFiles())
         {
             if (dir.isDirectory())
@@ -81,6 +78,8 @@ public class AsmModularityTest
                 out.close();
             }
         }
+        modularity = new AsmModularity().load(new File("target/test-classes/"));
+        assertEquals(0, modularity.getGraph().getUnresolved().size());
     }
 
     @Test

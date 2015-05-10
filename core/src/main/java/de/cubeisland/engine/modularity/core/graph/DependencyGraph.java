@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class DependencyGraph
@@ -59,13 +60,19 @@ public class DependencyGraph
         }
 
         // Resolve dependencies to node
-        List<Node> dependents = unresolved.remove(info.getClassName());
-        if (dependents != null)
+
+        String found = findVersion(info.getIdentifier(), unresolved.keySet());;
+        while (found != null)
         {
-            for (Node dependent : dependents)
+            List<Node> dependents = unresolved.remove(found);
+            if (dependents != null)
             {
-                node.addChild(dependent);
+                for (Node dependent : dependents)
+                {
+                    node.addChild(dependent);
+                }
             }
+            found = findVersion(info.getIdentifier(), unresolved.keySet());;
         }
 
         if (!isDependent)
@@ -73,12 +80,49 @@ public class DependencyGraph
             root.addChild(node);
         }
 
-        nodes.put(node.getInformation().getClassName(), node);
+        if (node.getInformation() instanceof ModuleMetadata)
+        {
+            nodes.put(node.getInformation().getClassName(), node);
+        }
+        else
+        {
+            nodes.put(node.getInformation().getIdentifier(), node);
+        }
+    }
+
+    public static String findVersion(String id, Set<String> in)
+    {
+        if (in.contains(id))
+        {
+            return id;
+        }
+        if (!id.contains(":"))
+        {
+            for (String dep : in)
+            {
+                if (dep.contains(":"))
+                {
+                    if (dep.split(":")[0].equals(id))
+                    {
+                        return dep;
+                    }
+                }
+            }
+        }
+        else
+        {
+            String substring = id.substring(0, id.indexOf(":"));
+            if (in.contains(substring))
+            {
+                return substring;
+            }
+        }
+        return null;
     }
 
     private void resolveDependency(Node node, String id)
     {
-        Node dependency = nodes.get(id);
+        Node dependency = nodes.get(findVersion(id, nodes.keySet()));
         if (dependency == null)
         {
             List<Node> list = unresolved.get(id);

@@ -22,24 +22,64 @@
  */
 package de.cubeisland.engine.modularity.core.service;
 
-
+import java.util.Collections;
 import java.util.List;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Implementation;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
 
-public interface ServiceContainer<T>
+public class ProvidedServiceContainer<T> implements ServiceContainer<T>
 {
-    Class<T> getInterface();
+    private final Implementation impl;
+    private Class<T> interfaceClass;
+    private T instance;
 
-    T getImplementation();
+    public ProvidedServiceContainer(Class<T> interfaceClass, T instance)
+    {
+        this.interfaceClass = interfaceClass;
+        this.instance = instance;
+        this.impl = new Implementation(instance, Priority.HIGHEST);
+    }
 
-    List<Implementation> getImplementations();
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<T> getInterface()
+    {
+        return interfaceClass;
+    }
 
-    boolean hasImplementations();
+    @Override
+    public T getImplementation()
+    {
+        return instance;
+    }
 
-    ServiceContainer<T> addImplementation(T implementation, Priority priority);
+    @Override
+    public List<Implementation> getImplementations()
+    {
+        return Collections.singletonList(impl);
+    }
 
-    ServiceContainer<T> removeImplementation(T implementation);
+    @Override
+    public boolean hasImplementations()
+    {
+        return true;
+    }
 
-    ServiceContainer<T> removeImplementations(ClassLoader loader);
+    @Override
+    public ProxyServiceContainer<T> addImplementation(T implementation, Priority priority)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ProxyServiceContainer<T> removeImplementation(T implementation)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ProxyServiceContainer<T> removeImplementations(ClassLoader loader)
+    {
+        throw new UnsupportedOperationException();
+    }
 }

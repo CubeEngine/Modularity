@@ -24,7 +24,15 @@ package de.cubeisland.engine.modularity.core;
 
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
+/**
+ * An instance of an object with DependencyInformation
+ */
 public interface Instance
 {
+    /**
+     * Returns the DependencyInformation of this instance
+     *
+     * @return the DependencyInformation
+     */
     DependencyInformation getInformation();
 }
