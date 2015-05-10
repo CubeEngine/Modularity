@@ -24,15 +24,43 @@ package de.cubeisland.engine.modularity.core;
 
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-public interface Module extends Instance
+public abstract class Module implements Instance
 {
-    void onLoad();
+    private final ModuleMetadata metadata = null;
+    private final Modularity modularity = null;
 
-    void onEnable();
+    public void onLoad()
+    {
+    }
 
-    void onDisable();
+    public void onEnable()
+    {
+    }
 
-    void onUnload();
+    public void onDisable()
+    {
+    }
 
-    ModuleMetadata getInformation();
+    public void onUnload()
+    {
+    }
+
+    public ModuleMetadata getInformation()
+    {
+        return metadata;
+    }
+    public Modularity getModulatiry()
+    {
+        return modularity;
+    }
+
+    public <T> T getProvided(Class<T> clazz)
+    {
+        ValueProvider<T> provider = getModulatiry().getProvider(clazz);
+        if (provider != null)
+        {
+            return provider.get(getInformation(), getModulatiry());
+        }
+        return null;
+    }
 }

@@ -269,8 +269,13 @@ public class AsmInformationLoader implements InformationLoader
         }
         if (current instanceof ClassCandidate)
         {
-            return implemented(knownTypes.get(((ClassCandidate)current).getExtendedClass().getReferencedClass()),
-                               interfaceToCheck);
+
+            String extended = ((ClassCandidate)current).getExtendedClass().getReferencedClass();
+            if (extended.equals(interfaceToCheck.getName()))
+            {
+                return true;
+            }
+            return implemented(knownTypes.get(extended), interfaceToCheck);
         }
         return false;
     }

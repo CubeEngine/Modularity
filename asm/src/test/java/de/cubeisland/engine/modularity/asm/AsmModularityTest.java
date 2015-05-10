@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
@@ -79,6 +80,7 @@ public class AsmModularityTest
             }
         }
         modularity = new AsmModularity().load(new File("target/test-classes/"));
+        modularity.registerProvider(File.class, new FileProvider());
         assertEquals(0, modularity.getGraph().getUnresolved().size());
     }
 

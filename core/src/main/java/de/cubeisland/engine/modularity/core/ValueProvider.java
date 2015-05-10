@@ -20,17 +20,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.info.module1;
+package de.cubeisland.engine.modularity.core;
 
-import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.asm.marker.Version;
-import de.cubeisland.engine.modularity.core.Maybe;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-@ModuleInfo(name = "basic", description = "just testing")
-public class BasicModule extends Module
+public interface ValueProvider<T>
 {
-    @Inject @Version(1) private Maybe<BasicService> anOptionalService;
+    T get(DependencyInformation info, Modularity modularity);
 }

@@ -47,12 +47,30 @@ public abstract class BasicModularity implements Modularity
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
     private final Map<String, ModuleMetadata> modules = new HashMap<String, ModuleMetadata>();
     private final Map<String, TreeMap<Integer, DependencyInformation>> services = new HashMap<String, TreeMap<Integer, DependencyInformation>>();
+    private Map<String, ValueProvider<?>> providers = new HashMap<String, ValueProvider<?>>();
+
     private final DependencyGraph graph = new DependencyGraph();
 
     private final Map<String, Instance> instances = new HashMap<String, Instance>();
 
     private final ServiceManager serviceManager = new ServiceManager();
-    // TODO external Service Provider / (no interface)
+    private final Field MODULE_META_FIELD;
+    private final Field MODULE_MODULARITY_FIELD;
+
+    public BasicModularity()
+    {
+        try
+        {
+            MODULE_META_FIELD = Module.class.getDeclaredField("metadata");
+            MODULE_META_FIELD.setAccessible(true);
+            MODULE_MODULARITY_FIELD = Module.class.getDeclaredField("modularity");
+            MODULE_MODULARITY_FIELD.setAccessible(true);
+        }
+        catch (NoSuchFieldException e)
+        {
+            throw new IllegalStateException();
+        }
+    }
 
     @Override
     public BasicModularity load(File source)
@@ -173,15 +191,21 @@ public abstract class BasicModularity implements Modularity
     {
         show("Collect dependencies of", info);
         Map<String, Object> result = new HashMap<String, Object>();
-        collectDependencies(info.requiredDependencies(), result, true);
-        collectDependencies(info.optionalDependencies(), result, false);
+        collectDependencies(info, info.requiredDependencies(), result, true);
+        collectDependencies(info, info.optionalDependencies(), result, false);
         return result;
     }
 
-    private void collectDependencies(Set<String> deps, Map<String, Object> collected, boolean required)
+    private void collectDependencies(DependencyInformation info, Set<String> deps, Map<String, Object> collected, boolean required)
     {
         for (String dep : deps)
         {
+            ValueProvider<?> provider = providers.get(dep);
+            if (provider != null)
+            {
+                collected.put(dep, provider.get(info, this));
+                continue;
+            }
             DependencyInformation dependency = getDependencyInformation(dep);
             if (dependency == null)
             {
@@ -242,7 +266,7 @@ public abstract class BasicModularity implements Modularity
             {
                 Constructor<?> constructor = getConstructor(info, deps, instanceClass);
                 Object created = constructor.newInstance(getConstructorParams(deps, constructor));
-                injectDependencies(deps, created);
+                injectDependencies(deps, created, info);
                 if (info instanceof ServiceImplementationMetadata)
                 {
                     Class serviceClass = Class.forName(((ServiceImplementationMetadata)info).getServiceName(), true,
@@ -285,8 +309,13 @@ public abstract class BasicModularity implements Modularity
         return null;
     }
 
-    private void injectDependencies(Map<String, Object> deps, Object instance) throws IllegalAccessException
+    private void injectDependencies(Map<String, Object> deps, Object instance, DependencyInformation info) throws IllegalAccessException
     {
+        if (instance instanceof Module)
+        {
+            MODULE_META_FIELD.set(instance, info);
+            MODULE_MODULARITY_FIELD.set(instance, this);
+        }
         for (Field field : instance.getClass().getDeclaredFields())
         {
             if (field.isAnnotationPresent(Inject.class))
@@ -316,6 +345,7 @@ public abstract class BasicModularity implements Modularity
         }
     }
 
+
     private Object[] getConstructorParams(Map<String, Object> deps, Constructor<?> instanceConstructor)
     {
         Object[] parameters;
@@ -337,8 +367,7 @@ public abstract class BasicModularity implements Modularity
         return parameters;
     }
 
-    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Object> deps,
-                                          Class<?> instanceClass)
+    private Constructor<?> getConstructor(DependencyInformation info, Map<String, Object> deps, Class<?> instanceClass)
     {
         Constructor<?> instanceConstructor = null;
         for (Constructor<?> constructor : instanceClass.getConstructors())
@@ -452,7 +481,8 @@ public abstract class BasicModularity implements Modularity
             Instance instance = instances.get(id);
             if (instance != null)
             {
-                if (instance instanceof ProxyServiceContainer && !((ProxyServiceContainer)instance).hasImplementations())
+                if (instance instanceof ProxyServiceContainer
+                    && !((ProxyServiceContainer)instance).hasImplementations())
                 {
                     name = "[" + name + "]";
                 }
@@ -470,5 +500,19 @@ public abstract class BasicModularity implements Modularity
     public <T> T getStarted(Class<T> type)
     {
         return (T)getStarted(type.getName());
+    }
+
+    @Override
+    public <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider)
+    {
+        this.providers.put(clazz.getName(), provider);
+        graph.provided(clazz);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> ValueProvider<T> getProvider(Class<T> clazz)
+    {
+        return (ValueProvider<T>)providers.get(clazz.getName());
     }
 }

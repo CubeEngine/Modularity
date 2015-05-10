@@ -77,4 +77,8 @@ public interface Modularity
     DependencyGraph getGraph();
 
     ServiceManager getServiceManager();
+
+    <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider);
+
+    <T> ValueProvider<T> getProvider(Class<T> clazz);
 }

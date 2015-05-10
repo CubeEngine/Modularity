@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.ValueProvider;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class DependencyGraph
@@ -88,6 +89,11 @@ public class DependencyGraph
         {
             nodes.put(node.getInformation().getIdentifier(), node);
         }
+    }
+
+    public <T> void provided(Class<T> clazz)
+    {
+        unresolved.remove(clazz.getName());
     }
 
     public static String findVersion(String id, Set<String> in)

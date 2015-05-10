@@ -29,7 +29,7 @@ import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 @ModuleInfo(name = "basic2", description = "just testing")
-public class BasicModule2 implements Module
+public class BasicModule2 extends Module
 {
     private BasicService service;
 
@@ -37,35 +37,5 @@ public class BasicModule2 implements Module
     public BasicModule2(BasicService service)
     {
         this.service = service;
-    }
-
-    @Override
-    public void onLoad()
-    {
-
-    }
-
-    @Override
-    public void onEnable()
-    {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
     }
 }

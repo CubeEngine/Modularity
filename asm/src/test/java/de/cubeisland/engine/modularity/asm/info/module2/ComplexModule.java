@@ -22,6 +22,7 @@
  */
 package de.cubeisland.engine.modularity.asm.info.module2;
 
+import java.io.File;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
@@ -30,38 +31,9 @@ import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 @ModuleInfo(name = "complex", description = "just testing")
-public class ComplexModule implements Module
+public class ComplexModule extends Module
 {
     @Inject private Maybe<BasicService> anOptionalService;
     @Inject private ComplexService aRequiredService;
-
-    @Override
-    public void onLoad()
-    {
-
-    }
-
-    @Override
-    public void onEnable()
-    {
-
-    }
-
-    @Override
-    public void onDisable()
-    {
-
-    }
-
-    @Override
-    public void onUnload()
-    {
-
-    }
-
-    @Override
-    public ModuleMetadata getInformation()
-    {
-        return null;
-    }
+    @Inject public File file;
 }
