@@ -30,7 +30,8 @@ import java.util.Set;
  */
 public class Node
 {
-    private final Set<Node> children = new HashSet<Node>();
+    private final Set<Node> successors = new HashSet<Node>();
+    private final Set<Node> predecessors = new HashSet<Node>();
     private DependencyInformation information;
 
     public Node()
@@ -42,10 +43,11 @@ public class Node
         this.information = information;
     }
 
-    public void addChild(Node node)
+    public void addSuccessor(Node node)
     {
         detectCircularDepdency(this, node);
-        children.add(node);
+        successors.add(node);
+        node.predecessors.add(this);
     }
 
     private void detectCircularDepdency(Node node, Node check)
@@ -54,9 +56,9 @@ public class Node
         {
             throw new IllegalArgumentException("Circular Dependency!");
         }
-        for (Node child : node.children)
+        for (Node child : node.successors)
         {
-            if (child.children.contains(check))
+            if (child.successors.contains(check))
             {
                 throw new IllegalArgumentException("Circular Dependency!");
             }
@@ -64,9 +66,14 @@ public class Node
         }
     }
 
-    public Set<Node> getChildren()
+    public Set<Node> getSuccessors()
     {
-        return children;
+        return successors;
+    }
+
+    public Set<Node> getPredecessors()
+    {
+        return predecessors;
     }
 
     public DependencyInformation getInformation()
@@ -88,7 +95,7 @@ public class Node
 
         final Node node = (Node)o;
 
-        if (information == null && ((Node)o).information == null)
+        if (information == node.information)
         {
             return true;
         }
@@ -97,12 +104,11 @@ public class Node
             return information.getClassName().equals(node.information.getClassName());
         }
         return false;
-
     }
 
     @Override
     public int hashCode()
     {
-        return information.getClassName().hashCode();
+        return information != null ? information.getClassName().hashCode() : 0;
     }
 }

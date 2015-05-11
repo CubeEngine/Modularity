@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.TreeMap;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
@@ -75,7 +77,6 @@ public abstract class BasicModularity implements Modularity
     @Override
     public BasicModularity load(File source)
     {
-
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         if (loaded.isEmpty())
         {
@@ -113,16 +114,19 @@ public abstract class BasicModularity implements Modularity
     }
 
     @Override
-    public Object getStarted(String identifier)
+    public Object start(Node node)
     {
-        DependencyInformation info = getDependencyInformation(identifier);
+        if (node == null)
+        {
+            return null;
+        }
+        DependencyInformation info = node.getInformation();
         if (info == null || info instanceof ServiceImplementationMetadata) // Not found OR Implementation
         {
             return null;
         }
-        System.out.println("Starting " + identifier + "...");
-
-        Object instance = this.getStarted(info);
+        System.out.println("Starting " + node.getInformation().getClassName() + "...");
+        Object instance = this.start(info);
         Object result = instance;
         if (instance instanceof ProxyServiceContainer)
         {
@@ -136,19 +140,14 @@ public abstract class BasicModularity implements Modularity
         return result;
     }
 
-    private Object getStarted(DependencyInformation info)
+    private Object start(DependencyInformation info)
     {
         depth++;
-        String identifier = info.getClassName();
-        if (info instanceof ServiceImplementationMetadata)
-        {
-            identifier = ((ServiceImplementationMetadata)info).getServiceName();
-        }
-        Object result = instances.get(identifier);
+        Object result = getInstance(info);
         if (result == null)
         {
             Map<String, Object> instances = collectDependencies(info);
-            result = start(info, instances);
+            result = newInstance(info, instances);
             startServiceImplementations(instances);
         }
         else
@@ -157,6 +156,16 @@ public abstract class BasicModularity implements Modularity
         }
         depth--;
         return result;
+    }
+
+    private Object getInstance(DependencyInformation info)
+    {
+        String identifier = info.getClassName();
+        if (info instanceof ServiceImplementationMetadata)
+        {
+            identifier = ((ServiceImplementationMetadata)info).getServiceName();
+        }
+        return instances.get(identifier);
     }
 
     private void startServiceImplementations(Map<String, Object> instances)
@@ -181,7 +190,7 @@ public abstract class BasicModularity implements Modularity
                 if (impl instanceof ServiceImplementationMetadata
                     && ((ServiceImplementationMetadata)impl).getServiceName().equals(instance.getInterface().getName()))
                 {
-                    start(impl, collectDependencies(impl));
+                    newInstance(impl, collectDependencies(impl));
                 }
             }
         }
@@ -206,6 +215,21 @@ public abstract class BasicModularity implements Modularity
                 collected.put(dep, provider.get(info, this));
                 continue;
             }
+            try
+            {
+                ServiceContainer<?> service = serviceManager.getService(Class.forName(dep));
+                if (service!=null)
+                {
+                    collected.put(dep, service.getImplementation());
+                    continue;
+                }
+            }
+            catch (ClassNotFoundException ignored)
+            {}
+            catch (NullPointerException e)
+            {
+                System.out.println(e);
+            }
             DependencyInformation dependency = getDependencyInformation(dep);
             if (dependency == null)
             {
@@ -216,7 +240,7 @@ public abstract class BasicModularity implements Modularity
                 System.out.println("Missing optional dependency to: " + dep);
                 continue;
             }
-            collected.put(dependency.getClassName(), getStarted(dependency));
+            collected.put(dependency.getClassName(), start(dependency));
         }
     }
 
@@ -250,7 +274,7 @@ public abstract class BasicModularity implements Modularity
         return null;
     }
 
-    private Object start(DependencyInformation info, Map<String, Object> deps)
+    private Object newInstance(DependencyInformation info, Map<String, Object> deps)
     {
         try
         {
@@ -285,7 +309,10 @@ public abstract class BasicModularity implements Modularity
             {
                 this.instances.put(info.getClassName(), (Instance)instance);
             }
-
+            if (instance instanceof Module)
+            {
+                ((Module)instance).onEnable();
+            }
             return instance;
         }
         catch (ClassNotFoundException e)
@@ -460,6 +487,10 @@ public abstract class BasicModularity implements Modularity
 
     private void show(String show, DependencyInformation clazz)
     {
+        if (1 == 1)
+        {
+            return;
+        }
         for (int i1 = 0; i1 < depth; i1++)
         {
             System.out.print("\t");
@@ -473,12 +504,7 @@ public abstract class BasicModularity implements Modularity
         }
         if (clazz != null)
         {
-            String id = clazz.getClassName();
-            if (clazz instanceof ServiceImplementationMetadata)
-            {
-                id = ((ServiceImplementationMetadata)clazz).getServiceName();
-            }
-            Instance instance = instances.get(id);
+            Object instance = getInstance(clazz);
             if (instance != null)
             {
                 if (instance instanceof ProxyServiceContainer
@@ -497,9 +523,116 @@ public abstract class BasicModularity implements Modularity
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getStarted(Class<T> type)
+    public <T> T start(Class<T> type)
     {
-        return (T)getStarted(type.getName());
+        return (T)start(graph.getNode(type.getName()));
+    }
+
+    @Override
+    public void startAll()
+    {
+        startRecursive(getGraph().getRoot());
+    }
+
+    @Override
+    public Set<Node> unload(Node node)
+    {
+        Object instance = getInstance(node.getInformation());
+        if (instance == null)
+        {
+            System.out.println(node.getInformation().getClassName() + " is not loaded");
+            return Collections.emptySet();
+        }
+
+        if (node.getInformation() instanceof ServiceImplementationMetadata)
+        {
+            Node serviceNode = graph.getNode(((ServiceImplementationMetadata)node.getInformation()).getServiceName());
+            Object serviceInstance = getInstance(serviceNode.getInformation());
+            if (!(serviceInstance instanceof ProxyServiceContainer))
+            {
+                throw new IllegalStateException("Service was not in a Container");
+            }
+            if (((ProxyServiceContainer)serviceInstance).getImplementations().size() > 1)
+            {
+                stop(node, instance);
+                return Collections.singleton(node);
+            }
+            // else unload predecessors too
+        }
+        Set<Node> unloaded = new HashSet<Node>();
+        for (Node pre : node.getPredecessors())
+        {
+            unloaded.addAll(unload(pre));
+        }
+        stop(node, instance);
+        unloaded.add(node);
+        return unloaded;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void stop(Node node, Object instance)
+    {
+        if (instance instanceof Module)
+        {
+            ((Module)instance).onDisable();
+            instances.values().remove(instance);
+        }
+        else if (instance instanceof ProxyServiceContainer)
+        {
+            if (node instanceof ServiceDefinitionMetadata)
+            {
+                // TODO stop all implementations
+                for (Object impl : ((ProxyServiceContainer)instance).getImplementations())
+                {
+                    ((ProxyServiceContainer)instance).removeImplementation(impl);
+                }
+                instances.values().remove(instance);
+            }
+            else
+            {
+                Object found = null;
+                for (Object impl : ((ProxyServiceContainer)instance).getImplementations())
+                {
+                    if (node.getInformation().getClassName().equals(impl.getClass().getName()))
+                    {
+                        found = impl;
+                        break;
+                    }
+                }
+                if (found == null)
+                {
+                    throw new IllegalStateException("Tried to remove missing Implementation");
+                }
+
+                ProxyServiceContainer service = ((ProxyServiceContainer)instance).removeImplementation(found);
+                if (!service.hasImplementations())
+                {
+                    instances.values().remove(service);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void reload(Node node)
+    {
+        Set<Node> unloaded = unload(node);
+        for (Node reload : unloaded)
+        {
+            start(reload);
+        }
+    }
+
+    private void startRecursive(Node node)
+    {
+        if (node.getInformation() != null)
+        {
+            start(node);
+        }
+        for (Node suc : node.getSuccessors())
+        {
+            startRecursive(suc);
+        }
     }
 
     @Override

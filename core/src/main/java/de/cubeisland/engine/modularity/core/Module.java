@@ -29,19 +29,11 @@ public abstract class Module implements Instance
     private final ModuleMetadata metadata = null;
     private final Modularity modularity = null;
 
-    public void onLoad()
-    {
-    }
-
     public void onEnable()
     {
     }
 
     public void onDisable()
-    {
-    }
-
-    public void onUnload()
     {
     }
 

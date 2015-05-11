@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import de.cubeisland.engine.modularity.core.ValueProvider;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 public class DependencyGraph
@@ -70,7 +69,7 @@ public class DependencyGraph
             {
                 for (Node dependent : dependents)
                 {
-                    node.addChild(dependent);
+                    node.addSuccessor(dependent);
                 }
             }
             found = findVersion(info.getIdentifier(), unresolved.keySet());;
@@ -78,7 +77,7 @@ public class DependencyGraph
 
         if (!isDependent)
         {
-            root.addChild(node);
+            root.addSuccessor(node);
         }
 
         if (node.getInformation() instanceof ModuleMetadata)
@@ -141,7 +140,7 @@ public class DependencyGraph
         }
         else
         {
-            dependency.addChild(node);
+            dependency.addSuccessor(node);
         }
     }
 
@@ -153,5 +152,10 @@ public class DependencyGraph
     public Map<String, List<Node>> getUnresolved()
     {
         return unresolved;
+    }
+
+    public Node getNode(String name)
+    {
+        return nodes.get(findVersion(name, nodes.keySet()));
     }
 }

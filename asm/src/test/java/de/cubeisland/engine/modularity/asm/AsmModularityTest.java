@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
@@ -80,29 +79,29 @@ public class AsmModularityTest
             }
         }
         modularity = new AsmModularity().load(new File("target/test-classes/"));
-        modularity.registerProvider(File.class, new FileProvider());
-        assertEquals(0, modularity.getGraph().getUnresolved().size());
+        modularity.getServiceManager().registerService(File.class, new File(""));
+        assertEquals(1, modularity.getGraph().getUnresolved().size());
     }
 
     @Test
     public void testBasicModule()
     {
-        assertNotNull(modularity.getStarted(BasicModule.class));
+        assertNotNull(modularity.start(BasicModule.class));
     }
 
     @Test
     public void testComplexModule()
     {
-        assertNotNull(modularity.getStarted(ComplexModule.class));
+        assertNotNull(modularity.start(ComplexModule.class));
     }
 
     @Test
     public void testBasicModule2()
     {
-        assertNotNull(modularity.getStarted(BasicModule2.class)); // Starts Module
-        ProvidedService started = modularity.getStarted(ProvidedService.class);  // Starts Service + Impl
+        assertNotNull(modularity.start(BasicModule2.class)); // Starts Module
+        ProvidedService started = modularity.start(ProvidedService.class);  // Starts Service + Impl
         assertNotNull(started);
         assertEquals(ProvidedServiceImpl.stripper, started.provideString());
-        assertNull(modularity.getStarted(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
+        assertNull(modularity.start(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
 }

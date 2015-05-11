@@ -25,7 +25,7 @@ package de.cubeisland.engine.modularity.core;
 import java.io.File;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
-import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
+import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
@@ -43,11 +43,19 @@ public interface Modularity
     /**
      * Attempts to start a Module with given identifier.
      *
-     * @param identifier the identifier
+     * @param node the identifier
      *
      * @return true if the module was loaded
      */
-    Object getStarted(String identifier);
+    Object start(Node node);
+
+    <T> T start(Class<T> type);
+
+    void startAll();
+
+    Set<Node> unload(Node node);
+
+    void reload(Node node);
 
     /**
      * Returns the InformationLoader
@@ -55,8 +63,6 @@ public interface Modularity
      * @return the InformationLoader
      */
     InformationLoader getLoader();
-
-    <T> T getStarted(Class<T> type);
 
     Set<Instance> getNodes();
 
