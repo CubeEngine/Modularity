@@ -41,17 +41,17 @@ public abstract class Module implements Instance
     {
         return metadata;
     }
-    public Modularity getModulatiry()
+    public Modularity getModularity()
     {
         return modularity;
     }
 
     public <T> T getProvided(Class<T> clazz)
     {
-        ValueProvider<T> provider = getModulatiry().getProvider(clazz);
+        ValueProvider<T> provider = getModularity().getProvider(clazz);
         if (provider != null)
         {
-            return provider.get(getInformation(), getModulatiry());
+            return provider.get(getInformation(), getModularity());
         }
         return null;
     }
