@@ -489,7 +489,7 @@ public abstract class BasicModularity implements Modularity
     {
         if (1 == 1)
         {
-            return;
+         //   return;
         }
         for (int i1 = 0; i1 < depth; i1++)
         {

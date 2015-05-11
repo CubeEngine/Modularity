@@ -59,7 +59,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
         }
         if (!implemented)
         {
-            throw new IllegalArgumentException("Given Class Candidate declares implementing a Service but is not!");
+            throw new IllegalArgumentException("Class Candidate " + candidate.getName() + " declares implementing a Service but is not!"); // TODO check further up
         }
     }
 
