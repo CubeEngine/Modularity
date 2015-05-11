@@ -104,4 +104,11 @@ public class AsmModularityTest
         assertEquals(ProvidedServiceImpl.stripper, started.provideString());
         assertNull(modularity.start(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
+
+    @Test
+    public void testProvidedService()
+    {
+        modularity.getServiceManager().registerService(String.class, "providedStringService");
+        assertEquals("providedStringService", modularity.start(String.class));
+    }
 }

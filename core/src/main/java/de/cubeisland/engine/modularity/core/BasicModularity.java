@@ -40,6 +40,7 @@ import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
+import de.cubeisland.engine.modularity.core.service.ProvidedServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
@@ -525,6 +526,11 @@ public abstract class BasicModularity implements Modularity
     @SuppressWarnings("unchecked")
     public <T> T start(Class<T> type)
     {
+        ServiceContainer<T> service = serviceManager.getService(type);
+        if (service instanceof ProvidedServiceContainer)
+        {
+            return service.getImplementation();
+        }
         return (T)start(graph.getNode(type.getName()));
     }
 
