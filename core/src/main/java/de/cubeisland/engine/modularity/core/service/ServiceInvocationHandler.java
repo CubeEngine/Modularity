@@ -63,6 +63,7 @@ class ServiceInvocationHandler implements InvocationHandler
             final Implementation impl = this.implementations.peek();
             if (impl == null)
             {
+                // TODO custom exception
                 throw new IllegalStateException("The service <" + this.service.getInterface().getName()
                                                     + "> was invoked, but has no implementations!");
             }

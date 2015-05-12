@@ -33,6 +33,6 @@ public class AsmServiceDefinitionMetadata extends AsmDependencyInformation imple
     public AsmServiceDefinitionMetadata(InterfaceCandidate candidate)
     {
         super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), Collections.<FieldCandidate>emptySet(),
-              Collections.<ConstructorCandidate>emptySet(), candidate.getClassLoader());
+              candidate.getMethods(), Collections.<ConstructorCandidate>emptySet(), candidate.getClassLoader());
     }
 }

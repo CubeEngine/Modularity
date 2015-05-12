@@ -26,6 +26,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,7 +127,6 @@ public abstract class BasicModularity implements Modularity
         {
             return null;
         }
-        System.out.println("Starting " + node.getInformation().getClassName() + "...");
         Object instance = this.start(info);
         Object result = instance;
         if (instance instanceof ProxyServiceContainer)
@@ -137,7 +137,6 @@ public abstract class BasicModularity implements Modularity
             }
             result = ((ProxyServiceContainer)instance).getImplementation();
         }
-        System.out.println("done.\n");
         return result;
     }
 
@@ -147,9 +146,35 @@ public abstract class BasicModularity implements Modularity
         Object result = getInstance(info);
         if (result == null)
         {
+            System.out.println("Starting " + info.getClassName() + "...");
+
             Map<String, Object> instances = collectDependencies(info);
             result = newInstance(info, instances);
             startServiceImplementations(instances);
+
+            String enableMethod = info.getEnableMethod();
+            if (enableMethod != null)
+            {
+                try
+                {
+                    Method method = result.getClass().getMethod(enableMethod);
+                    method.invoke(result); // TODO allow Parameters (add to dependencies)
+                }
+                catch (NoSuchMethodException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+                catch (InvocationTargetException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+                catch (IllegalAccessException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+            }
+
+            System.out.println("done.\n");
         }
         else
         {
@@ -309,10 +334,6 @@ public abstract class BasicModularity implements Modularity
             if (instance instanceof Instance)
             {
                 this.instances.put(info.getClassName(), (Instance)instance);
-            }
-            if (instance instanceof Module)
-            {
-                ((Module)instance).onEnable();
             }
             return instance;
         }
@@ -486,42 +507,6 @@ public abstract class BasicModularity implements Modularity
         return null; // TODO
     }
 
-    private void show(String show, DependencyInformation clazz)
-    {
-        if (1 == 1)
-        {
-         //   return;
-        }
-        for (int i1 = 0; i1 < depth; i1++)
-        {
-            System.out.print("\t");
-        }
-        String name = "";
-        if (clazz != null)
-        {
-            name = clazz.getClassName();
-            name = name.substring(name.lastIndexOf(".") + 1);
-            name += ":" + clazz.getVersion();
-        }
-        if (clazz != null)
-        {
-            Object instance = getInstance(clazz);
-            if (instance != null)
-            {
-                if (instance instanceof ProxyServiceContainer
-                    && !((ProxyServiceContainer)instance).hasImplementations())
-                {
-                    name = "[" + name + "]";
-                }
-            }
-            else
-            {
-                name = "[" + name + "]";
-            }
-        }
-        System.out.println(show + " " + name);
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> T start(Class<T> type)
@@ -578,9 +563,30 @@ public abstract class BasicModularity implements Modularity
     @SuppressWarnings("unchecked")
     private void stop(Node node, Object instance)
     {
+        String disableMethod = node.getInformation().getDisableMethod();
+        if (disableMethod != null)
+        {
+            try
+            {
+                Method method = instance.getClass().getMethod(disableMethod);
+                method.setAccessible(true);
+                method.invoke(instance);
+            }
+            catch (NoSuchMethodException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            catch (InvocationTargetException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new IllegalStateException(e);
+            }
+        }
         if (instance instanceof Module)
         {
-            ((Module)instance).onDisable();
             instances.values().remove(instance);
         }
         else if (instance instanceof ProxyServiceContainer)
@@ -653,5 +659,41 @@ public abstract class BasicModularity implements Modularity
     public <T> ValueProvider<T> getProvider(Class<T> clazz)
     {
         return (ValueProvider<T>)providers.get(clazz.getName());
+    }
+
+    private void show(String show, DependencyInformation clazz)
+    {
+        if (1 == 1)
+        {
+            //   return;
+        }
+        for (int i1 = 0; i1 < depth; i1++)
+        {
+            System.out.print("\t");
+        }
+        String name = "";
+        if (clazz != null)
+        {
+            name = clazz.getClassName();
+            name = name.substring(name.lastIndexOf(".") + 1);
+            name += ":" + clazz.getVersion();
+        }
+        if (clazz != null)
+        {
+            Object instance = getInstance(clazz);
+            if (instance != null)
+            {
+                if (instance instanceof ProxyServiceContainer
+                    && !((ProxyServiceContainer)instance).hasImplementations())
+                {
+                    name = "[" + name + "]";
+                }
+            }
+            else
+            {
+                name = "[" + name + "]";
+            }
+        }
+        System.out.println(show + " " + name);
     }
 }

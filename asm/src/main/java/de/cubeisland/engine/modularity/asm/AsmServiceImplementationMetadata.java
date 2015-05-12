@@ -38,7 +38,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
 
     public AsmServiceImplementationMetadata(ClassCandidate candidate)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(),
+        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getMethods(),
               candidate.getConstructors(), candidate.getClassLoader());
 
         Type type = candidate.getAnnotation(ServiceImpl.class).property("value");
