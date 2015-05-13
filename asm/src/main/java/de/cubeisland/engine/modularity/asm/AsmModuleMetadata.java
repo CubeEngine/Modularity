@@ -30,6 +30,9 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
+/**
+ * ModuleMetadata from Asm
+ */
 public class AsmModuleMetadata extends AsmDependencyInformation implements ModuleMetadata
 {
     private final String name;

@@ -263,7 +263,7 @@ public class BasicModularity implements Modularity
             {
                 if (required)
                 {
-                    throw new IllegalStateException("Missing required dependency to: " + dep); // TODO custom Exception
+                    throw new MissingDependencyException(info, dep);
                 }
                 System.out.println("Missing optional dependency to: " + dep);
                 continue;

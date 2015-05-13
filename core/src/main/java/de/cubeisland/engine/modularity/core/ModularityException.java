@@ -20,22 +20,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core;
 
-import java.util.Collections;
-import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
-
-/**
- * ServiceDefinitionMetadata from Asm
- */
-public class AsmServiceDefinitionMetadata extends AsmDependencyInformation implements ServiceDefinitionMetadata
+public class ModularityException extends RuntimeException
 {
-    public AsmServiceDefinitionMetadata(InterfaceCandidate candidate)
+    public ModularityException()
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), Collections.<FieldCandidate>emptySet(),
-              candidate.getMethods(), Collections.<ConstructorCandidate>emptySet(), candidate.getClassLoader());
+    }
+
+    public ModularityException(String message)
+    {
+        super(message);
+    }
+
+    public ModularityException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+    public ModularityException(Throwable cause)
+    {
+        super(cause);
+    }
+
+    public ModularityException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+    {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

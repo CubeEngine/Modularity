@@ -20,22 +20,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core;
 
-import java.util.Collections;
-import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-/**
- * ServiceDefinitionMetadata from Asm
- */
-public class AsmServiceDefinitionMetadata extends AsmDependencyInformation implements ServiceDefinitionMetadata
+public class MissingDependencyException extends ModularityException
 {
-    public AsmServiceDefinitionMetadata(InterfaceCandidate candidate)
+    public MissingDependencyException()
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), Collections.<FieldCandidate>emptySet(),
-              candidate.getMethods(), Collections.<ConstructorCandidate>emptySet(), candidate.getClassLoader());
+    }
+
+    public MissingDependencyException(String message)
+    {
+        super(message);
+    }
+
+    public MissingDependencyException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+    public MissingDependencyException(Throwable cause)
+    {
+        super(cause);
+    }
+
+    public MissingDependencyException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+    {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public MissingDependencyException(DependencyInformation info, String dep)
+    {
+        this(info.getClassName() + " is missing a required dependency to " + dep);
     }
 }

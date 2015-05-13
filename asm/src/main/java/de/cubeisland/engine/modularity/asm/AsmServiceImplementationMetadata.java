@@ -30,7 +30,7 @@ import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMeta
 import org.objectweb.asm.Type;
 
 /**
- * Created by ANSELM on 19.04.2015.
+ * ServiceImplementationMetadata from Asm
  */
 public class AsmServiceImplementationMetadata extends AsmDependencyInformation implements ServiceImplementationMetadata
 {
