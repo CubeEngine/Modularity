@@ -22,6 +22,9 @@
  */
 package de.cubeisland.engine.modularity.asm.meta;
 
+/**
+ * A reference to a Type
+ */
 public class TypeReference
 {
     private final String referencedClass;
@@ -33,6 +36,11 @@ public class TypeReference
         this.referencedClass = referencedClass;
     }
 
+    /**
+     * Returns the name of the referenced class or interface
+     *
+     * @return the name ot the reference
+     */
     public String getReferencedClass()
     {
         return referencedClass;
@@ -56,7 +64,7 @@ public class TypeReference
             return false;
         }
 
-        final TypeReference that = (TypeReference)o;
+        final TypeReference that = (TypeReference) o;
 
         if (referencedClass != null ? !referencedClass.equals(that.referencedClass) : that.referencedClass != null)
         {

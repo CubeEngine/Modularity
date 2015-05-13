@@ -27,12 +27,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marks the annotated Class to be the specified version or the annotated Field to require the specified version
+ */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.FIELD})
 public @interface Version
 {
     /**
-     * Returns true when required and false when optional
+     * Returns the revision
+     *
+     * @return the revision
      */
     int value();
 }

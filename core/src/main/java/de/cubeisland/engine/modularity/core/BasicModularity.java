@@ -46,7 +46,7 @@ import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
-public abstract class BasicModularity implements Modularity
+public class BasicModularity implements Modularity
 {
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
     private final Map<String, ModuleMetadata> modules = new HashMap<String, ModuleMetadata>();
@@ -60,9 +60,11 @@ public abstract class BasicModularity implements Modularity
     private final ServiceManager serviceManager = new ServiceManager();
     private final Field MODULE_META_FIELD;
     private final Field MODULE_MODULARITY_FIELD;
+    private InformationLoader loader;
 
-    public BasicModularity()
+    public BasicModularity(InformationLoader loader)
     {
+        this.loader = loader;
         try
         {
             MODULE_META_FIELD = Module.class.getDeclaredField("metadata");
@@ -695,5 +697,17 @@ public abstract class BasicModularity implements Modularity
             }
         }
         System.out.println(show + " " + name);
+    }
+
+    @Override
+    public InformationLoader getLoader()
+    {
+        return loader;
+    }
+
+    @Override
+    public Set<Instance> getNodes()
+    {
+        return new HashSet<Instance>(instances.values());
     }
 }

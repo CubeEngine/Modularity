@@ -33,6 +33,9 @@ import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
 import static java.util.Collections.unmodifiableMap;
 
+/**
+ * Represents an annotation possibly containing DependencyInformation
+ */
 public class AnnotationCandidate extends Candidate
 {
     private final TypeReference type;
@@ -45,6 +48,12 @@ public class AnnotationCandidate extends Candidate
         this.type = type;
     }
 
+    /**
+     * Adds a property to the annotation
+     *
+     * @param name the methods name
+     * @param value the methods value
+     */
     @SuppressWarnings("unchecked")
     public void addProperty(String name, Object value)
     {
@@ -59,6 +68,10 @@ public class AnnotationCandidate extends Candidate
         }
     }
 
+    /**
+     * Returns the properties of this annotation
+     * @return the properties
+     */
     public Map<String, Object> getProperties()
     {
         return unmodifiableMap(properties);
@@ -123,6 +136,14 @@ public class AnnotationCandidate extends Candidate
         return sb.toString();
     }
 
+    /**
+     * Returns the property for given name.
+     * If not found this will return the default value of the property or null if unavailable
+     *
+     * @param property the name of the property
+     * @param <T> the Type
+     * @return the property for given name or null
+     */
     @SuppressWarnings("unchecked")
     public <T> T property(String property)
     {

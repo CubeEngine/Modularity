@@ -24,6 +24,9 @@ package de.cubeisland.engine.modularity.asm.meta.candidate;
 
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
+/**
+ * Represents a Field potentially containing DependencyInformation
+ */
 public class FieldCandidate extends Candidate
 {
     private final TypeReference declaringClass;
@@ -40,21 +43,41 @@ public class FieldCandidate extends Candidate
         this.value = value;
     }
 
+    /**
+     * Returns the declaring class as TypeReference
+     *
+     * @return the declaring class as TypeReference
+     */
     public TypeReference getDeclaringClass()
     {
         return declaringClass;
     }
 
+    /**
+     * Returns the modifiers
+     *
+     * @return the modifiers
+     */
     public int getModifiers()
     {
         return modifiers;
     }
 
+    /**
+     * Returns the type of the field as TypeReference
+     *
+     * @return the type of the field
+     */
     public TypeReference getType()
     {
         return type;
     }
 
+    /**
+     * Returns the value of the field if available at compile-time
+     *
+     * @return the value of the field
+     */
     public Object getValue()
     {
         return value;
@@ -72,7 +95,7 @@ public class FieldCandidate extends Candidate
             return false;
         }
 
-        final FieldCandidate that = (FieldCandidate)o;
+        final FieldCandidate that = (FieldCandidate) o;
 
         if (modifiers != that.modifiers)
         {

@@ -27,6 +27,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+/**
+ * Visits a Signature and provides a TypeReference with GenericType Information
+ */
 public class ModuleSignatureVisitor extends SignatureVisitor
 {
     private boolean nextType = false;

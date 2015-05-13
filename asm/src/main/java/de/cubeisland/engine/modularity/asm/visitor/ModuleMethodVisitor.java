@@ -29,6 +29,9 @@ import org.objectweb.asm.Opcodes;
 
 import static de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor.visit;
 
+/**
+ * Visits Methods and create MethodCandidates
+ */
 public class ModuleMethodVisitor extends MethodVisitor
 {
     private final MethodCandidate methodCandidate;

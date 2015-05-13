@@ -29,6 +29,9 @@ import org.objectweb.asm.Opcodes;
 
 import static de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor.visit;
 
+/**
+ * Visits fields and creates FieldCandidates
+ */
 public class ModuleFieldVisitor extends FieldVisitor
 {
     private final FieldCandidate candidate;

@@ -29,6 +29,9 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
 
+/**
+ * Visits Annotations and creates AnnotationCandidates
+ */
 public class ModuleAnnotationVisitor extends AnnotationVisitor
 {
     private final AnnotationCandidate candidate;

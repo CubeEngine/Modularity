@@ -26,16 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -49,24 +40,19 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor;
-import de.cubeisland.engine.modularity.core.InformationLoader;
-import de.cubeisland.engine.modularity.core.Modularity;
-import de.cubeisland.engine.modularity.core.ModularityClassLoader;
-import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.*;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.objectweb.asm.ClassReader;
 
+/**
+ * A InformationLoader implementation using Asm
+ */
 public class AsmInformationLoader implements InformationLoader
 {
     private final Map<String, TypeCandidate> knownTypes = new HashMap<String, TypeCandidate>();
 
-    private final Modularity modularity;
-
-    public AsmInformationLoader(AsmModularity modularity)
-    {
-        this.modularity = modularity;
-    }
+    private Modularity modularity;
 
     public Set<DependencyInformation> loadInformation(Set<File> files)
     {
@@ -301,5 +287,13 @@ public class AsmInformationLoader implements InformationLoader
             }
         }
         return list;
+    }
+
+    public static Modularity newModularity()
+    {
+        AsmInformationLoader loader = new AsmInformationLoader();
+        BasicModularity modularity = new BasicModularity(loader);
+        loader.modularity = modularity;
+        return modularity;
     }
 }

@@ -29,6 +29,9 @@ import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
 import static java.util.Collections.unmodifiableSet;
 
+/**
+ * Represents a Class potentially containing DependencyInformation
+ */
 public class ClassCandidate extends TypeCandidate
 {
     private final TypeReference extendedClass;
@@ -40,6 +43,10 @@ public class ClassCandidate extends TypeCandidate
         this.extendedClass = extendedClass;
     }
 
+    /**
+     * Returns the superclass of this class
+     * @return
+     */
     public TypeReference getExtendedClass()
     {
         return extendedClass;
@@ -51,11 +58,19 @@ public class ClassCandidate extends TypeCandidate
         return "class";
     }
 
+    /**
+     * Adds a Constructor to this class
+     * @param constructor the constructor to add
+     */
     public void addConstructor(ConstructorCandidate constructor)
     {
         this.constructors.add(constructor);
     }
 
+    /**
+     * Returns the constructors of this class
+     * @return the constructors
+     */
     public Set<ConstructorCandidate> getConstructors()
     {
         return unmodifiableSet(constructors);

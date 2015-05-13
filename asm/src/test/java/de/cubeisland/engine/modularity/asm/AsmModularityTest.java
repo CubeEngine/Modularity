@@ -37,6 +37,7 @@ import de.cubeisland.engine.modularity.core.Modularity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static de.cubeisland.engine.modularity.asm.AsmInformationLoader.newModularity;
 import static org.junit.Assert.*;
 
 public class AsmModularityTest
@@ -78,7 +79,7 @@ public class AsmModularityTest
                 out.close();
             }
         }
-        modularity = new AsmModularity().load(new File("target/test-classes/"));
+        modularity = newModularity().load(new File("target/test-classes/"));
         modularity.getServiceManager().registerService(File.class, new File(""));
         assertEquals(1, modularity.getGraph().getUnresolved().size());
     }

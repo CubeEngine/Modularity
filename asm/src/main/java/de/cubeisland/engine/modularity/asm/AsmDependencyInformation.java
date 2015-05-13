@@ -38,6 +38,9 @@ import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
+/**
+ * The base for DependencyInformation from Asm
+ */
 public abstract class AsmDependencyInformation implements DependencyInformation
 {
     private final String identifier;

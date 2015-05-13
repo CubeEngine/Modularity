@@ -22,6 +22,9 @@
  */
 package de.cubeisland.engine.modularity.asm.meta;
 
+/**
+ * Holds a reference to an Enum value
+ */
 public class EnumHolder
 {
     private String desc;

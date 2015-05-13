@@ -29,6 +29,9 @@ import java.util.Set;
 
 import static java.util.Collections.unmodifiableSet;
 
+/**
+ * The base for Candidates representing some kind of DependencyInformation
+ */
 public abstract class Candidate
 {
     private final String name;
@@ -39,26 +42,53 @@ public abstract class Candidate
         this.name = name;
     }
 
+    /**
+     * Returns the name of the Candidate
+     *
+     * @return the name
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * Adds an annotation to this candidate
+     *
+     * @param candidate the annotation to add
+     */
     public void addAnnotation(AnnotationCandidate candidate)
     {
         this.annotations.add(candidate);
     }
 
+    /**
+     * Returns the annotations of this candidate
+     *
+     * @return the annotations
+     */
     public Set<AnnotationCandidate> getAnnotations()
     {
         return unmodifiableSet(annotations);
     }
 
+    /**
+     * Returns whether the candidate is annotated with an annotation of given class
+     *
+     * @param clazz the class of the annotation to check
+     * @return true if the candidate is annotated with an annotation of given class
+     */
     public boolean isAnnotatedWith(Class clazz)
     {
         return isAnnotatedWith(clazz.getName());
     }
 
+    /**
+     * Returns whether the candidate is annotated with an annotation of given class
+     *
+     * @param annotationType the name of the annotations class
+     * @return
+     */
     public boolean isAnnotatedWith(String annotationType)
     {
         for (final AnnotationCandidate annotation : annotations)
@@ -71,6 +101,11 @@ public abstract class Candidate
         return false;
     }
 
+    /**
+     * Returns the annotation for given class or null if not present
+     * @param clazz the class of the annotation
+     * @return the annotation or null
+     */
     public AnnotationCandidate getAnnotation(Class<? extends Annotation> clazz)
     {
         if (this.isAnnotatedWith(clazz))

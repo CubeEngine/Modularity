@@ -27,6 +27,9 @@ import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
 import static de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate.simpleName;
 
+/**
+ * Represents a Constructor potentially containing DependencyInformation
+ */
 public class ConstructorCandidate extends MethodCandidate
 {
     public ConstructorCandidate(TypeReference declaringClass, String name, int modifiers, List<TypeReference> parameterTypes)

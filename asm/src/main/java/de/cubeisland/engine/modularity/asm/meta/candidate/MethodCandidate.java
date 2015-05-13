@@ -22,9 +22,13 @@
  */
 package de.cubeisland.engine.modularity.asm.meta.candidate;
 
-import java.util.List;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 
+import java.util.List;
+
+/**
+ * Represents a Method potentially containing DependencyInformation
+ */
 public class MethodCandidate extends Candidate
 {
     private final TypeReference declaringClass;
@@ -41,21 +45,41 @@ public class MethodCandidate extends Candidate
         this.parameterTypes = parameterTypes;
     }
 
+    /**
+     * Returns the declaring class as TypeReference
+     *
+     * @return the declaring class as TypeReference
+     */
     public TypeReference getDeclaringClass()
     {
         return declaringClass;
     }
 
+    /**
+     * Returns the modifiers
+     *
+     * @return the modifiers
+     */
     public int getModifiers()
     {
         return modifiers;
     }
 
+    /**
+     * Returns the return type of the method as TypeReference
+     *
+     * @return the return type as TypeReference
+     */
     public TypeReference getReturnType()
     {
         return returnType;
     }
 
+    /**
+     * Returns the parameter types of the method as TypeReferences
+     *
+     * @return the parameter types as TypeReferences
+     */
     public List<TypeReference> getParameterTypes()
     {
         return parameterTypes;
@@ -73,7 +97,7 @@ public class MethodCandidate extends Candidate
             return false;
         }
 
-        final MethodCandidate that = (MethodCandidate)o;
+        final MethodCandidate that = (MethodCandidate) o;
 
         if (modifiers != that.modifiers)
         {

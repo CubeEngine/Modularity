@@ -48,5 +48,10 @@ public @interface ModuleInfo
      */
     String description();
 
+    /**
+     * Returns the dependencies to load before this
+     *
+     * @return the dependencies to load before this
+     */
     String[] loadAfter() default {};
 }

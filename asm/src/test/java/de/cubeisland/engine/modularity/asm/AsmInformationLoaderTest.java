@@ -33,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static de.cubeisland.engine.modularity.asm.ASMModuleInfoParserTest.getPath;
+import static de.cubeisland.engine.modularity.asm.AsmInformationLoader.newModularity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -48,7 +49,8 @@ public class AsmInformationLoaderTest
     @Test
     public void testJar1()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader(new AsmModularity()).loadInformation(new File("target/test-classes/module1.jar"));
+
+        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module1.jar"));
         assertEquals(3, infos.size());
         for (DependencyInformation info : infos)
         {
@@ -59,7 +61,7 @@ public class AsmInformationLoaderTest
     @Test
     public void testJar2()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader(new AsmModularity()).loadInformation(new File("target/test-classes/module2.jar"));
+        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module2.jar"));
         assertEquals(3, infos.size());
         for (DependencyInformation info : infos)
         {
@@ -71,7 +73,7 @@ public class AsmInformationLoaderTest
     @Test
     public void testFolder()
     {
-        Set<DependencyInformation> infos = new AsmInformationLoader(new AsmModularity()).loadInformation(new File(getPath(BasicModule.class)));
+        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File(getPath(BasicModule.class)));
 
         for (DependencyInformation info : infos)
         {

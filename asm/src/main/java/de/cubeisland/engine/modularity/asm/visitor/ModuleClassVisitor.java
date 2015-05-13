@@ -47,6 +47,9 @@ import org.objectweb.asm.signature.SignatureReader;
 
 import static org.objectweb.asm.Opcodes.*;
 
+/**
+ * Visits classes and creates TypeCandidates
+ */
 public class ModuleClassVisitor extends ClassVisitor
 {
     private final File file;
