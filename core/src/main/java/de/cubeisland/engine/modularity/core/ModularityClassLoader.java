@@ -22,6 +22,8 @@
  */
 package de.cubeisland.engine.modularity.core;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.LinkedHashSet;
@@ -33,15 +35,50 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ModularityClassLoader extends URLClassLoader
 {
+    private static final Method addURL;
+    static
+    {
+        try
+        {
+            addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+            addURL.setAccessible(true);
+        }
+        catch (SecurityException e)
+        {
+            throw new IllegalStateException(e);
+        }
+        catch (NoSuchMethodException e)
+        {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private final Map<String, Class> classMap = new ConcurrentHashMap<String, Class>();
     private final Modularity modularity;
+    private URL sourceURL;
     private final LinkedHashSet<String> dependencies;
 
-    public ModularityClassLoader(Modularity modularity, URL jarURL, LinkedHashSet<String> dependencies, ClassLoader parent)
+    public ModularityClassLoader(Modularity modularity, URL sourceURL, LinkedHashSet<String> dependencies, ClassLoader parent)
     {
-        super(new URL[]{jarURL}, parent);
+        super(new URL[]{sourceURL}, parent);
         this.modularity = modularity;
+        this.sourceURL = sourceURL;
         this.dependencies = dependencies;
+        if (parent instanceof URLClassLoader)
+        {
+            try
+            {
+                addURL.invoke(parent, sourceURL);
+            }
+            catch (IllegalAccessException e)
+            {
+             throw new IllegalStateException(e);
+            }
+            catch (InvocationTargetException e)
+            {
+                throw new IllegalStateException(e);
+            }
+        }
     }
 
     @Override
@@ -86,5 +123,10 @@ public class ModularityClassLoader extends URLClassLoader
             return super.getResource(name);
         }
         return url;
+    }
+
+    public URL getSourceURL()
+    {
+        return sourceURL;
     }
 }

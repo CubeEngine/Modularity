@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,6 +77,8 @@ public class BasicModularity implements Modularity
         {
             throw new IllegalStateException();
         }
+
+        this.registerProvider(URL.class, new SourceURLProvider());
     }
 
     @Override
@@ -530,6 +533,10 @@ public class BasicModularity implements Modularity
     @Override
     public Set<Node> unload(Node node)
     {
+        if (node.getInformation() == null)
+        {
+            return Collections.emptySet();
+        }
         Object instance = getInstance(node.getInformation());
         if (instance == null)
         {
@@ -615,7 +622,7 @@ public class BasicModularity implements Modularity
                 }
                 if (found == null)
                 {
-                    throw new IllegalStateException("Tried to remove missing Implementation");
+                    throw new IllegalStateException("Tried to remove missing Implementation: " + node.getInformation().getClassName());
                 }
 
                 ProxyServiceContainer service = ((ProxyServiceContainer)instance).removeImplementation(found);
