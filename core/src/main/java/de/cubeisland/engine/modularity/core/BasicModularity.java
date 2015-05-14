@@ -515,7 +515,7 @@ public class BasicModularity implements Modularity
     @Override
     public Set<Module> getModules()
     {
-        return null; // TODO
+        return Collections.emptySet(); // TODO
     }
 
     @Override
