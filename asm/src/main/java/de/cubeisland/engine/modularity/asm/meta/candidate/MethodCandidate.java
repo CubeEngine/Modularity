@@ -97,35 +97,36 @@ public class MethodCandidate extends Candidate
             return false;
         }
 
-        final MethodCandidate that = (MethodCandidate) o;
+        final MethodCandidate that = (MethodCandidate)o;
+
+        if (!getName().equals(((MethodCandidate)o).getName()))
+        {
+            return false;
+        }
 
         if (modifiers != that.modifiers)
         {
             return false;
         }
-        if (!declaringClass.equals(that.declaringClass))
+        if (declaringClass != null ? !declaringClass.equals(that.declaringClass) : that.declaringClass != null)
         {
             return false;
         }
-        if (!parameterTypes.equals(that.parameterTypes))
+        if (returnType != null ? !returnType.equals(that.returnType) : that.returnType != null)
         {
             return false;
         }
-        if (!returnType.equals(that.returnType))
-        {
-            return false;
-        }
-
-        return true;
+        return !(parameterTypes != null ? !parameterTypes.equals(that.parameterTypes) : that.parameterTypes != null);
     }
 
     @Override
     public int hashCode()
     {
-        int result = declaringClass.hashCode();
+        int result = declaringClass != null ? declaringClass.hashCode() : 0;
         result = 31 * result + modifiers;
-        result = 31 * result + returnType.hashCode();
-        result = 31 * result + parameterTypes.hashCode();
+        result = 31 * result + getName().hashCode();
+        result = 31 * result + (returnType != null ? returnType.hashCode() : 0);
+        result = 31 * result + (parameterTypes != null ? parameterTypes.hashCode() : 0);
         return result;
     }
 

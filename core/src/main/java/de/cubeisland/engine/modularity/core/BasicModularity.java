@@ -157,27 +157,7 @@ public class BasicModularity implements Modularity
             result = newInstance(info, instances);
             startServiceImplementations(instances);
 
-            String enableMethod = info.getEnableMethod();
-            if (enableMethod != null)
-            {
-                try
-                {
-                    Method method = result.getClass().getMethod(enableMethod);
-                    method.invoke(result); // TODO allow Parameters (add to dependencies)
-                }
-                catch (NoSuchMethodException e)
-                {
-                    throw new IllegalStateException(e);
-                }
-                catch (InvocationTargetException e)
-                {
-                    throw new IllegalStateException(e);
-                }
-                catch (IllegalAccessException e)
-                {
-                    throw new IllegalStateException(e);
-                }
-            }
+            enableInstance(info, result);
 
             System.out.println("done.\n");
         }
@@ -187,6 +167,31 @@ public class BasicModularity implements Modularity
         }
         depth--;
         return result;
+    }
+
+    private void enableInstance(DependencyInformation info, Object result)
+    {
+        String enableMethod = info.getEnableMethod();
+        if (enableMethod != null)
+        {
+            try
+            {
+                Method method = result.getClass().getMethod(enableMethod);
+                method.invoke(result); // TODO allow Parameters (add to dependencies)
+            }
+            catch (NoSuchMethodException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            catch (InvocationTargetException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new IllegalStateException(e);
+            }
+        }
     }
 
     private Object getInstance(DependencyInformation info)
@@ -212,16 +217,17 @@ public class BasicModularity implements Modularity
         show(">", null);
     }
 
-    private void startServiceImplementation(ProxyServiceContainer instance)
+    private void startServiceImplementation(ProxyServiceContainer container)
     {
         for (TreeMap<Integer, DependencyInformation> map : services.values())
         {
             for (DependencyInformation impl : map.values())
             {
                 if (impl instanceof ServiceImplementationMetadata
-                    && ((ServiceImplementationMetadata)impl).getServiceName().equals(instance.getInterface().getName()))
+                    && ((ServiceImplementationMetadata)impl).getServiceName().equals(container.getInterface().getName()))
                 {
-                    newInstance(impl, collectDependencies(impl));
+                    Object instance = newInstance(impl, collectDependencies(impl));
+                    enableInstance(impl, instance);
                 }
             }
         }
@@ -327,7 +333,7 @@ public class BasicModularity implements Modularity
                     Class serviceClass = Class.forName(((ServiceImplementationMetadata)info).getServiceName(), true,
                                                        info.getClassLoader());
                     serviceManager.registerService(serviceClass, created);
-                    return serviceManager.getService(serviceClass);
+                    return created;
                 }
                 instance = created;
             }
