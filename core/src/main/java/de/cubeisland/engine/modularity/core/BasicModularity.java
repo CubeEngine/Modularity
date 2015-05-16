@@ -174,7 +174,7 @@ public class BasicModularity implements Modularity
         Object result = getInstance(info);
         if (result == null)
         {
-            System.out.println("Starting " + info.getClassName() + "...");
+            show("Starting", info);
 
             Map<String, Object> instances = collectDependencies(info);
             result = newInstance(info, instances);
@@ -194,6 +194,7 @@ public class BasicModularity implements Modularity
 
     private void enableInstance(DependencyInformation info, Object instance)
     {
+        show("enable", info);
         if (instance instanceof InstancedServiceContainer)
         {
             instance = ((InstancedServiceContainer)instance).getImplementation();
@@ -257,7 +258,9 @@ public class BasicModularity implements Modularity
                 if (impl instanceof ServiceImplementationMetadata
                     && ((ServiceImplementationMetadata)impl).getServiceName().equals(container.getInterface().getName()))
                 {
-                    Object instance = newInstance(impl, collectDependencies(impl));
+                    Map<String, Object> deps = collectDependencies(impl);
+                    Object instance = newInstance(impl, deps);
+                    startServiceImplementations(deps);
                     enableInstance(impl, instance);
                 }
             }
@@ -392,8 +395,7 @@ public class BasicModularity implements Modularity
 
             if (instance instanceof Provider)
             {
-                Class<?> serviceClass = Class.forName(((ServiceProviderMetadata)info).getServiceName(), true, info.getClassLoader());
-                instance = serviceManager.registerService(serviceClass, (Provider)instance);
+                instance = serviceManager.registerService(((ServiceProviderMetadata)info), (Provider)instance);
             }
 
             if (instance instanceof Instance)
@@ -413,23 +415,20 @@ public class BasicModularity implements Modularity
         }
         catch (ClassNotFoundException e)
         {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
         catch (InvocationTargetException e)
         {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
         catch (InstantiationException e)
         {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
         catch (IllegalAccessException e)
         {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
-        System.out.println("An error occurred!");
-
-        return null;
     }
 
     private void injectDependencies(Map<String, Object> deps, Object instance, DependencyInformation info) throws IllegalAccessException

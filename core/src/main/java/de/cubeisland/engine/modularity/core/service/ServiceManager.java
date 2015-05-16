@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
 
 public class ServiceManager
@@ -87,13 +88,22 @@ public class ServiceManager
         }
     }
 
-    public <S> ServiceContainer<S> registerService(Class<S> serviceClass, Provider<S> instance)
+    public <S> ServiceContainer<S> registerService(ServiceProviderMetadata info, Provider<S> instance)
     {
         synchronized (this.services)
         {
-            ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, instance);
-            services.put(serviceClass, container);
-            return container;
+            try
+            {
+                Class serviceClass = Class.forName(info.getServiceName(), true, info.getClassLoader());
+                @SuppressWarnings("unchecked")
+                ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, info, instance);
+                services.put(serviceClass, container);
+                return container;
+            }
+            catch (ClassNotFoundException e)
+            {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
