@@ -83,4 +83,9 @@ public class ProvidedServiceContainer<T> implements ServiceContainer<T>
     {
         throw new UnsupportedOperationException();
     }
+
+    public Provider<T> getProvider()
+    {
+        return provider;
+    }
 }

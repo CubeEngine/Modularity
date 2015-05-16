@@ -46,6 +46,7 @@ import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMeta
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
 import de.cubeisland.engine.modularity.core.service.InstancedServiceContainer;
+import de.cubeisland.engine.modularity.core.service.ProvidedServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
@@ -191,19 +192,23 @@ public class BasicModularity implements Modularity
         return result;
     }
 
-    private void enableInstance(DependencyInformation info, Object result)
+    private void enableInstance(DependencyInformation info, Object instance)
     {
-        if (result instanceof InstancedServiceContainer)
+        if (instance instanceof InstancedServiceContainer)
         {
-            result = ((InstancedServiceContainer)result).getImplementation();
+            instance = ((InstancedServiceContainer)instance).getImplementation();
+        }
+        if (instance instanceof ProvidedServiceContainer)
+        {
+            instance = ((ProvidedServiceContainer)instance).getProvider();
         }
         String enableMethod = info.getEnableMethod();
         if (enableMethod != null)
         {
             try
             {
-                Method method = result.getClass().getMethod(enableMethod);
-                method.invoke(result); // TODO allow Parameters (add to dependencies)
+                Method method = instance.getClass().getMethod(enableMethod);
+                method.invoke(instance); // TODO allow Parameters (add to dependencies)
             }
             catch (NoSuchMethodException e)
             {
@@ -388,12 +393,17 @@ public class BasicModularity implements Modularity
             if (instance instanceof Provider)
             {
                 Class<?> serviceClass = Class.forName(((ServiceProviderMetadata)info).getServiceName(), true, info.getClassLoader());
-                serviceManager.registerService(serviceClass, (Provider)instance);
+                instance = serviceManager.registerService(serviceClass, (Provider)instance);
             }
 
             if (instance instanceof Instance)
             {
-                this.instances.put(info.getClassName(), (Instance)instance);
+                String name = info.getClassName();
+                if (info instanceof ServiceProviderMetadata)
+                {
+                    name = ((ServiceProviderMetadata)info).getServiceName();
+                }
+                this.instances.put(name, (Instance)instance);
             }
             else if (instance instanceof ValueProvider)
             {
