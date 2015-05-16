@@ -20,18 +20,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.asm.marker;
 
-import java.io.File;
-import de.cubeisland.engine.modularity.core.Modularity;
-import de.cubeisland.engine.modularity.core.ValueProvider;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class FileProvider implements ValueProvider<File>
+/**
+ * Marks the annotated class as a {@link de.cubeisland.engine.modularity.core.ValueProvider} for given class
+ */
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.TYPE)
+public @interface Provider
 {
-    @Override
-    public File get(DependencyInformation info, Modularity modularity)
-    {
-        return new File("");
-    }
+    /**
+     * Returns the provided value type
+     *
+     * @return the provided value type
+     */
+    Class value();
 }

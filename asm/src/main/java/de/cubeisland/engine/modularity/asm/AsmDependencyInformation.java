@@ -34,6 +34,7 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
@@ -52,17 +53,15 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private String enableMethod;
     private String disableMethod;
 
-    public AsmDependencyInformation(String identifier, String version, String sourceVersion, Set<FieldCandidate> fields,
-                                    Set<MethodCandidate> methods, Set<ConstructorCandidate> constructors,
-                                    ModularityClassLoader classLoader)
+    public AsmDependencyInformation(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
     {
-        this.identifier = identifier;
-        this.version = version;
-        this.sourceVersion = sourceVersion;
-        this.classLoader = classLoader;
+        this.identifier = candidate.getName();
+        this.version = candidate.getVersion();
+        this.sourceVersion = candidate.getSourceVersion();
+        this.classLoader = candidate.getClassLoader();
 
         // Search dependencies:
-        for (FieldCandidate field : fields)
+        for (FieldCandidate field : candidate.getFields())
         {
             if (field.isAnnotatedWith(Inject.class))
             {
@@ -90,7 +89,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         }
 
         // find enable and disable methods
-        for (MethodCandidate method : methods)
+        for (MethodCandidate method : candidate.getMethods())
         {
             if (method.isAnnotatedWith(Enable.class))
             {

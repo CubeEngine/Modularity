@@ -62,7 +62,7 @@ public class AsmInformationLoaderTest
     public void testJar2()
     {
         Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module2.jar"));
-        assertEquals(3, infos.size());
+        assertEquals(4, infos.size());
         for (DependencyInformation info : infos)
         {
             assertEquals("branch-somehashvalue", info.getSourceVersion());

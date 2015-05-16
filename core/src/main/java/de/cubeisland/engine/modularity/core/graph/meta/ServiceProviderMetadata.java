@@ -20,31 +20,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.core.graph.meta;
 
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public abstract class Module implements Instance
+/**
+ * Describes metadata for a provided service
+ */
+public interface ServiceProviderMetadata extends DependencyInformation
 {
-    private final ModuleMetadata metadata = null;
-    private final Modularity modularity = null;
-
-    public ModuleMetadata getInformation()
-    {
-        return metadata;
-    }
-    public Modularity getModularity()
-    {
-        return modularity;
-    }
-
-    public <T> T getProvided(Class<T> clazz)
-    {
-        ValueProvider<T> provider = getModularity().getProvider(clazz);
-        if (provider != null)
-        {
-            return provider.get(getInformation(), getModularity());
-        }
-        throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
-    }
+    /**
+     * Returns the name of the provided Service
+     *
+     * @return the name of the provided Service
+     */
+    String getServiceName();
 }

@@ -22,9 +22,7 @@
  */
 package de.cubeisland.engine.modularity.core.graph;
 
-import java.lang.reflect.Method;
 import java.util.Set;
-import de.cubeisland.engine.modularity.core.Modularity;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 
 /**

@@ -26,8 +26,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 /**
@@ -42,8 +45,7 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
 
     public AsmModuleMetadata(ClassCandidate candidate)
     {
-        super(candidate.getName(), candidate.getVersion(), candidate.getSourceVersion(), candidate.getFields(), candidate.getMethods(),
-              candidate.getConstructors(), candidate.getClassLoader());
+        super(candidate, candidate.getConstructors());
         AnnotationCandidate moduleInfo = candidate.getAnnotation(ModuleInfo.class);
         this.name = moduleInfo.property("name");
         this.description = moduleInfo.property("description");

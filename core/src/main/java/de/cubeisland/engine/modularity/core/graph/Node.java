@@ -52,17 +52,13 @@ public class Node
 
     private void detectCircularDepdency(Node node, Node check)
     {
-        if (node.equals(check))
+        if (node.predecessors.contains(check))
         {
-            throw new IllegalArgumentException("Circular Dependency!");
+            throw new IllegalArgumentException("Circular Dependency! " + node.getInformation().getClassName() + " - " + check.getInformation().getClassName());
         }
-        for (Node child : node.successors)
+        for (Node pre : node.predecessors)
         {
-            if (child.successors.contains(check))
-            {
-                throw new IllegalArgumentException("Circular Dependency!");
-            }
-            detectCircularDepdency(child, check);
+            detectCircularDepdency(pre, check);
         }
     }
 

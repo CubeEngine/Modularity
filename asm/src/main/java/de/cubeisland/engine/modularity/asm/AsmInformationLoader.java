@@ -26,21 +26,39 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
+import de.cubeisland.engine.modularity.asm.marker.Provider;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
+import de.cubeisland.engine.modularity.asm.marker.ServiceProvider;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.asm.visitor.ModuleClassVisitor;
-import de.cubeisland.engine.modularity.core.*;
+import de.cubeisland.engine.modularity.core.BasicModularity;
+import de.cubeisland.engine.modularity.core.InformationLoader;
+import de.cubeisland.engine.modularity.core.Modularity;
+import de.cubeisland.engine.modularity.core.ModularityClassLoader;
+import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.ValueProvider;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.objectweb.asm.ClassReader;
@@ -86,63 +104,6 @@ public class AsmInformationLoader implements InformationLoader
         {
             Set<TypeCandidate> candidates = getCandidates(source); // Get all candidates from source
 
-            // Sort candidates and add additional Information
-            List<ClassCandidate> modules = new ArrayList<ClassCandidate>();
-            List<InterfaceCandidate> services = new ArrayList<InterfaceCandidate>();
-            List<ClassCandidate> servicesImpl = new ArrayList<ClassCandidate>();
-
-            for (TypeCandidate candidate : candidates)
-            {
-                knownTypes.put(candidate.getName(), candidate);
-                if (candidate.isAnnotatedWith(ModuleInfo.class))
-                {
-                    if (candidate instanceof ClassCandidate)
-                    {
-                        modules.add((ClassCandidate)candidate);
-                    }
-                    else
-                    {
-                        System.err.println("Type '" + candidate.getName()
-                                               + "' has the @ModuleInfo annotation, but cannot be a module!");
-                    }
-                }
-                else if (candidate.isAnnotatedWith(Service.class))
-                {
-                    if (candidate instanceof InterfaceCandidate)
-                    {
-                        services.add((InterfaceCandidate)candidate);
-                    }
-                    else
-                    {
-                        System.err.println(
-                            "Type '" + candidate.getName() + "' has the @Service annotation, but cannot be a service!");
-                    }
-                }
-                else if (candidate.isAnnotatedWith(ServiceImpl.class))
-                {
-                    if (candidate instanceof ClassCandidate)
-                    {
-                        servicesImpl.add((ClassCandidate)candidate);
-                    }
-                    else
-                    {
-                        System.err.println("Type '" + candidate.getName()
-                                               + "' has the @ServiceImpl annotation, but cannot be a service-implementation!");
-                    }
-                }
-            }
-
-            for (Iterator<ClassCandidate> iterator = modules.iterator(); iterator.hasNext(); )
-            {
-                final TypeCandidate module = iterator.next();
-                if (!implemented(module, Module.class))
-                {
-                    System.err.println("Type '" + module.getName()
-                                           + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
-                    iterator.remove();
-                }
-            }
-
             ModularityClassLoader classLoader = null;
             LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
             if (source.getName().endsWith(".jar"))
@@ -150,27 +111,33 @@ public class AsmInformationLoader implements InformationLoader
                 classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies,
                                                         modularity.getClass().getClassLoader());
             }
-            else
-            {
-                // TODO
-            }
 
-            for (ClassCandidate module : modules)
+            // Sort candidates and add additional Information
+            for (TypeCandidate candidate : candidates)
             {
-                module.setClassLoader(classLoader);
-                result.add(new AsmModuleMetadata(module));
-            }
+                candidate.setClassLoader(classLoader);
+                knownTypes.put(candidate.getName(), candidate);
 
-            for (InterfaceCandidate service : services)
-            {
-                service.setClassLoader(classLoader);
-                result.add(new AsmServiceDefinitionMetadata(service));
-            }
-
-            for (ClassCandidate serviceImpl : servicesImpl)
-            {
-                serviceImpl.setClassLoader(classLoader);
-                result.add(new AsmServiceImplementationMetadata(serviceImpl));
+                try
+                {
+                    checkFor(candidate, ModuleInfo.class, ClassCandidate.class, AsmModuleMetadata.class, result);
+                    checkFor(candidate, Service.class, InterfaceCandidate.class, AsmServiceDefinitionMetadata.class, result);
+                    checkFor(candidate, ServiceImpl.class, ClassCandidate.class, AsmServiceImplementationMetadata.class, result);
+                    checkFor(candidate, ServiceProvider.class, ClassCandidate.class, AsmServiceProviderMetadata.class, result);
+                    checkFor(candidate, Provider.class, ClassCandidate.class, AsmValueProviderMetadata.class, result);
+                }
+                catch (NoSuchMethodException ignored)
+                {
+                }
+                catch (IllegalAccessException ignored)
+                {
+                }
+                catch (InvocationTargetException ignored)
+                {
+                }
+                catch (InstantiationException ignored)
+                {
+                }
             }
 
             for (DependencyInformation info : result)
@@ -189,6 +156,40 @@ public class AsmInformationLoader implements InformationLoader
         {
             // TODO log error
             return Collections.emptySet();
+        }
+    }
+
+    private void checkFor(TypeCandidate candidate, Class<? extends Annotation> annotation, Class<? extends TypeCandidate> candidateType,
+                          Class<? extends AsmDependencyInformation> metaClass, Set<DependencyInformation> result) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+    {
+        if (candidate.isAnnotatedWith(annotation))
+        {
+            if (candidateType.isAssignableFrom(candidateType))
+            {
+                if (annotation == ModuleInfo.class && !implemented(candidate, Module.class))
+                {
+                    System.err.println("Type '" + candidate.getName()
+                                           + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
+                    return;
+                }
+                if (annotation == ServiceProvider.class && !candidate.hasInterface(javax.inject.Provider.class))
+                {
+                    System.err.println("Type '" + candidate.getName()
+                                           + "' has the @ServiceProvider annotation, but cannot be a service-provider!");
+                    return;
+                }
+                if (annotation == Provider.class && !candidate.hasInterface(ValueProvider.class))
+                {
+                    System.err.println("Type '" + candidate.getName()
+                                           + "' has the @Provider annotation, but cannot be a value-provider!");
+                    return;
+                }
+                result.add(metaClass.getConstructor(candidateType).newInstance(candidate));
+            }
+            else
+            {
+                System.err.println("Type '" + candidate.getName() + "' has the @" + annotation.getSimpleName() + " annotation, but is not a " + candidateType.getName());
+            }
         }
     }
 

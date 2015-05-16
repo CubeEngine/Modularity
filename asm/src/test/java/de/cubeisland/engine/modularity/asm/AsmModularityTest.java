@@ -79,9 +79,14 @@ public class AsmModularityTest
                 out.close();
             }
         }
-        modularity = newModularity().load(new File("target/test-classes/"));
-        modularity.getServiceManager().registerService(File.class, new File(""));
-        assertEquals(1, modularity.getGraph().getUnresolved().size());
+        modularity = newModularity();
+        modularity.load(new File("target/test-classes/"));
+        for (String missing : modularity.getGraph().getUnresolved().keySet())
+        {
+            System.out.println("Missing dependency: " + missing);
+        }
+
+        assertEquals(0, modularity.getGraph().getUnresolved().size());
     }
 
     @Test

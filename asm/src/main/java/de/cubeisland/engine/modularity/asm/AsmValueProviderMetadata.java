@@ -20,31 +20,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.asm;
 
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.asm.marker.Provider;
+import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
+import org.objectweb.asm.Type;
 
-public abstract class Module implements Instance
+public class AsmValueProviderMetadata extends AsmDependencyInformation implements ValueProviderMetadata
 {
-    private final ModuleMetadata metadata = null;
-    private final Modularity modularity = null;
+    private final String valueName;
 
-    public ModuleMetadata getInformation()
+    public AsmValueProviderMetadata(ClassCandidate candidate)
     {
-        return metadata;
-    }
-    public Modularity getModularity()
-    {
-        return modularity;
+        super(candidate, candidate.getConstructors());
+        Type type = candidate.getAnnotation(Provider.class).property("value");
+        this.valueName = type.getClassName();
     }
 
-    public <T> T getProvided(Class<T> clazz)
+    @Override
+    public String getValueName()
     {
-        ValueProvider<T> provider = getModularity().getProvider(clazz);
-        if (provider != null)
-        {
-            return provider.get(getInformation(), getModularity());
-        }
-        throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
+        return valueName;
     }
 }

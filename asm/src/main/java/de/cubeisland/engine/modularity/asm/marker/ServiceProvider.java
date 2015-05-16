@@ -20,31 +20,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.asm.marker;
 
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public abstract class Module implements Instance
+/**
+ * Marks the annotated class as a {@link javax.inject.Provider} for given service class
+ */
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.TYPE)
+public @interface ServiceProvider
 {
-    private final ModuleMetadata metadata = null;
-    private final Modularity modularity = null;
-
-    public ModuleMetadata getInformation()
-    {
-        return metadata;
-    }
-    public Modularity getModularity()
-    {
-        return modularity;
-    }
-
-    public <T> T getProvided(Class<T> clazz)
-    {
-        ValueProvider<T> provider = getModularity().getProvider(clazz);
-        if (provider != null)
-        {
-            return provider.get(getInformation(), getModularity());
-        }
-        throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
-    }
+    /**
+     * Returns the provided Service
+     *
+     * @return the provided Service
+     */
+    Class value();
 }

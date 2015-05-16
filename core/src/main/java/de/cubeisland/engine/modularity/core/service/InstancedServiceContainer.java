@@ -24,21 +24,20 @@ package de.cubeisland.engine.modularity.core.service;
 
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Implementation;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
 
-public class ProvidedServiceContainer<T> implements ServiceContainer<T>
+public class InstancedServiceContainer<T> implements ServiceContainer<T>
 {
     private final Implementation impl;
     private Class<T> interfaceClass;
-    private Provider<T> provider;
+    private T instance;
 
-    public ProvidedServiceContainer(Class<T> interfaceClass, Provider<T> provider)
+    public InstancedServiceContainer(Class<T> interfaceClass, T instance)
     {
         this.interfaceClass = interfaceClass;
-        this.provider = provider;
-        this.impl = new Implementation(this.provider, Priority.HIGHEST);
+        this.instance = instance;
+        this.impl = new Implementation(instance, Priority.HIGHEST);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class ProvidedServiceContainer<T> implements ServiceContainer<T>
     @Override
     public T getImplementation()
     {
-        return provider.get();
+        return instance;
     }
 
     @Override

@@ -20,31 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.asm.info.module2;
 
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import java.io.File;
+import de.cubeisland.engine.modularity.asm.marker.Provider;
+import de.cubeisland.engine.modularity.core.Modularity;
+import de.cubeisland.engine.modularity.core.ValueProvider;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
-public abstract class Module implements Instance
+@Provider(File.class)
+public class FileProvider implements ValueProvider<File>
 {
-    private final ModuleMetadata metadata = null;
-    private final Modularity modularity = null;
-
-    public ModuleMetadata getInformation()
+    @Override
+    public File get(DependencyInformation info, Modularity modularity)
     {
-        return metadata;
-    }
-    public Modularity getModularity()
-    {
-        return modularity;
-    }
-
-    public <T> T getProvided(Class<T> clazz)
-    {
-        ValueProvider<T> provider = getModularity().getProvider(clazz);
-        if (provider != null)
-        {
-            return provider.get(getInformation(), getModularity());
-        }
-        throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
+        return new File("");
     }
 }

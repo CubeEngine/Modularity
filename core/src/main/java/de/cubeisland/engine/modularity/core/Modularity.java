@@ -25,6 +25,7 @@ package de.cubeisland.engine.modularity.core;
 import java.io.File;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
+import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
@@ -38,7 +39,7 @@ public interface Modularity
      *
      * @return fluent interface
      */
-    BasicModularity load(File source);
+    Set<Node> load(File source);
 
     /**
      * Attempts to start a Module with given identifier.

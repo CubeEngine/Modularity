@@ -27,7 +27,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.ValueProvider;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
 
 public class DependencyGraph
 {
@@ -35,7 +38,7 @@ public class DependencyGraph
     private Map<String, Node> nodes = new HashMap<String, Node>();
     private Node root = new Node();
 
-    public void addNode(DependencyInformation info)
+    public Node addNode(DependencyInformation info)
     {
         Node node = new Node(info);
         // Resolve dependencies of node
@@ -80,14 +83,23 @@ public class DependencyGraph
             root.addSuccessor(node);
         }
 
-        if (node.getInformation() instanceof ModuleMetadata)
+        if (info instanceof ModuleMetadata)
         {
-            nodes.put(node.getInformation().getClassName(), node);
+            nodes.put(info.getClassName(), node);
+        }
+        else if (info instanceof ServiceProviderMetadata)
+        {
+            nodes.put(((ServiceProviderMetadata)info).getServiceName(), node);
+        }
+        else if (info instanceof ValueProviderMetadata)
+        {
+            nodes.put(((ValueProviderMetadata)info).getValueName(), node);
         }
         else
         {
-            nodes.put(node.getInformation().getIdentifier(), node);
+            nodes.put(info.getIdentifier(), node);
         }
+        return node;
     }
 
     public <T> void provided(Class<T> clazz)

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
@@ -52,9 +53,13 @@ public class ServiceManager
 
     public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, DependencyInformation info)
     {
-        ProxyServiceContainer<S> service = new ProxyServiceContainer<S>(interfaceClass, info);
-        this.services.put(interfaceClass, service);
-        return service;
+        synchronized (this.services)
+        {
+            ProxyServiceContainer<S> service = new ProxyServiceContainer<S>(interfaceClass, info);
+            this.services.put(interfaceClass, service);
+            return service;
+        }
+
     }
 
     public <S> ServiceContainer<S> registerService(Class<S> interfaceClass, S implementation)
@@ -70,7 +75,7 @@ public class ServiceManager
             ServiceContainer<S> service = (ServiceContainer<S>)this.services.get(interfaceClass);
             if (service == null || !interfaceClass.isInterface())
             {
-                ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(interfaceClass, implementation);
+                InstancedServiceContainer<S> container = new InstancedServiceContainer<S>(interfaceClass, implementation);
                 services.put(interfaceClass, container);
                 return container;
             }
@@ -79,6 +84,16 @@ public class ServiceManager
                 service.addImplementation(implementation, priority);
             }
             return service;
+        }
+    }
+
+    public <S> ServiceContainer<S> registerService(Class<S> serviceClass, Provider<S> instance)
+    {
+        synchronized (this.services)
+        {
+            ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, instance);
+            services.put(serviceClass, container);
+            return container;
         }
     }
 
@@ -134,5 +149,6 @@ public class ServiceManager
         }
         return service != null && service.hasImplementations();
     }
+
 }
 
