@@ -22,21 +22,17 @@
  */
 package de.cubeisland.engine.modularity.asm.info.module2;
 
-import java.io.File;
-import java.io.PrintStream;
-import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
-import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.core.Maybe;
-import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
-@ModuleInfo(name = "complex", description = "just testing")
-public class ComplexModule extends Module
+import java.io.PrintStream;
+import javax.inject.Provider;
+import de.cubeisland.engine.modularity.asm.marker.ServiceProvider;
+
+@ServiceProvider(PrintStream.class)
+public class ProvidingService implements Provider<PrintStream>
 {
-    @Inject private Maybe<BasicService> anOptionalService;
-    @Inject private ComplexService aRequiredService;
-    @Inject public File file;
-    @Inject private SelfProvidingService selfProvidedService;
-    @Inject private PrintStream providedService;
+    @Override
+    public PrintStream get()
+    {
+        return System.out;
+    }
 }

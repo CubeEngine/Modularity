@@ -63,8 +63,20 @@ public class DependencyGraph
         }
 
         // Resolve dependencies to node
-
-        String found = findVersion(info.getIdentifier(), unresolved.keySet());;
+        String identifier = info.getIdentifier();
+        if (info instanceof ModuleMetadata)
+        {
+            identifier = info.getClassName();
+        }
+        else if (info instanceof ServiceProviderMetadata)
+        {
+            identifier = ((ServiceProviderMetadata)info).getServiceName();
+        }
+        else if (info instanceof ValueProviderMetadata)
+        {
+            identifier = ((ValueProviderMetadata)info).getValueName();
+        }
+        String found = findVersion(identifier, unresolved.keySet());
         while (found != null)
         {
             List<Node> dependents = unresolved.remove(found);
@@ -75,7 +87,7 @@ public class DependencyGraph
                     node.addSuccessor(dependent);
                 }
             }
-            found = findVersion(info.getIdentifier(), unresolved.keySet());;
+            found = findVersion(identifier, unresolved.keySet());;
         }
 
         if (!isDependent)
@@ -83,22 +95,7 @@ public class DependencyGraph
             root.addSuccessor(node);
         }
 
-        if (info instanceof ModuleMetadata)
-        {
-            nodes.put(info.getClassName(), node);
-        }
-        else if (info instanceof ServiceProviderMetadata)
-        {
-            nodes.put(((ServiceProviderMetadata)info).getServiceName(), node);
-        }
-        else if (info instanceof ValueProviderMetadata)
-        {
-            nodes.put(((ValueProviderMetadata)info).getValueName(), node);
-        }
-        else
-        {
-            nodes.put(info.getIdentifier(), node);
-        }
+        nodes.put(identifier, node);
         return node;
     }
 

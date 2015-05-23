@@ -172,12 +172,6 @@ public class AsmInformationLoader implements InformationLoader
                                            + "' has the @ModuleInfo annotation, but doesn't implement the Module interface!");
                     return;
                 }
-                if (annotation == ServiceProvider.class && !candidate.hasInterface(javax.inject.Provider.class))
-                {
-                    System.err.println("Type '" + candidate.getName()
-                                           + "' has the @ServiceProvider annotation, but cannot be a service-provider!");
-                    return;
-                }
                 if (annotation == Provider.class && !candidate.hasInterface(ValueProvider.class))
                 {
                     System.err.println("Type '" + candidate.getName()
