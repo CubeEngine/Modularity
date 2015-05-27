@@ -127,7 +127,14 @@ public class BasicModularity implements Modularity
                 {
                     version = "0";
                 }
-                services.put(Integer.valueOf(version), info);
+                try
+                {
+                    services.put(Integer.valueOf(version), info);
+                }
+                catch (NumberFormatException e)
+                {
+                    services.put(0, info);
+                }
             }
             Set<DependencyInformation> set = infosByClassLoader.get(info.getClassLoader());
             if (set == null)
@@ -377,7 +384,7 @@ public class BasicModularity implements Modularity
             else // Module, ServiceImpl, ServiceProvider, ValueProvider
             {
                 Constructor<?> constructor = getConstructor(info, deps, instanceClass);
-                Object created = constructor.newInstance(getConstructorParams(deps, constructor));
+                final Object created = constructor.newInstance(getConstructorParams(deps, constructor));
                 injectDependencies(deps, created, info);
                 if (info instanceof ServiceImplementationMetadata)
                 {
@@ -386,16 +393,15 @@ public class BasicModularity implements Modularity
                     serviceManager.registerService(serviceClass, created);
                     return created;
                 }
+                if (info instanceof ServiceProviderMetadata)
+                {
+                    serviceManager.registerService((ServiceProviderMetadata)info, created);
+                }
                 instance = created;
             }
             if (instance == null)
             {
                 throw new IllegalStateException();
-            }
-
-            if (instance instanceof Provider)
-            {
-                instance = serviceManager.registerService(((ServiceProviderMetadata)info), (Provider)instance);
             }
 
             if (instance instanceof Instance)

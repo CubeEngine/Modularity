@@ -88,17 +88,35 @@ public class ServiceManager
         }
     }
 
-    public <S> ServiceContainer<S> registerService(ServiceProviderMetadata info, Provider<S> instance)
+    /**
+     * Registers a new service-provider
+     *
+     * @param info the ServiceProviderMetadata
+     * @param provider a {@link Provider} for the Service or an instance
+     * @param <S> the service class
+     * @return a ServiceContainer for the service
+     */
+    @SuppressWarnings("unchecked")
+    public <S> ServiceContainer<S> registerService(ServiceProviderMetadata info, Object provider)
     {
         synchronized (this.services)
         {
             try
             {
                 Class serviceClass = Class.forName(info.getServiceName(), true, info.getClassLoader());
-                @SuppressWarnings("unchecked")
-                ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, info, instance);
-                services.put(serviceClass, container);
-                return container;
+                if (provider instanceof Provider)
+                {
+                    ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, info, ((Provider)provider));
+                    services.put(serviceClass, container);
+                    return container;
+                }
+                if (serviceClass.isAssignableFrom(provider.getClass()))
+                {
+                    InstancedServiceContainer<S> container = new InstancedServiceContainer<S>(serviceClass, (S)provider);
+                    services.put(serviceClass, container);
+                    return container;
+                }
+                throw new IllegalArgumentException("Object does not provide Service");
             }
             catch (ClassNotFoundException e)
             {
