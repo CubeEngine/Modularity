@@ -189,7 +189,7 @@ public class BasicModularity implements Modularity
 
             enableInstance(info, result);
 
-            System.out.println("done.\n");
+            show("done.\n", null);
         }
         else
         {
@@ -771,7 +771,7 @@ public class BasicModularity implements Modularity
     {
         if (1 == 1)
         {
-            //   return;
+               return;
         }
         for (int i1 = 0; i1 < depth; i1++)
         {
