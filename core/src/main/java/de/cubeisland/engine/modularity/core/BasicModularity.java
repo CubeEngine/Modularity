@@ -240,6 +240,31 @@ public class BasicModularity implements Modularity
         {
             identifier = ((ServiceImplementationMetadata)info).getServiceName();
         }
+
+        try
+        {
+            if (info instanceof ServiceDefinitionMetadata)
+            {
+                ServiceContainer<?> service = serviceManager.getService(Class.forName(info.getClassName(), true, info.getClassLoader()));
+                if (service != null)
+                {
+                    return service;
+                }
+            }
+            if (info instanceof ServiceProviderMetadata)
+            {
+                ServiceContainer<?> service = serviceManager.getService(Class.forName(((ServiceProviderMetadata)info).getServiceName(), true, info.getClassLoader()));
+                if (service != null)
+                {
+                    return service;
+                }
+            }
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new IllegalStateException(e);
+        }
+
         return instances.get(identifier);
     }
 
