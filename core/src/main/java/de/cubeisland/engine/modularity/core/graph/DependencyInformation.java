@@ -31,13 +31,25 @@ import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 public interface DependencyInformation
 {
     /**
-     * Returns the identifier, which also is the class
+     * Returns the identifier with version if known
      *
      * @return the identifier
      */
     String getIdentifier();
 
+    /**
+     * The class to instantiate
+     *
+     * @return the class
+     */
     String getClassName();
+
+    /**
+     * The actual class this dependency is providing
+     *
+     * @return the actual class
+     */
+    String getActualClass();
 
     /**
      * Returns the source version if available
@@ -74,6 +86,17 @@ public interface DependencyInformation
      */
     ModularityClassLoader getClassLoader();
 
+    /**
+     * Returns the name of the method to call when enabling
+     *
+     * @return the name of the method to call when enabling
+     */
     String getEnableMethod();
+
+    /**
+     * Returns the name of the method to call when disabling
+     *
+     * @return the name of the method to call when disabling
+     */
     String getDisableMethod();
 }

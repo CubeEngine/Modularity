@@ -74,4 +74,9 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
         return loadAfter;
     }
 
+    @Override
+    public String getActualClass()
+    {
+        return getClassName();
+    }
 }

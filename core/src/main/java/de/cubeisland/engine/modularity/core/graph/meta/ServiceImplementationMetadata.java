@@ -31,5 +31,5 @@ public interface ServiceImplementationMetadata extends DependencyInformation
      *
      * @return the name of the implemented Service
      */
-    String getServiceName();
+    String getActualClass();
 }

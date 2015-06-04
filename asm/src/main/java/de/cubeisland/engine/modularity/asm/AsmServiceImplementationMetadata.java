@@ -63,7 +63,7 @@ public class AsmServiceImplementationMetadata extends AsmDependencyInformation i
     }
 
     @Override
-    public String getServiceName()
+    public String getActualClass()
     {
         return serviceName;
     }

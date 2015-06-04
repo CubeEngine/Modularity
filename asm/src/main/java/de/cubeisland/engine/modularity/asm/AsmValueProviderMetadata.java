@@ -39,7 +39,7 @@ public class AsmValueProviderMetadata extends AsmDependencyInformation implement
     }
 
     @Override
-    public String getValueName()
+    public String getActualClass()
     {
         return valueName;
     }

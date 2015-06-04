@@ -34,5 +34,5 @@ public interface ValueProviderMetadata extends DependencyInformation
      *
      * @return the name of the provided Service
      */
-    String getValueName();
+    String getActualClass();
 }

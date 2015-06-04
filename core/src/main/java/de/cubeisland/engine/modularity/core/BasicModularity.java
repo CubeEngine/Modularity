@@ -56,14 +56,18 @@ public class BasicModularity implements Modularity
     private InformationLoader loader;
     private final DependencyGraph graph = new DependencyGraph();
     private final Map<ClassLoader, Set<DependencyInformation>> infosByClassLoader = new HashMap<ClassLoader, Set<DependencyInformation>>();
-    private final Map<String, ModuleMetadata> modules = new HashMap<String, ModuleMetadata>();
-    private final Map<String, TreeMap<Integer, DependencyInformation>> services = new HashMap<String, TreeMap<Integer, DependencyInformation>>();
-    private final Map<String, ValueProviderMetadata> valueProviders = new HashMap<String, ValueProviderMetadata>();
 
     private final Map<String, Instance> instances = new HashMap<String, Instance>(); // Modules and ServiceContainers
     private final Map<String, ValueProvider<?>> providers = new HashMap<String, ValueProvider<?>>();
 
     private final ServiceManager serviceManager = new ServiceManager();
+
+    // Loaded Metadata
+    private final Map<String, ModuleMetadata> modules = new HashMap<String, ModuleMetadata>();
+    private final Map<String, TreeMap<Integer, ServiceDefinitionMetadata>> services = new HashMap<String, TreeMap<Integer, ServiceDefinitionMetadata>>();
+    private final Map<String, TreeMap<Integer, ServiceImplementationMetadata>> serviceImpls = new HashMap<String, TreeMap<Integer, ServiceImplementationMetadata>>();
+    private final Map<String, ValueProviderMetadata> valueProviders = new HashMap<String, ValueProviderMetadata>();
+    private final Map<String, ServiceProviderMetadata> serviceProviders = new HashMap<String, ServiceProviderMetadata>();
 
     private final Field MODULE_META_FIELD;
     private final Field MODULE_MODULARITY_FIELD;
@@ -101,39 +105,59 @@ public class BasicModularity implements Modularity
             {
                 nodes.add(graph.addNode(info));
             }
-            String className = info.getClassName();
+            String className = info.getActualClass();
             if (info instanceof ModuleMetadata)
             {
                 modules.put(className, (ModuleMetadata)info);
             }
             else if (info instanceof ValueProviderMetadata)
             {
-                valueProviders.put(((ValueProviderMetadata)info).getValueName(), (ValueProviderMetadata)info);
+                valueProviders.put(className, (ValueProviderMetadata)info);
+            }
+            else if (info instanceof ServiceProviderMetadata)
+            {
+                serviceProviders.put(className, ((ServiceProviderMetadata)info));
             }
             else
             {
-                if (info instanceof ServiceProviderMetadata)
-                {
-                    className = ((ServiceProviderMetadata)info).getServiceName();
-                }
-                TreeMap<Integer, DependencyInformation> services = this.services.get(className);
-                if (services == null)
-                {
-                    services = new TreeMap<Integer, DependencyInformation>();
-                    this.services.put(className, services);
-                }
                 String version = info.getVersion();
                 if ("unknown".equals(version))
                 {
                     version = "0";
                 }
-                try
+                if (info instanceof ServiceDefinitionMetadata)
                 {
-                    services.put(Integer.valueOf(version), info);
+                    TreeMap<Integer, ServiceDefinitionMetadata> services = this.services.get(className);
+                    if (services == null)
+                    {
+                        services = new TreeMap<Integer, ServiceDefinitionMetadata>();
+                        this.services.put(className, services);
+                    }
+                    try
+                    {
+                        services.put(Integer.valueOf(version), ((ServiceDefinitionMetadata)info));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        services.put(0, ((ServiceDefinitionMetadata)info));
+                    }
                 }
-                catch (NumberFormatException e)
+                else if (info instanceof ServiceImplementationMetadata)
                 {
-                    services.put(0, info);
+                    TreeMap<Integer, ServiceImplementationMetadata> services = this.serviceImpls.get(className);
+                    if (services == null)
+                    {
+                        services = new TreeMap<Integer, ServiceImplementationMetadata>();
+                        this.serviceImpls.put(className, services);
+                    }
+                    try
+                    {
+                        services.put(Integer.valueOf(version), ((ServiceImplementationMetadata)info));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        services.put(0, ((ServiceImplementationMetadata)info));
+                    }
                 }
             }
             Set<DependencyInformation> set = infosByClassLoader.get(info.getClassLoader());
@@ -235,29 +259,14 @@ public class BasicModularity implements Modularity
 
     private Object getInstance(DependencyInformation info)
     {
-        String identifier = info.getClassName();
-        if (info instanceof ServiceImplementationMetadata)
-        {
-            identifier = ((ServiceImplementationMetadata)info).getServiceName();
-        }
+        String identifier = info.getActualClass();
 
         try
         {
-            if (info instanceof ServiceDefinitionMetadata)
+            ServiceContainer<?> service = serviceManager.getService(Class.forName(identifier, true, info.getClassLoader()));
+            if (service != null)
             {
-                ServiceContainer<?> service = serviceManager.getService(Class.forName(info.getClassName(), true, info.getClassLoader()));
-                if (service != null)
-                {
-                    return service;
-                }
-            }
-            if (info instanceof ServiceProviderMetadata)
-            {
-                ServiceContainer<?> service = serviceManager.getService(Class.forName(((ServiceProviderMetadata)info).getServiceName(), true, info.getClassLoader()));
-                if (service != null)
-                {
-                    return service;
-                }
+                return service;
             }
         }
         catch (ClassNotFoundException e)
@@ -283,12 +292,11 @@ public class BasicModularity implements Modularity
 
     private void startServiceImplementation(ProxyServiceContainer container)
     {
-        for (TreeMap<Integer, DependencyInformation> map : services.values())
+        for (TreeMap<Integer, ServiceImplementationMetadata> map : serviceImpls.values())
         {
-            for (DependencyInformation impl : map.values())
+            for (ServiceImplementationMetadata impl : map.values())
             {
-                if (impl instanceof ServiceImplementationMetadata
-                    && ((ServiceImplementationMetadata)impl).getServiceName().equals(container.getInterface().getName()))
+                if (impl.getActualClass().equals(container.getInterface().getName()))
                 {
                     Map<String, Object> deps = collectDependencies(impl);
                     Object instance = newInstance(impl, deps);
@@ -349,12 +357,7 @@ public class BasicModularity implements Modularity
             }
             else
             {
-                String className = dependency.getClassName();
-                if (dependency instanceof ServiceProviderMetadata)
-                {
-                    className = ((ServiceProviderMetadata)dependency).getServiceName();
-                }
-                collected.put(className, start(dependency));
+                collected.put(dependency.getActualClass(), start(dependency));
             }
         }
     }
@@ -371,6 +374,13 @@ public class BasicModularity implements Modularity
         {
             return value;
         }
+
+        ServiceProviderMetadata service = serviceProviders.get(dependencyString);
+        if (service != null)
+        {
+            return service;
+        }
+
         int versionAt = dependencyString.indexOf(':');
         Integer version = null;
         if (versionAt != -1)
@@ -379,7 +389,7 @@ public class BasicModularity implements Modularity
             dependencyString = dependencyString.substring(0, versionAt);
         }
 
-        TreeMap<Integer, DependencyInformation> services = this.services.get(dependencyString);
+        TreeMap<Integer, ServiceDefinitionMetadata> services = this.services.get(dependencyString);
         if (services != null)
         {
             if (version == null)
@@ -413,7 +423,7 @@ public class BasicModularity implements Modularity
                 injectDependencies(deps, created, info);
                 if (info instanceof ServiceImplementationMetadata)
                 {
-                    Class serviceClass = Class.forName(((ServiceImplementationMetadata)info).getServiceName(), true,
+                    Class serviceClass = Class.forName(info.getActualClass(), true,
                                                        info.getClassLoader());
                     serviceManager.registerService(serviceClass, created);
                     return created;
@@ -431,16 +441,11 @@ public class BasicModularity implements Modularity
 
             if (instance instanceof Instance)
             {
-                String name = info.getClassName();
-                if (info instanceof ServiceProviderMetadata)
-                {
-                    name = ((ServiceProviderMetadata)info).getServiceName();
-                }
-                this.instances.put(name, (Instance)instance);
+                this.instances.put(info.getActualClass(), (Instance)instance);
             }
             else if (instance instanceof ValueProvider)
             {
-                this.providers.put(((ValueProviderMetadata)info).getValueName(), (ValueProvider<?>)instance);
+                this.providers.put(info.getActualClass(), (ValueProvider<?>)instance);
             }
             return instance;
         }
@@ -621,7 +626,15 @@ public class BasicModularity implements Modularity
     @Override
     public Set<Module> getModules()
     {
-        return Collections.emptySet(); // TODO
+        Set<Module> modules = new HashSet<Module>();
+        for (Instance instance : instances.values())
+        {
+            if (instance instanceof Module)
+            {
+                modules.add(((Module)instance));
+            }
+        }
+        return modules;
     }
 
     @Override
@@ -643,6 +656,28 @@ public class BasicModularity implements Modularity
     }
 
     @Override
+    public void startModules()
+    {
+        for (ModuleMetadata module : modules.values())
+        {
+            start(module);
+        }
+    }
+
+    @Override
+    public void stopModules()
+    {
+        for (ModuleMetadata module : modules.values())
+        {
+            Object instance = getInstance(module);
+            if (instance != null)
+            {
+                stop(module, instance);
+            }
+        }
+    }
+
+    @Override
     public Set<Node> unload(Node node)
     {
         if (node.getInformation() == null)
@@ -658,7 +693,7 @@ public class BasicModularity implements Modularity
 
         if (node.getInformation() instanceof ServiceImplementationMetadata)
         {
-            Node serviceNode = graph.getNode(((ServiceImplementationMetadata)node.getInformation()).getServiceName());
+            Node serviceNode = graph.getNode(node.getInformation().getActualClass());
             Object serviceInstance = getInstance(serviceNode.getInformation());
             if (!(serviceInstance instanceof ProxyServiceContainer))
             {
@@ -666,7 +701,7 @@ public class BasicModularity implements Modularity
             }
             if (((ProxyServiceContainer)serviceInstance).getImplementations().size() > 1)
             {
-                stop(node, instance);
+                stop(node.getInformation(), instance);
                 return Collections.singleton(node);
             }
             // else unload predecessors too
@@ -676,15 +711,15 @@ public class BasicModularity implements Modularity
         {
             unloaded.addAll(unload(pre));
         }
-        stop(node, instance);
+        stop(node.getInformation(), instance);
         unloaded.add(node);
         return unloaded;
     }
 
     @SuppressWarnings("unchecked")
-    private void stop(Node node, Object instance)
+    private void stop(DependencyInformation info, Object instance)
     {
-        String disableMethod = node.getInformation().getDisableMethod();
+        String disableMethod = info.getDisableMethod();
         if (disableMethod != null)
         {
             try
@@ -712,7 +747,7 @@ public class BasicModularity implements Modularity
         }
         else if (instance instanceof ProxyServiceContainer)
         {
-            if (node instanceof ServiceDefinitionMetadata)
+            if (info instanceof ServiceDefinitionMetadata)
             {
                 // TODO stop all implementations
                 for (Object impl : ((ProxyServiceContainer)instance).getImplementations())
@@ -726,7 +761,7 @@ public class BasicModularity implements Modularity
                 Object found = null;
                 for (Object impl : ((ProxyServiceContainer)instance).getImplementations())
                 {
-                    if (node.getInformation().getClassName().equals(impl.getClass().getName()))
+                    if (info.getClassName().equals(impl.getClass().getName()))
                     {
                         found = impl;
                         break;
@@ -734,7 +769,7 @@ public class BasicModularity implements Modularity
                 }
                 if (found == null)
                 {
-                    throw new IllegalStateException("Tried to remove missing Implementation: " + node.getInformation().getClassName());
+                    throw new IllegalStateException("Tried to remove missing Implementation: " + info.getClassName());
                 }
 
                 ProxyServiceContainer service = ((ProxyServiceContainer)instance).removeImplementation(found);
@@ -835,7 +870,7 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public Set<Instance> getNodes()
+    public Set<Instance> getInstances()
     {
         return new HashSet<Instance>(instances.values());
     }

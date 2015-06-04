@@ -37,4 +37,10 @@ public class AsmServiceDefinitionMetadata extends AsmDependencyInformation imple
     {
         super(candidate, Collections.<ConstructorCandidate>emptySet());
     }
+
+    @Override
+    public String getActualClass()
+    {
+        return getClassName();
+    }
 }

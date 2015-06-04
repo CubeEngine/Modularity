@@ -27,10 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import de.cubeisland.engine.modularity.core.ValueProvider;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
-import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
 
 public class DependencyGraph
 {
@@ -63,18 +62,10 @@ public class DependencyGraph
         }
 
         // Resolve dependencies to node
-        String identifier = info.getIdentifier();
-        if (info instanceof ModuleMetadata)
+        String identifier = info.getActualClass();
+        if (info instanceof ServiceDefinitionMetadata)
         {
-            identifier = info.getClassName();
-        }
-        else if (info instanceof ServiceProviderMetadata)
-        {
-            identifier = ((ServiceProviderMetadata)info).getServiceName();
-        }
-        else if (info instanceof ValueProviderMetadata)
-        {
-            identifier = ((ValueProviderMetadata)info).getValueName();
+            identifier = info.getIdentifier();
         }
         String found = findVersion(identifier, unresolved.keySet());
         while (found != null)

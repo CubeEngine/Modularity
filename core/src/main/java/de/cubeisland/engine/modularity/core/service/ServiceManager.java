@@ -103,7 +103,7 @@ public class ServiceManager
         {
             try
             {
-                Class serviceClass = Class.forName(info.getServiceName(), true, info.getClassLoader());
+                Class serviceClass = Class.forName(info.getActualClass(), true, info.getClassLoader());
                 if (provider instanceof Provider)
                 {
                     ProvidedServiceContainer<S> container = new ProvidedServiceContainer<S>(serviceClass, info, ((Provider)provider));

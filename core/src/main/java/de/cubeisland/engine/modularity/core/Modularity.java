@@ -54,6 +54,10 @@ public interface Modularity
 
     void startAll();
 
+    void startModules();
+
+    void stopModules();
+
     Set<Node> unload(Node node);
 
     void reload(Node node);
@@ -65,7 +69,7 @@ public interface Modularity
      */
     InformationLoader getLoader();
 
-    Set<Instance> getNodes();
+    Set<Instance> getInstances();
 
     Set<Module> getModules();
 
