@@ -331,7 +331,7 @@ public class BasicModularity implements Modularity
                 ServiceContainer<?> service = serviceManager.getService(Class.forName(dep, true, info.getClassLoader()));
                 if (service!=null)
                 {
-                    collected.put(dep, service.getImplementation());
+                    collected.put(dep, service);
                     continue;
                 }
             }
