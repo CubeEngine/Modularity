@@ -25,6 +25,8 @@ package de.cubeisland.engine.modularity.core;
 public final class SettableMaybe<T> implements Maybe<T>
 {
     private T value;
+    private Callback<T> onAvailable;
+    private Callback<T> onRemove;
 
     public SettableMaybe()
     {
@@ -51,5 +53,31 @@ public final class SettableMaybe<T> implements Maybe<T>
     void provide(T value)
     {
         this.value = value;
+        if (onAvailable != null)
+        {
+            onAvailable.react(value);
+        }
+    }
+
+    void remove()
+    {
+        if (onRemove != null)
+        {
+            onRemove.react(value);
+        }
+        value = null;
+    }
+
+    @Override
+    public void onAvailable(Callback<T> callback)
+    {
+        this.onAvailable = callback;
+    }
+
+    @Override
+    public void onRemove(Callback<T> callback)
+    {
+        // TODO
+        this.onRemove = callback;
     }
 }

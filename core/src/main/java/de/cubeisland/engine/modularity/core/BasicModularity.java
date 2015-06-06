@@ -29,9 +29,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -68,6 +70,8 @@ public class BasicModularity implements Modularity
     private final Map<String, TreeMap<Integer, ServiceImplementationMetadata>> serviceImpls = new HashMap<String, TreeMap<Integer, ServiceImplementationMetadata>>();
     private final Map<String, ValueProviderMetadata> valueProviders = new HashMap<String, ValueProviderMetadata>();
     private final Map<String, ServiceProviderMetadata> serviceProviders = new HashMap<String, ServiceProviderMetadata>();
+
+    private final Map<Class<?>, List<SettableMaybe>> maybes = new HashMap<Class<?>, List<SettableMaybe>>();
 
     private final Field MODULE_META_FIELD;
     private final Field MODULE_MODULARITY_FIELD;
@@ -210,8 +214,15 @@ public class BasicModularity implements Modularity
             Map<String, Object> instances = collectDependencies(info);
             result = newInstance(info, instances);
             startServiceImplementations(instances);
-
             enableInstance(info, result);
+            List<SettableMaybe> list = maybes.get(info.getActualClass());
+            if (list != null)
+            {
+                for (SettableMaybe maybe : list)
+                {
+                    maybe.provide(result);
+                }
+            }
 
             show("done.\n", null);
         }
@@ -479,20 +490,19 @@ public class BasicModularity implements Modularity
             if (field.isAnnotationPresent(Inject.class))
             {
                 Class<?> type = field.getType();
-                boolean maybe = Maybe.class.equals(type);
-                if (maybe)
+                boolean isMaybe = Maybe.class.equals(type);
+                if (isMaybe)
                 {
                     type = (Class)((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
                 }
                 Object toSet = deps.get(type.getName());
-                if (!maybe && toSet == null)
+                if (!isMaybe && toSet == null)
                 {
                     throw new IllegalStateException();
                 }
                 if (toSet instanceof ServiceContainer)
                 {
                     toSet = ((ServiceContainer)toSet).getImplementation();
-
                 }
                 if (toSet instanceof Provider)
                 {
@@ -502,9 +512,17 @@ public class BasicModularity implements Modularity
                 {
                     toSet = ((ValueProvider)toSet).get(info, this);
                 }
-                if (maybe)
+                if (isMaybe)
                 {
-                    toSet = new SettableMaybe(toSet); // TODO save to be able to provide/remove module later
+                    SettableMaybe maybe = new SettableMaybe(toSet);
+                    List<SettableMaybe> list = maybes.get(type);
+                    if (list == null)
+                    {
+                        list = new ArrayList<SettableMaybe>();
+                    }
+                    list.add(maybe);
+                    maybes.put(type, list);
+                    toSet = maybe;
                 }
                 field.setAccessible(true);
                 field.set(instance, toSet);
@@ -720,6 +738,22 @@ public class BasicModularity implements Modularity
     private void stop(DependencyInformation info, Object instance)
     {
         String disableMethod = info.getDisableMethod();
+        try
+        {
+            Class<?> clazz = Class.forName(info.getActualClass(), true, info.getClassLoader());
+            List<SettableMaybe> list = maybes.get(clazz);
+            if (list != null)
+            {
+                for (SettableMaybe<?> maybe : list)
+                {
+                    maybe.remove();
+                }
+            }
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new IllegalStateException(e);
+        }
         if (disableMethod != null)
         {
             try

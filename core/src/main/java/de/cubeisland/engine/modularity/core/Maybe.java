@@ -37,4 +37,12 @@ public interface Maybe<T>
      * @return whether a T is available
      */
     boolean isAvailable();
+
+    void onAvailable(Callback<T> callback);
+    void onRemove(Callback<T> callback);
+
+    interface Callback<T>
+    {
+        void react(T dep);
+    }
 }
