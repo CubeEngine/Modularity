@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.marker.Disable;
 import de.cubeisland.engine.modularity.asm.marker.Enable;
+import de.cubeisland.engine.modularity.asm.marker.Setup;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
@@ -52,6 +53,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private final Set<String> optionalDependencies = new HashSet<String>();
     private String enableMethod;
     private String disableMethod;
+    private String setupMethod;
 
     public AsmDependencyInformation(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
     {
@@ -98,6 +100,10 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             if (method.isAnnotatedWith(Disable.class))
             {
                 this.disableMethod = method.getName();
+            }
+            if (method.isAnnotatedWith(Setup.class))
+            {
+                this.setupMethod = method.getName();
             }
         }
     }
@@ -169,6 +175,12 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     public String getEnableMethod()
     {
         return this.enableMethod;
+    }
+
+    @Override
+    public String getSetupMethod()
+    {
+        return this.setupMethod;
     }
 
     @Override

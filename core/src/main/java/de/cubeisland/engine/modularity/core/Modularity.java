@@ -48,15 +48,17 @@ public interface Modularity
      *
      * @return true if the module was loaded
      */
-    Object start(Node node);
+    Object getInstance(Node node);
 
-    <T> T start(Class<T> type);
+    <T> T getInstance(Class<T> type);
 
     void startAll();
 
-    void startModules();
+    void setupModules();
 
-    void stopModules();
+    void enableModules();
+
+    void disableModules();
 
     Set<Node> unload(Node node);
 

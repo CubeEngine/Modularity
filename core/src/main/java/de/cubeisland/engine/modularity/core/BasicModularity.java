@@ -71,7 +71,7 @@ public class BasicModularity implements Modularity
     private final Map<String, ValueProviderMetadata> valueProviders = new HashMap<String, ValueProviderMetadata>();
     private final Map<String, ServiceProviderMetadata> serviceProviders = new HashMap<String, ServiceProviderMetadata>();
 
-    private final Map<Class<?>, List<SettableMaybe>> maybes = new HashMap<Class<?>, List<SettableMaybe>>();
+    private final Map<String, List<SettableMaybe>> maybes = new HashMap<String, List<SettableMaybe>>();
 
     private final Field MODULE_META_FIELD;
     private final Field MODULE_MODULARITY_FIELD;
@@ -176,7 +176,7 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public Object start(Node node)
+    public Object getInstance(Node node)
     {
         if (node == null)
         {
@@ -187,7 +187,12 @@ public class BasicModularity implements Modularity
         {
             return null;
         }
-        Object instance = this.start(info);
+        Object instance = getInstance(info);
+        if (instance == null)
+        {
+            this.setup(info);
+            instance = this.enable(info);
+        }
         Object result = instance;
         if (instance instanceof ServiceContainer)
         {
@@ -203,17 +208,64 @@ public class BasicModularity implements Modularity
         return result;
     }
 
-    private Object start(DependencyInformation info)
+
+    private Object setup(DependencyInformation info)
+    {
+        Object result = getInstance(info);
+        if (result != null)
+        {
+            return result;
+        }
+        show("Start Setup ", info);
+        Map<String, Object> instances = collectDependencies(info);
+        result = newInstance(info, instances);
+        show("Setup Instance", info);
+        setupInstance(info, result, instances);
+        return result;
+    }
+
+    private void setupInstance(DependencyInformation info, Object instance, Map<String, Object> instances)
+    {
+        startServiceImplementations(instances);
+
+        show("setup", info);
+        if (instance instanceof InstancedServiceContainer)
+        {
+            instance = ((InstancedServiceContainer)instance).getImplementation();
+        }
+        if (instance instanceof ProvidedServiceContainer)
+        {
+            instance = ((ProvidedServiceContainer)instance).getProvider();
+        }
+        String setupMethod = info.getSetupMethod();
+        if (setupMethod != null)
+        {
+            try
+            {
+                Method method = instance.getClass().getMethod(setupMethod);
+                method.invoke(instance);
+            }
+            catch (NoSuchMethodException e)
+            {
+                throw new IllegalStateException(e); // TODO better exception
+            }
+            catch (InvocationTargetException e)
+            {
+                throw new IllegalStateException(e.getCause()); // TODO better exception
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new IllegalStateException(e); // TODO better exception
+            }
+        }
+    }
+
+    private Object enable(DependencyInformation info)
     {
         depth++;
         Object result = getInstance(info);
-        if (result == null)
+        if (result != null)
         {
-            show("Starting", info);
-
-            Map<String, Object> instances = collectDependencies(info);
-            result = newInstance(info, instances);
-            startServiceImplementations(instances);
             enableInstance(info, result);
             List<SettableMaybe> list = maybes.get(info.getActualClass());
             if (list != null)
@@ -224,11 +276,7 @@ public class BasicModularity implements Modularity
                 }
             }
 
-            show("done.\n", null);
-        }
-        else
-        {
-            show("- get", info);
+            show("enabled.", info);
         }
         depth--;
         return result;
@@ -255,15 +303,15 @@ public class BasicModularity implements Modularity
             }
             catch (NoSuchMethodException e)
             {
-                throw new IllegalStateException(e);
+                throw new IllegalStateException(e); // TODO better exception
             }
             catch (InvocationTargetException e)
             {
-                throw new IllegalStateException(e);
+                throw new IllegalStateException(e.getCause()); // TODO better exception
             }
             catch (IllegalAccessException e)
             {
-                throw new IllegalStateException(e);
+                throw new IllegalStateException(e); // TODO better exception
             }
         }
     }
@@ -290,15 +338,14 @@ public class BasicModularity implements Modularity
 
     private void startServiceImplementations(Map<String, Object> instances)
     {
-        show("Search for impls <", null);
         for (Object instance : instances.values())
         {
             if (instance instanceof ProxyServiceContainer && !((ProxyServiceContainer)instance).hasImplementations())
             {
+                show("Search for impl =>", null);
                 startServiceImplementation((ProxyServiceContainer)instance);
             }
         }
-        show(">", null);
     }
 
     private void startServiceImplementation(ProxyServiceContainer container)
@@ -320,10 +367,12 @@ public class BasicModularity implements Modularity
 
     private Map<String, Object> collectDependencies(DependencyInformation info)
     {
+        depth++;
         show("Collect dependencies of", info);
         Map<String, Object> result = new HashMap<String, Object>();
         collectDependencies(info, info.requiredDependencies(), result, true);
         collectDependencies(info, info.optionalDependencies(), result, false);
+        depth--;
         return result;
     }
 
@@ -364,11 +413,11 @@ public class BasicModularity implements Modularity
             }
             if (dependency instanceof ValueProviderMetadata)
             {
-                collected.put(dep, start(dependency));
+                collected.put(dep, setup(dependency));
             }
             else
             {
-                collected.put(dependency.getActualClass(), start(dependency));
+                collected.put(dependency.getActualClass(), setup(dependency));
             }
         }
     }
@@ -419,7 +468,7 @@ public class BasicModularity implements Modularity
     {
         try
         {
-            show("Start", info);
+            show("new Instance ", info);
             Class<?> instanceClass = Class.forName(info.getClassName(), true, info.getClassLoader());
             Object instance;
             if (info instanceof ServiceDefinitionMetadata)
@@ -515,13 +564,13 @@ public class BasicModularity implements Modularity
                 if (isMaybe)
                 {
                     SettableMaybe maybe = new SettableMaybe(toSet);
-                    List<SettableMaybe> list = maybes.get(type);
+                    List<SettableMaybe> list = maybes.get(type.getName());
                     if (list == null)
                     {
                         list = new ArrayList<SettableMaybe>();
                     }
                     list.add(maybe);
-                    maybes.put(type, list);
+                    maybes.put(type.getName(), list);
                     toSet = maybe;
                 }
                 field.setAccessible(true);
@@ -657,14 +706,14 @@ public class BasicModularity implements Modularity
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T start(Class<T> type)
+    public <T> T getInstance(Class<T> type)
     {
         ServiceContainer<T> service = serviceManager.getService(type);
         if (service instanceof InstancedServiceContainer)
         {
             return service.getImplementation();
         }
-        return (T)start(graph.getNode(type.getName()));
+        return (T)getInstance(graph.getNode(type.getName()));
     }
 
     @Override
@@ -674,16 +723,41 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public void startModules()
+    public void setupModules()
     {
-        for (ModuleMetadata module : modules.values())
+        for (ModuleMetadata meta : modules.values())
         {
-            start(module);
+            try
+            {
+                setup(meta);
+            }
+            catch (IllegalStateException e)
+            {
+                // TODO
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
-    public void stopModules()
+    public void enableModules()
+    {
+        for (ModuleMetadata module : modules.values())
+        {
+            try
+            {
+                enable(module);
+            }
+            catch (IllegalStateException e)
+            {
+                // TODO
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void disableModules()
     {
         for (ModuleMetadata module : modules.values())
         {
@@ -741,7 +815,7 @@ public class BasicModularity implements Modularity
         try
         {
             Class<?> clazz = Class.forName(info.getActualClass(), true, info.getClassLoader());
-            List<SettableMaybe> list = maybes.get(clazz);
+            List<SettableMaybe> list = maybes.get(clazz.getName());
             if (list != null)
             {
                 for (SettableMaybe<?> maybe : list)
@@ -821,7 +895,7 @@ public class BasicModularity implements Modularity
         Set<Node> unloaded = unload(node);
         for (Node reload : unloaded)
         {
-            start(reload);
+            getInstance(reload);
         }
     }
 
@@ -829,7 +903,7 @@ public class BasicModularity implements Modularity
     {
         if (node.getInformation() != null)
         {
-            start(node);
+            getInstance(node);
         }
         for (Node suc : node.getSuccessors())
         {
@@ -856,7 +930,7 @@ public class BasicModularity implements Modularity
         ValueProviderMetadata meta = valueProviders.get(clazz.getName());
         if (meta != null)
         {
-            return (ValueProvider<T>)start(meta);
+            return (ValueProvider<T>)enable(meta);
         }
         return null;
     }

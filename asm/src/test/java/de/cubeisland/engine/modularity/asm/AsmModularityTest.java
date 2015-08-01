@@ -92,29 +92,29 @@ public class AsmModularityTest
     @Test
     public void testBasicModule()
     {
-        assertNotNull(modularity.start(BasicModule.class));
+        assertNotNull(modularity.getInstance(BasicModule.class));
     }
 
     @Test
     public void testComplexModule()
     {
-        assertNotNull(modularity.start(ComplexModule.class));
+        assertNotNull(modularity.getInstance(ComplexModule.class));
     }
 
     @Test
     public void testBasicModule2()
     {
-        assertNotNull(modularity.start(BasicModule2.class)); // Starts Module
-        ProvidedService started = modularity.start(ProvidedService.class);  // Starts Service + Impl
+        assertNotNull(modularity.getInstance(BasicModule2.class)); // Starts Module
+        ProvidedService started = modularity.getInstance(ProvidedService.class);  // Starts Service + Impl
         assertNotNull(started);
         assertEquals(ProvidedServiceImpl.stripper, started.provideString());
-        assertNull(modularity.start(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
+        assertNull(modularity.getInstance(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
 
     @Test
     public void testProvidedService()
     {
         modularity.getServiceManager().registerService(String.class, "providedStringService");
-        assertEquals("providedStringService", modularity.start(String.class));
+        assertEquals("providedStringService", modularity.getInstance(String.class));
     }
 }

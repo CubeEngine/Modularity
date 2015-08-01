@@ -87,6 +87,13 @@ public interface DependencyInformation
     ModularityClassLoader getClassLoader();
 
     /**
+     * Returns the name of the method to call when setting up
+     *
+     * @return the name of the method to call when setting up
+     */
+    String getSetupMethod();
+
+    /**
      * Returns the name of the method to call when enabling
      *
      * @return the name of the method to call when enabling
