@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm.marker;
+package de.cubeisland.engine.modularity.core.marker;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,9 +28,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks the annotated method to be called when disabling the module or service
+ * Marks the annotated method to be called when enabling the module or service
  */
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Disable
+public @interface Enable
 {}

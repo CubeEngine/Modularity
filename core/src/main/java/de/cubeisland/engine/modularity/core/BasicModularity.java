@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import de.cubeisland.engine.modularity.core.LifeCycle.State;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.Node;
@@ -47,11 +48,18 @@ import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
+import de.cubeisland.engine.modularity.core.marker.Disable;
+import de.cubeisland.engine.modularity.core.marker.Enable;
+import de.cubeisland.engine.modularity.core.marker.Setup;
 import de.cubeisland.engine.modularity.core.service.InstancedServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ProvidedServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceContainer;
 import de.cubeisland.engine.modularity.core.service.ServiceManager;
+
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.DISABLED;
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.ENABLED;
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.SETUP;
 
 public class BasicModularity implements Modularity
 {
@@ -72,6 +80,7 @@ public class BasicModularity implements Modularity
     private final Map<String, ServiceProviderMetadata> serviceProviders = new HashMap<String, ServiceProviderMetadata>();
 
     private final Map<String, List<SettableMaybe>> maybes = new HashMap<String, List<SettableMaybe>>();
+    private final Map<DependencyInformation, LifeCycle> lifeCycles = new HashMap<DependencyInformation, LifeCycle>();
 
     private final Field MODULE_META_FIELD;
     private final Field MODULE_MODULARITY_FIELD;
@@ -227,37 +236,8 @@ public class BasicModularity implements Modularity
     private void setupInstance(DependencyInformation info, Object instance, Map<String, Object> instances)
     {
         startServiceImplementations(instances);
-
         show("setup", info);
-        if (instance instanceof InstancedServiceContainer)
-        {
-            instance = ((InstancedServiceContainer)instance).getImplementation();
-        }
-        if (instance instanceof ProvidedServiceContainer)
-        {
-            instance = ((ProvidedServiceContainer)instance).getProvider();
-        }
-        String setupMethod = info.getSetupMethod();
-        if (setupMethod != null)
-        {
-            try
-            {
-                Method method = instance.getClass().getMethod(setupMethod);
-                method.invoke(instance);
-            }
-            catch (NoSuchMethodException e)
-            {
-                throw new IllegalStateException(e); // TODO better exception
-            }
-            catch (InvocationTargetException e)
-            {
-                throw new IllegalStateException(e.getCause()); // TODO better exception
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new IllegalStateException(e); // TODO better exception
-            }
-        }
+        lifeCycles.get(info).transition(SETUP);
     }
 
     private Object enable(DependencyInformation info)
@@ -293,27 +273,7 @@ public class BasicModularity implements Modularity
         {
             instance = ((ProvidedServiceContainer)instance).getProvider();
         }
-        String enableMethod = info.getEnableMethod();
-        if (enableMethod != null)
-        {
-            try
-            {
-                Method method = instance.getClass().getMethod(enableMethod);
-                method.invoke(instance); // TODO allow Parameters (add to dependencies)
-            }
-            catch (NoSuchMethodException e)
-            {
-                throw new IllegalStateException(e); // TODO better exception
-            }
-            catch (InvocationTargetException e)
-            {
-                throw new IllegalStateException(e.getCause()); // TODO better exception
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new IllegalStateException(e); // TODO better exception
-            }
-        }
+        lifeCycles.get(info).transition(ENABLED);
     }
 
     private Object getInstance(DependencyInformation info)
@@ -486,6 +446,7 @@ public class BasicModularity implements Modularity
                     Class serviceClass = Class.forName(info.getActualClass(), true,
                                                        info.getClassLoader());
                     serviceManager.registerService(serviceClass, created);
+                    lifeCycles.put(info, new LifeCycle(created));
                     return created;
                 }
                 if (info instanceof ServiceProviderMetadata)
@@ -507,6 +468,7 @@ public class BasicModularity implements Modularity
             {
                 this.providers.put(info.getActualClass(), (ValueProvider<?>)instance);
             }
+            lifeCycles.put(info, new LifeCycle(instance));
             return instance;
         }
         catch (ClassNotFoundException e)
@@ -811,7 +773,6 @@ public class BasicModularity implements Modularity
     @SuppressWarnings("unchecked")
     private void stop(DependencyInformation info, Object instance)
     {
-        String disableMethod = info.getDisableMethod();
         try
         {
             Class<?> clazz = Class.forName(info.getActualClass(), true, info.getClassLoader());
@@ -828,27 +789,8 @@ public class BasicModularity implements Modularity
         {
             throw new IllegalStateException(e);
         }
-        if (disableMethod != null)
-        {
-            try
-            {
-                Method method = instance.getClass().getMethod(disableMethod);
-                method.setAccessible(true);
-                method.invoke(instance);
-            }
-            catch (NoSuchMethodException e)
-            {
-                throw new IllegalStateException(e);
-            }
-            catch (InvocationTargetException e)
-            {
-                throw new IllegalStateException(e);
-            }
-            catch (IllegalAccessException e)
-            {
-                throw new IllegalStateException(e);
-            }
-        }
+        lifeCycles.get(info).transition(DISABLED);
+
         if (instance instanceof Module)
         {
             instances.values().remove(instance);

@@ -26,15 +26,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
-import de.cubeisland.engine.modularity.asm.marker.Disable;
-import de.cubeisland.engine.modularity.asm.marker.Enable;
-import de.cubeisland.engine.modularity.asm.marker.Setup;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
@@ -51,9 +47,6 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private final ModularityClassLoader classLoader;
     private final Set<String> requiredDependencies = new HashSet<String>();
     private final Set<String> optionalDependencies = new HashSet<String>();
-    private String enableMethod;
-    private String disableMethod;
-    private String setupMethod;
 
     public AsmDependencyInformation(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
     {
@@ -87,23 +80,6 @@ public abstract class AsmDependencyInformation implements DependencyInformation
                     addRequiredDependency(reference, null); // TODO version
                     // TODO optional
                 }
-            }
-        }
-
-        // find enable and disable methods
-        for (MethodCandidate method : candidate.getMethods())
-        {
-            if (method.isAnnotatedWith(Enable.class))
-            {
-                this.enableMethod = method.getName();
-            }
-            if (method.isAnnotatedWith(Disable.class))
-            {
-                this.disableMethod = method.getName();
-            }
-            if (method.isAnnotatedWith(Setup.class))
-            {
-                this.setupMethod = method.getName();
             }
         }
     }
@@ -169,23 +145,5 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     public ModularityClassLoader getClassLoader()
     {
         return classLoader;
-    }
-
-    @Override
-    public String getEnableMethod()
-    {
-        return this.enableMethod;
-    }
-
-    @Override
-    public String getSetupMethod()
-    {
-        return this.setupMethod;
-    }
-
-    @Override
-    public String getDisableMethod()
-    {
-        return this.disableMethod;
     }
 }
