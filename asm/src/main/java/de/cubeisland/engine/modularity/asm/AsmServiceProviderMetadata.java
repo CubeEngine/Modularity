@@ -24,6 +24,8 @@ package de.cubeisland.engine.modularity.asm;
 
 import de.cubeisland.engine.modularity.asm.marker.ServiceProvider;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
+import de.cubeisland.engine.modularity.core.graph.BasicDependency;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import org.objectweb.asm.Type;
 
@@ -31,16 +33,25 @@ public class AsmServiceProviderMetadata extends AsmDependencyInformation impleme
 {
     private final String serviceName;
 
+    private final Dependency identifier;
+
     public AsmServiceProviderMetadata(ClassCandidate candidate)
     {
         super(candidate, candidate.getConstructors());
         Type type = candidate.getAnnotation(ServiceProvider.class).property("value");
         this.serviceName = type.getClassName();
+        this.identifier = new BasicDependency(serviceName, getVersion());
     }
 
     @Override
     public String getActualClass()
     {
         return serviceName;
+    }
+
+    @Override
+    public Dependency getIdentifier()
+    {
+         return identifier;
     }
 }

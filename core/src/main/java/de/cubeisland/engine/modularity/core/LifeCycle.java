@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
@@ -405,6 +406,11 @@ public class LifeCycle
     public void addImpl(LifeCycle impl)
     {
         this.impls.add(impl);
+    }
+
+    public DependencyInformation getInformation()
+    {
+        return info;
     }
 
     public enum State

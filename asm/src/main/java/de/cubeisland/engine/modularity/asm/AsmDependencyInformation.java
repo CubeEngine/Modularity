@@ -34,6 +34,8 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
+import de.cubeisland.engine.modularity.core.graph.BasicDependency;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 /**
@@ -41,17 +43,15 @@ import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
  */
 public abstract class AsmDependencyInformation implements DependencyInformation
 {
-    private final String identifier;
-    private final String version;
+    private final Dependency identifier;
     private final String sourceVersion;
     private final ModularityClassLoader classLoader;
-    private final Set<String> requiredDependencies = new HashSet<String>();
-    private final Set<String> optionalDependencies = new HashSet<String>();
+    private final Set<Dependency> requiredDependencies = new HashSet<Dependency>();
+    private final Set<Dependency> optionalDependencies = new HashSet<Dependency>();
 
     public AsmDependencyInformation(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
     {
-        this.identifier = candidate.getName();
-        this.version = candidate.getVersion();
+        identifier = new BasicDependency(candidate.getName(), candidate.getVersion());
         this.sourceVersion = candidate.getSourceVersion();
         this.classLoader = candidate.getClassLoader();
 
@@ -89,14 +89,9 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         optionalDependencies.add(getIdentifier(type, version));
     }
 
-    private String getIdentifier(TypeReference type, AnnotationCandidate version)
+    private Dependency getIdentifier(TypeReference type, AnnotationCandidate version)
     {
-        String identifier = type.getReferencedClass();
-        if (version != null)
-        {
-            identifier += ":" + version.property("value").toString();
-        }
-        return identifier;
+        return new BasicDependency(type.getReferencedClass(), version != null ? version.property("value").toString() : null);
     }
 
     void addRequiredDependency(TypeReference type, AnnotationCandidate version)
@@ -105,15 +100,15 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     }
 
     @Override
-    public String getIdentifier()
+    public Dependency getIdentifier()
     {
-        return identifier + ":" + getVersion();
+        return identifier;
     }
 
     @Override
     public String getClassName()
     {
-        return identifier;
+        return identifier.name();
     }
 
     @Override
@@ -125,18 +120,18 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     @Override
     public String getVersion()
     {
-        return version;
+        return identifier.version();
     }
 
 
     @Override
-    public Set<String> requiredDependencies()
+    public Set<Dependency> requiredDependencies()
     {
         return Collections.unmodifiableSet(requiredDependencies);
     }
 
     @Override
-    public Set<String> optionalDependencies()
+    public Set<Dependency> optionalDependencies()
     {
         return Collections.unmodifiableSet(optionalDependencies);
     }
