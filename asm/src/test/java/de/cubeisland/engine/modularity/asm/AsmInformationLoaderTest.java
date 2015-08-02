@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
+import de.cubeisland.engine.modularity.core.graph.BasicDependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.junit.BeforeClass;
@@ -82,7 +83,7 @@ public class AsmInformationLoaderTest
                 // SuchTestingModule:
                 assertTrue(info instanceof ModuleMetadata);
                 assertEquals("basic", ((ModuleMetadata)info).getName());
-                assertTrue(info.optionalDependencies().contains(BasicService.class.getName() + ":1"));
+                assertTrue(info.optionalDependencies().contains(new BasicDependency(BasicService.class.getName(),"1")));
             }
 
         }
