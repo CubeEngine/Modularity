@@ -24,6 +24,7 @@ package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.Node;
@@ -36,33 +37,22 @@ public interface Modularity
      * Loads a all DependencyInformation from given source
      *
      * @param source the source
+     * @param filter optional package filters to be matched
      *
      * @return fluent interface
      */
-    Set<Node> load(File source);
+    void load(File source, String... filter);
 
-    /**
-     * Attempts to start a Module with given identifier.
-     *
-     * @param node the identifier
-     *
-     * @return true if the module was loaded
-     */
-    Object getInstance(Node node);
+    <T> T provide(Class<T> type);
+    LifeCycle getLifecycle(Class type);
 
-    <T> T getInstance(Class<T> type);
-
-    void startAll();
+    LifeCycle getLifecycle(Dependency dep);
 
     void setupModules();
 
     void enableModules();
 
     void disableModules();
-
-    Set<Node> unload(Node node);
-
-    void reload(Node node);
 
     /**
      * Returns the InformationLoader
@@ -71,9 +61,7 @@ public interface Modularity
      */
     InformationLoader getLoader();
 
-    Set<Instance> getInstances();
-
-    Set<Module> getModules();
+    Set<LifeCycle> getModules();
 
     Set<ServiceContainer<?>> getServices();
 
@@ -85,7 +73,7 @@ public interface Modularity
      *
      * @return the loaded class or null if not found
      */
-    Class<?> getClazz(String name, Set<String> dependencies);
+    Class<?> findClass(String name, Set<Dependency> dependencies);
 
     DependencyGraph getGraph();
 
@@ -93,5 +81,5 @@ public interface Modularity
 
     <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider);
 
-    <T> ValueProvider<T> getProvider(Class<T> clazz);
+    LifeCycle maybe(Dependency dep);
 }

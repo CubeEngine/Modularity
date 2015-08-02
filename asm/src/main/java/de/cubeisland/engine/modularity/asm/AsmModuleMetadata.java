@@ -26,11 +26,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
-import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
-import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
-import de.cubeisland.engine.modularity.core.Module;
+import de.cubeisland.engine.modularity.core.graph.BasicDependency;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 
 /**
@@ -40,7 +39,7 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
 {
     private final String name;
     private final String description;
-    private final Set<String> loadAfter;
+    private final Set<Dependency> loadAfter = new LinkedHashSet<Dependency>();;
     private final Set<String> authors = null; // TODO from maven?
 
     public AsmModuleMetadata(ClassCandidate candidate)
@@ -49,8 +48,10 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
         AnnotationCandidate moduleInfo = candidate.getAnnotation(ModuleInfo.class);
         this.name = moduleInfo.property("name");
         this.description = moduleInfo.property("description");
-        List<String> loadAfter = moduleInfo.property("loadAfter");
-        this.loadAfter = new LinkedHashSet<String>(loadAfter);
+        for (String name : moduleInfo.<List<String>>property("loadAfter"))
+        {
+            this.loadAfter.add(new BasicDependency(name, null));
+        }
     }
 
     public String getName()
@@ -69,7 +70,7 @@ public class AsmModuleMetadata extends AsmDependencyInformation implements Modul
     }
 
     @Override
-    public Set<String> loadAfter()
+    public Set<Dependency> loadAfter()
     {
         return loadAfter;
     }

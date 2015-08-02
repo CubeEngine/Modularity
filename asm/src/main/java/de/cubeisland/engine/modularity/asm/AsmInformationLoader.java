@@ -59,6 +59,7 @@ import de.cubeisland.engine.modularity.core.Modularity;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.Module;
 import de.cubeisland.engine.modularity.core.ValueProvider;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import org.objectweb.asm.ClassReader;
@@ -85,7 +86,7 @@ public class AsmInformationLoader implements InformationLoader
     }
 
     @Override
-    public Set<DependencyInformation> loadInformation(File source)
+    public Set<DependencyInformation> loadInformation(File source, String... filters)
     {
         Set<DependencyInformation> result = new HashSet<DependencyInformation>();
         if (source.isDirectory()) // if source is directory load each file
@@ -95,17 +96,17 @@ public class AsmInformationLoader implements InformationLoader
                 // TODO configurable
                 if (!file.isDirectory()) // do not search recursively
                 {
-                    result.addAll(loadInformation(file));
+                    result.addAll(loadInformation(file, filters));
                 }
             }
             return result;
         }
         try
         {
-            Set<TypeCandidate> candidates = getCandidates(source); // Get all candidates from source
+            Set<TypeCandidate> candidates = getCandidates(source, filters); // Get all candidates from source
 
             ModularityClassLoader classLoader = null;
-            LinkedHashSet<String> dependencies = new LinkedHashSet<String>();
+            LinkedHashSet<Dependency> dependencies = new LinkedHashSet<Dependency>();
             if (source.getName().endsWith(".jar"))
             {
                 classLoader = new ModularityClassLoader(modularity, source.toURI().toURL(), dependencies,
@@ -187,12 +188,12 @@ public class AsmInformationLoader implements InformationLoader
         }
     }
 
-    private Set<TypeCandidate> getCandidates(File file) throws IOException
+    private Set<TypeCandidate> getCandidates(File file, String... filters) throws IOException
     {
         String sourceVersion = getManifestInfo(file, "sourceVersion", "unknown-unknown");
         String version = getManifestInfo(file, "version", "unknown");
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
-        for (InputStream stream : getStreams(file))
+        for (InputStream stream : getStreams(file, filters))
         {
             ModuleClassVisitor classVisitor = new ModuleClassVisitor(file);
             new ClassReader(stream).accept(classVisitor, 0);
@@ -261,7 +262,7 @@ public class AsmInformationLoader implements InformationLoader
         return false;
     }
 
-    private List<InputStream> getStreams(File file) throws IOException
+    private List<InputStream> getStreams(File file, String... filters) throws IOException
     {
         List<InputStream> list = new ArrayList<InputStream>();
         if (file.getName().endsWith(".class"))
@@ -277,7 +278,21 @@ public class AsmInformationLoader implements InformationLoader
                 ZipEntry entry = entries.nextElement();
                 if (entry.getName().endsWith(".class"))
                 {
-                    list.add(zipFile.getInputStream(entry));
+                    if (filters.length == 0)
+                    {
+                        list.add(zipFile.getInputStream(entry));
+                    }
+                    else
+                    {
+                        for (String filter : filters)
+                        {
+                            if (entry.getName().startsWith(filter))
+                            {
+                                list.add(zipFile.getInputStream(entry));
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }

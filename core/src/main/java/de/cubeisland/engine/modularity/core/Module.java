@@ -28,6 +28,7 @@ public abstract class Module implements Instance
 {
     private final ModuleMetadata metadata = null;
     private final Modularity modularity = null;
+    private final LifeCycle lifeCycle = null;
 
     public ModuleMetadata getInformation()
     {
@@ -38,13 +39,16 @@ public abstract class Module implements Instance
         return modularity;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getProvided(Class<T> clazz)
     {
-        ValueProvider<T> provider = getModularity().getProvider(clazz);
-        if (provider != null)
+        try
         {
-            return provider.get(getInformation(), getModularity());
+            return (T)getModularity().getLifecycle(clazz).getProvided(lifeCycle);
         }
-        throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
+        catch (MissingDependencyException e)
+        {
+            throw new IllegalArgumentException("Provider not registered for " + clazz.getName());
+        }
     }
 }

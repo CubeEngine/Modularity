@@ -35,7 +35,7 @@ public interface DependencyInformation
      *
      * @return the identifier
      */
-    String getIdentifier();
+    Dependency getIdentifier();
 
     /**
      * The class to instantiate
@@ -70,14 +70,14 @@ public interface DependencyInformation
      *
      * @return the required dependencies
      */
-    Set<String> requiredDependencies();
+    Set<Dependency> requiredDependencies();
 
     /**
      * Returns a set of optional dependencies
      *
      * @return the optional dependencies
      */
-    Set<String> optionalDependencies();
+    Set<Dependency> optionalDependencies();
 
     /**
      * Returns the responsible ModularityClassLoader

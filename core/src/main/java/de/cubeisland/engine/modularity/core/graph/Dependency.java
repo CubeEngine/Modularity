@@ -20,20 +20,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core;
+package de.cubeisland.engine.modularity.core.graph;
 
-import java.io.File;
-import java.util.Set;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-
-public interface InformationLoader
+public interface Dependency
 {
-    /**
-     * Loads DependencyInformation from given file or directory
-     *
-     * @param file the file or directory to load from
-     *
-     * @return the DependencyInformation found
-     */
-    Set<DependencyInformation> loadInformation(File file, String... filters);
+    String name();
+    String version();
 }

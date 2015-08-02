@@ -33,8 +33,8 @@ import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 
 public class DependencyGraph
 {
-    private Map<String, List<Node>> unresolved = new HashMap<String, List<Node>>();
-    private Map<String, Node> nodes = new HashMap<String, Node>();
+    private Map<Dependency, List<Node>> unresolved = new HashMap<Dependency, List<Node>>();
+    private Map<Dependency, Node> nodes = new HashMap<Dependency, Node>();
     private Node root = new Node();
 
     public Node addNode(DependencyInformation info)
@@ -42,19 +42,19 @@ public class DependencyGraph
         Node node = new Node(info);
         // Resolve dependencies of node
         boolean isDependent = false;
-        for (String id : info.requiredDependencies())
+        for (Dependency id : info.requiredDependencies())
         {
             isDependent = true;
             resolveDependency(node, id);
         }
-        for (String id : info.optionalDependencies())
+        for (Dependency id : info.optionalDependencies())
         {
             isDependent = true;
             resolveDependency(node, id);
         }
         if (info instanceof ModuleMetadata)
         {
-            for (String id : ((ModuleMetadata)info).loadAfter())
+            for (Dependency id : ((ModuleMetadata)info).loadAfter())
             {
                 isDependent = true;
                 resolveDependency(node, id);
@@ -62,12 +62,7 @@ public class DependencyGraph
         }
 
         // Resolve dependencies to node
-        String identifier = info.getActualClass();
-        if (info instanceof ServiceDefinitionMetadata)
-        {
-            identifier = info.getIdentifier();
-        }
-        String found = findVersion(identifier, unresolved.keySet());
+        Dependency found = findVersion(info.getIdentifier(), unresolved.keySet());
         while (found != null)
         {
             List<Node> dependents = unresolved.remove(found);
@@ -78,7 +73,7 @@ public class DependencyGraph
                     node.addSuccessor(dependent);
                 }
             }
-            found = findVersion(identifier, unresolved.keySet());;
+            found = findVersion(info.getIdentifier(), unresolved.keySet());
         }
 
         if (!isDependent)
@@ -86,46 +81,32 @@ public class DependencyGraph
             root.addSuccessor(node);
         }
 
-        nodes.put(identifier, node);
+        nodes.put(info.getIdentifier(), node);
         return node;
     }
 
-    public <T> void provided(Class<T> clazz)
+    public void provided(Dependency dep)
     {
-        unresolved.remove(clazz.getName());
+        unresolved.remove(dep);
     }
 
-    public static String findVersion(String id, Set<String> in)
+    public static Dependency findVersion(Dependency id, Set<Dependency> in)
     {
         if (in.contains(id))
         {
             return id;
         }
-        if (!id.contains(":"))
+        for (Dependency dependency : in)
         {
-            for (String dep : in)
+            if (dependency.name().equals(id.name()))
             {
-                if (dep.contains(":"))
-                {
-                    if (dep.split(":")[0].equals(id))
-                    {
-                        return dep;
-                    }
-                }
-            }
-        }
-        else
-        {
-            String substring = id.substring(0, id.indexOf(":"));
-            if (in.contains(substring))
-            {
-                return substring;
+                return dependency;
             }
         }
         return null;
     }
 
-    private void resolveDependency(Node node, String id)
+    private void resolveDependency(Node node, Dependency id)
     {
         Node dependency = nodes.get(findVersion(id, nodes.keySet()));
         if (dependency == null)
@@ -149,13 +130,13 @@ public class DependencyGraph
         return root;
     }
 
-    public Map<String, List<Node>> getUnresolved()
+    public Map<Dependency, List<Node>> getUnresolved()
     {
         return unresolved;
     }
 
-    public Node getNode(String name)
+    public Node getNode(Dependency dep)
     {
-        return nodes.get(findVersion(name, nodes.keySet()));
+        return nodes.get(findVersion(dep, nodes.keySet()));
     }
 }

@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.core.graph.meta;
 
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 /**
@@ -53,5 +54,5 @@ public interface ModuleMetadata extends DependencyInformation
      * Returns the identifiers of other modules which should be started before this one
      * @return the modules to load before
      */
-    Set<String> loadAfter();
+    Set<Dependency> loadAfter();
 }

@@ -34,6 +34,7 @@ import de.cubeisland.engine.modularity.asm.info.module3.BasicModule2;
 import de.cubeisland.engine.modularity.asm.info.module3.ProvidedService;
 import de.cubeisland.engine.modularity.asm.info.module3.ProvidedServiceImpl;
 import de.cubeisland.engine.modularity.core.Modularity;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -81,7 +82,7 @@ public class AsmModularityTest
         }
         modularity = newModularity();
         modularity.load(new File("target/test-classes/"));
-        for (String missing : modularity.getGraph().getUnresolved().keySet())
+        for (Dependency missing : modularity.getGraph().getUnresolved().keySet())
         {
             System.out.println("Missing dependency: " + missing);
         }
@@ -92,29 +93,29 @@ public class AsmModularityTest
     @Test
     public void testBasicModule()
     {
-        assertNotNull(modularity.getInstance(BasicModule.class));
+        assertNotNull(modularity.provide(BasicModule.class));
     }
 
     @Test
     public void testComplexModule()
     {
-        assertNotNull(modularity.getInstance(ComplexModule.class));
+        assertNotNull(modularity.provide(ComplexModule.class));
     }
 
     @Test
     public void testBasicModule2()
     {
-        assertNotNull(modularity.getInstance(BasicModule2.class)); // Starts Module
-        ProvidedService started = modularity.getInstance(ProvidedService.class);  // Starts Service + Impl
+        assertNotNull(modularity.provide(BasicModule2.class)); // Starts Module
+        ProvidedService started = modularity.provide(ProvidedService.class);  // Starts Service + Impl
         assertNotNull(started);
         assertEquals(ProvidedServiceImpl.stripper, started.provideString());
-        assertNull(modularity.getInstance(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
+        assertNull(modularity.provide(ProvidedServiceImpl.class)); // Returns null. Not allowed to query for implementation
     }
 
     @Test
     public void testProvidedService()
     {
         modularity.getServiceManager().registerService(String.class, "providedStringService");
-        assertEquals("providedStringService", modularity.getInstance(String.class));
+        assertEquals("providedStringService", modularity.provide(String.class));
     }
 }

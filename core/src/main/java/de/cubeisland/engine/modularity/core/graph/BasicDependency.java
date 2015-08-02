@@ -20,39 +20,64 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.asm;
+package de.cubeisland.engine.modularity.core.graph;
 
-import de.cubeisland.engine.modularity.asm.marker.Provider;
-import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
-import de.cubeisland.engine.modularity.core.graph.BasicDependency;
-import de.cubeisland.engine.modularity.core.graph.Dependency;
-import de.cubeisland.engine.modularity.core.graph.meta.ValueProviderMetadata;
-import org.objectweb.asm.Type;
-
-public class AsmValueProviderMetadata extends AsmDependencyInformation implements ValueProviderMetadata
+public class BasicDependency implements Dependency
 {
-    private final String valueName;
+    private final String name;
+    private final String version;
 
-    private final Dependency identifier;
-
-
-    public AsmValueProviderMetadata(ClassCandidate candidate)
+    public BasicDependency(String name, String version)
     {
-        super(candidate, candidate.getConstructors());
-        Type type = candidate.getAnnotation(Provider.class).property("value");
-        this.valueName = type.getClassName();
-        this.identifier = new BasicDependency(valueName, getVersion());
+        this.name = name;
+        this.version = version;
     }
 
     @Override
-    public String getActualClass()
+    public String name()
     {
-        return valueName;
+        return name;
     }
 
     @Override
-    public Dependency getIdentifier()
+    public String version()
     {
-        return identifier;
+        return version;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof Dependency))
+        {
+            return false;
+        }
+
+        final Dependency that = (Dependency)o;
+
+        if (name() != null ? !name().equals(that.name()) : that.name() != null)
+        {
+            return false;
+        }
+        return !(version() != null ? !version().equals(that.version()) : that.version() != null);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = name() != null ? name().hashCode() : 0;
+        result = 31 * result + (version() != null ? version().hashCode() : 0);
+        return result;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        return name + ":" + String.valueOf(version);
     }
 }
