@@ -26,10 +26,6 @@ import java.io.File;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-import de.cubeisland.engine.modularity.core.graph.Node;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer;
-import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
 public interface Modularity
 {
@@ -63,8 +59,6 @@ public interface Modularity
 
     Set<LifeCycle> getModules();
 
-    Set<ServiceContainer<?>> getServices();
-
     /**
      * Returns the loaded class with given name. Searching first in the ClassLoaders of the dependencies.
      *
@@ -77,9 +71,9 @@ public interface Modularity
 
     DependencyGraph getGraph();
 
-    ServiceManager getServiceManager();
-
     <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider);
+
+    <T> void register(Class<T> gameClass, T game);
 
     LifeCycle maybe(Dependency dep);
 }

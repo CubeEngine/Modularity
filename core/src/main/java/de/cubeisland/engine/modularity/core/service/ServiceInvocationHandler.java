@@ -42,15 +42,15 @@ package de.cubeisland.engine.modularity.core.service;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.PriorityQueue;
-import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Implementation;
+import java.util.Queue;
+import de.cubeisland.engine.modularity.core.LifeCycle;
 
 class ServiceInvocationHandler implements InvocationHandler
 {
-    private final ProxyServiceContainer<?> service;
-    private final PriorityQueue<Implementation> implementations;
+    private final ServiceProvider<?> service;
+    private final Queue<LifeCycle> implementations;
 
-    public ServiceInvocationHandler(ProxyServiceContainer<?> service, PriorityQueue<Implementation> implementations)
+    public ServiceInvocationHandler(ServiceProvider<?> service, Queue<LifeCycle> implementations)
     {
         this.service = service;
         this.implementations = implementations;
@@ -60,7 +60,7 @@ class ServiceInvocationHandler implements InvocationHandler
     {
         synchronized (this.implementations)
         {
-            final Implementation impl = this.implementations.peek();
+            final LifeCycle impl = this.implementations.peek();
             if (impl == null)
             {
                 // TODO custom exception
@@ -70,7 +70,7 @@ class ServiceInvocationHandler implements InvocationHandler
 
             try
             {
-                return method.invoke(impl.getTarget(), args);
+                return method.invoke(impl.getProvided(null), args);
             }
             catch (InvocationTargetException e)
             {

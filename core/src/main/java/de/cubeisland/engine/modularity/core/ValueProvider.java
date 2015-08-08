@@ -22,9 +22,7 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-
 public interface ValueProvider<T>
 {
-    T get(DependencyInformation info, Modularity modularity);
+    T get(LifeCycle lifeCycle, Modularity modularity);
 }

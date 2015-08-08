@@ -115,7 +115,7 @@ public class AsmModularityTest
     @Test
     public void testProvidedService()
     {
-        modularity.getServiceManager().registerService(String.class, "providedStringService");
+        modularity.register(String.class, "providedStringService");
         assertEquals("providedStringService", modularity.provide(String.class));
     }
 }

@@ -23,13 +23,12 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.net.URL;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 public class SourceURLProvider implements ValueProvider<URL>
 {
     @Override
-    public URL get(DependencyInformation info, Modularity modularity)
+    public URL get(LifeCycle lifeCycle, Modularity modularity)
     {
-        return info.getClassLoader().getSourceURL();
+        return lifeCycle.getInformation().getClassLoader().getSourceURL();
     }
 }

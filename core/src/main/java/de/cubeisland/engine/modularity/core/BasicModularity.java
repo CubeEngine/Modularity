@@ -36,8 +36,6 @@ import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer;
-import de.cubeisland.engine.modularity.core.service.ServiceManager;
 
 import static de.cubeisland.engine.modularity.core.LifeCycle.State.*;
 
@@ -45,8 +43,6 @@ public class BasicModularity implements Modularity
 {
     private InformationLoader loader;
     private final DependencyGraph graph = new DependencyGraph();
-
-    private final ServiceManager serviceManager = new ServiceManager();
 
     private final Map<Dependency, LifeCycle> lifeCycles = new HashMap<Dependency, LifeCycle>();
     private final Map<Dependency, ModuleMetadata> moduleInfos = new HashMap<Dependency, ModuleMetadata>();
@@ -56,6 +52,7 @@ public class BasicModularity implements Modularity
     {
         this.loader = loader;
         this.registerProvider(URL.class, new SourceURLProvider());
+        this.register(Modularity.class, this);
     }
 
     @Override
@@ -181,18 +178,6 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public ServiceManager getServiceManager()
-    {
-        return this.serviceManager;
-    }
-
-    @Override
-    public Set<ServiceContainer<?>> getServices()
-    {
-        return serviceManager.getServices();
-    }
-
-    @Override
     public Set<LifeCycle> getModules()
     {
         Set<LifeCycle> modules = new HashSet<LifeCycle>();
@@ -213,11 +198,6 @@ public class BasicModularity implements Modularity
     {
         try
         {
-            ServiceContainer<T> service = serviceManager.getService(type);
-            if (service != null)
-            {
-                return service.getImplementation();
-            }
             LifeCycle lifecycle = getLifecycle(new BasicDependency(type.getName(), null));
             if (!lifecycle.isInstantiated())
             {
@@ -298,6 +278,14 @@ public class BasicModularity implements Modularity
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
         maybe(dep).init(provider); // Get or create Lifecycle and init
+    }
+
+    @Override
+    public <T> void register(Class<T> clazz, T instance)
+    {
+        BasicDependency dep = new BasicDependency(clazz.getName(), null);
+        graph.provided(dep);
+        maybe(dep).initProvided(instance);
     }
 
     @Override

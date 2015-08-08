@@ -24,15 +24,15 @@ package de.cubeisland.engine.modularity.asm.info.module2;
 
 import java.io.File;
 import de.cubeisland.engine.modularity.asm.marker.Provider;
+import de.cubeisland.engine.modularity.core.LifeCycle;
 import de.cubeisland.engine.modularity.core.Modularity;
 import de.cubeisland.engine.modularity.core.ValueProvider;
-import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 
 @Provider(File.class)
 public class FileProvider implements ValueProvider<File>
 {
     @Override
-    public File get(DependencyInformation info, Modularity modularity)
+    public File get(LifeCycle lifeCycle, Modularity modularity)
     {
         return new File("");
     }

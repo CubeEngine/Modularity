@@ -27,22 +27,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import de.cubeisland.engine.modularity.core.marker.Disable;
 import de.cubeisland.engine.modularity.core.marker.Enable;
 import de.cubeisland.engine.modularity.core.marker.Setup;
-import de.cubeisland.engine.modularity.core.service.ServiceContainer;
+import de.cubeisland.engine.modularity.core.service.ServiceProvider;
 
 import static de.cubeisland.engine.modularity.core.LifeCycle.State.*;
 
@@ -80,7 +77,7 @@ public class LifeCycle
     private HashMap<String, LifeCycle> deps = new HashMap<String, LifeCycle>();
 
     private SettableMaybe maybe;
-    private List<LifeCycle> impls = new ArrayList<LifeCycle>();
+    private Queue<LifeCycle> impls = new PriorityQueue<LifeCycle>();
 
     public LifeCycle(Modularity modularity)
     {
@@ -100,6 +97,14 @@ public class LifeCycle
     {
         System.out.print("Registered external provider " + provider.getClass().getName() + "\n");
         this.instance = provider;
+        this.current = PROVIDED;
+        return this;
+    }
+
+    public LifeCycle initProvided(Object object)
+    {
+        System.out.print("Registered external provided object " + object.getClass().getName() + "\n");
+        this.instance = object;
         this.current = PROVIDED;
         return this;
     }
@@ -245,26 +250,12 @@ public class LifeCycle
             Object instance;
             if (info instanceof ServiceDefinitionMetadata)
             {
-                instance = modularity.getServiceManager().registerService(instanceClass, info);
-                // TODO find impls in modularity and link them to this OR activate on using proxy
-
+                instance = new ServiceProvider(instanceClass, impls);
+                // TODO find impls in modularity and link them to this
             }
             else // Module, ServiceImpl, ServiceProvider, ValueProvider
             {
-                final Object created = injectDependencies(newInstance(getConstructor(instanceClass)));;
-
-                if (info instanceof ServiceImplementationMetadata)
-                {
-                    Class serviceClass = Class.forName(info.getActualClass(), true,
-                                                       info.getClassLoader());
-                    modularity.getServiceManager().registerService(serviceClass, created);
-                    return created;
-                }
-                if (info instanceof ServiceProviderMetadata)
-                {
-                    modularity.getServiceManager().registerService((ServiceProviderMetadata)info, created);
-                }
-                instance = created;
+                instance = injectDependencies(newInstance(getConstructor(instanceClass)));
             }
             if (instance == null)
             {
@@ -387,18 +378,18 @@ public class LifeCycle
 
     public Object getProvided(LifeCycle lifeCycle)
     {
-        Object toSet = instance;
-        if (toSet instanceof ServiceContainer)
+        if (instance == null)
         {
-            toSet = ((ServiceContainer)toSet).getImplementation();
+            this.transition(INSTANTIATED).transition(SETUP_COMPLETE).transition(ENABLED);
         }
+        Object toSet = instance;
         if (toSet instanceof Provider)
         {
             toSet = ((Provider)toSet).get();
         }
         if (toSet instanceof ValueProvider)
         {
-            toSet = ((ValueProvider)toSet).get(lifeCycle.info, modularity);
+            toSet = ((ValueProvider)toSet).get(lifeCycle, modularity);
         }
         return toSet;
     }

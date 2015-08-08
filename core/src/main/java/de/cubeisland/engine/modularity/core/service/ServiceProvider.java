@@ -22,24 +22,34 @@
  */
 package de.cubeisland.engine.modularity.core.service;
 
+import java.util.Queue;
+import javax.inject.Provider;
+import de.cubeisland.engine.modularity.core.LifeCycle;
 
-import java.util.List;
-import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Implementation;
-import de.cubeisland.engine.modularity.core.service.ProxyServiceContainer.Priority;
+import static java.lang.reflect.Proxy.newProxyInstance;
 
-public interface ServiceContainer<T>
+public class ServiceProvider<T> implements Provider<T>
 {
-    Class<T> getInterface();
+    private Class clazz;
+    private final T proxy;
+    private final ServiceInvocationHandler invocationHandler;
 
-    T getImplementation();
+    @SuppressWarnings("unchecked")
+    public ServiceProvider(Class clazz, Queue<LifeCycle> impls)
+    {
+        this.clazz = clazz;
+        this.invocationHandler = new ServiceInvocationHandler(this, impls);
+        this.proxy = (T)newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this.invocationHandler);
+    }
 
-    List<Implementation> getImplementations();
+    @Override
+    public T get()
+    {
+        return proxy;
+    }
 
-    boolean hasImplementations();
-
-    ServiceContainer<T> addImplementation(T implementation, Priority priority);
-
-    ServiceContainer<T> removeImplementation(T implementation);
-
-    ServiceContainer<T> removeImplementations(ClassLoader loader);
+    public Class getInterface()
+    {
+        return clazz;
+    }
 }
