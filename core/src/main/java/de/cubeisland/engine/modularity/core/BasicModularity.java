@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
@@ -147,7 +148,7 @@ public class BasicModularity implements Modularity
                         }
                     }
                 }
-                lifeCycles.put(dep, lifeCycle);
+                lifeCycles.put(node.getInformation().getIdentifier(), lifeCycle);
             }
         }
         return lifeCycle;
@@ -201,7 +202,7 @@ public class BasicModularity implements Modularity
             LifeCycle lifecycle = getLifecycle(new BasicDependency(type.getName(), null));
             if (!lifecycle.isInstantiated())
             {
-                lifecycle.transition(INSTANTIATED).transition(ENABLED);
+                lifecycle.transition(INSTANTIATED).transition(SETUP_COMPLETE).transition(ENABLED);
             }
             return (T)lifecycle.getProvided(null);
         }
@@ -286,6 +287,14 @@ public class BasicModularity implements Modularity
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
         maybe(dep).initProvided(instance);
+    }
+
+    @Override
+    public <T> void register(Class<T> clazz, Provider<T> provider)
+    {
+        BasicDependency dep = new BasicDependency(clazz.getName(), null);
+        graph.provided(dep);
+        maybe(dep).initProvided(provider);
     }
 
     @Override

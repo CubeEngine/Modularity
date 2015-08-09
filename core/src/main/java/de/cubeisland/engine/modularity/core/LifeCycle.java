@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.marker.Disable;
 import de.cubeisland.engine.modularity.core.marker.Enable;
@@ -86,7 +87,7 @@ public class LifeCycle
 
     public LifeCycle init(DependencyInformation info)
     {
-        System.out.print("Start Lifecycle of " + info.getIdentifier().name() + "\n");
+        System.out.print("Start Lifecycle of " + info.getIdentifier().name() + ":" + info.getIdentifier().version() +  "\n");
         this.info = info;
         this.current = LOADED;
         return this;
@@ -182,7 +183,6 @@ public class LifeCycle
             {
                 maybe.remove();
             }
-
         }
     }
 
@@ -380,7 +380,11 @@ public class LifeCycle
     {
         if (instance == null)
         {
-            this.transition(INSTANTIATED).transition(SETUP_COMPLETE).transition(ENABLED);
+            this.transition(INSTANTIATED).transition(SETUP_COMPLETE);
+            if (!(info instanceof ModuleMetadata))
+            {
+                transition(ENABLED); // All But Modules get Enabled
+            }
         }
         Object toSet = instance;
         if (toSet instanceof Provider)

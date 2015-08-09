@@ -23,41 +23,37 @@
 package de.cubeisland.engine.modularity.core.service;
 
 import java.lang.reflect.InvocationHandler;
-import java.util.Queue;
-import javax.inject.Provider;
-import de.cubeisland.engine.modularity.core.LifeCycle;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
-import static java.lang.reflect.Proxy.newProxyInstance;
-
-public class ServiceProvider<T> implements Provider<T>
+public abstract class BasicInvocationHandler implements InvocationHandler
 {
-    private Class clazz;
-    private final T proxy;
-    private final InvocationHandler invocationHandler;
+    private final ServiceProvider<?> service;
 
-    @SuppressWarnings("unchecked")
-    public ServiceProvider(Class clazz, Queue<LifeCycle> impls)
+    public BasicInvocationHandler(ServiceProvider<?> service)
     {
-        this.clazz = clazz;
-        this.invocationHandler = new ServiceInvocationHandler(this, impls);
-        this.proxy = (T)newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this.invocationHandler);
-    }
-
-    public ServiceProvider(Class clazz, Provider<T> proxy)
-    {
-        this.clazz = clazz;
-        this.invocationHandler = new ProxyInvocationHandler(this, proxy);
-        this.proxy = (T)newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this.invocationHandler);
+        this.service = service;
     }
 
     @Override
-    public T get()
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
-        return proxy;
+        Object impl = getImplementation();
+        if (impl == null)
+        {
+            // TODO custom exception
+            throw new IllegalStateException("The service <" + this.service.getInterface().getName()
+                                                + "> was invoked, but has no implementations!");
+        }
+        try
+        {
+            return method.invoke(impl, args);
+        }
+        catch (InvocationTargetException e)
+        {
+            throw e.getCause();
+        }
     }
 
-    public Class getInterface()
-    {
-        return clazz;
-    }
+    public abstract Object getImplementation();
 }

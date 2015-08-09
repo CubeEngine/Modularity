@@ -24,6 +24,7 @@ package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 import java.util.Set;
+import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 
@@ -74,6 +75,7 @@ public interface Modularity
     <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider);
 
     <T> void register(Class<T> gameClass, T game);
+    <T> void register(Class<T> gameClass, Provider<T> game);
 
     LifeCycle maybe(Dependency dep);
 }
