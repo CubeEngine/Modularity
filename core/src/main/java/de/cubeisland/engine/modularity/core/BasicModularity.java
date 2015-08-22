@@ -226,6 +226,11 @@ public class BasicModularity implements Modularity
             {
                 setup(dep);
             }
+            catch (MissingDependencyException e)
+            {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
             catch (IllegalStateException e)
             {
                 // TODO
