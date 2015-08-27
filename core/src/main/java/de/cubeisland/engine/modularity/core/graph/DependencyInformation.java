@@ -22,7 +22,10 @@
  */
 package de.cubeisland.engine.modularity.core.graph;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import de.cubeisland.engine.modularity.core.InjectionPoint;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 
 /**
@@ -78,6 +81,13 @@ public interface DependencyInformation
      * @return the optional dependencies
      */
     Set<Dependency> optionalDependencies();
+
+    /**
+     * Returns the list of InjectionPoint for dependencies
+     *
+     * @return the InjecctionPoints
+     */
+    Map<String, InjectionPoint> injectionPoints();
 
     /**
      * Returns the responsible ModularityClassLoader

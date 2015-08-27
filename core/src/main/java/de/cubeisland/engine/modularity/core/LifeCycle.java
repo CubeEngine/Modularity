@@ -22,18 +22,14 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
-import javax.inject.Inject;
+import java.util.TreeMap;
 import javax.inject.Provider;
-import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
@@ -74,8 +70,7 @@ public class LifeCycle
 
     private Method enable;
     private Method disable;
-    private Method setup;
-    private HashMap<String, LifeCycle> deps = new HashMap<String, LifeCycle>();
+    private Map<Integer, Method> setup = new TreeMap<Integer, Method>();
 
     private SettableMaybe maybe;
     private Queue<LifeCycle> impls = new PriorityQueue<LifeCycle>();
@@ -127,13 +122,30 @@ public class LifeCycle
             switch (state)
             {
                 case INSTANTIATED:
-                    collectDependencies(info.requiredDependencies(), true);
-                    collectDependencies(info.optionalDependencies(), false);
-                    this.instance = newInstance();
-                    findMethods();
+                    if (info instanceof ServiceDefinitionMetadata)
+                    {
+                        Class<?> instanceClass = Class.forName(info.getClassName(), true, info.getClassLoader());
+                        instance = new ServiceProvider(instanceClass, impls);
+                        // TODO find impls in modularity and link them to this
+                    }
+                    else
+                    {
+                        this.instance = info.injectionPoints().get(INSTANTIATED.name(0)).inject(modularity, this);
+                        info.injectionPoints().get(INSTANTIATED.name(1)).inject(modularity, this);
+                        if (instance instanceof Module)
+                        {
+                            MODULE_META_FIELD.set(instance, info);
+                            MODULE_MODULARITY_FIELD.set(instance, modularity);
+                            MODULE_LIFECYCLE.set(instance, this);
+                        }
+                        findMethods();
+                    }
                     break;
                 case SETUP_COMPLETE:
-                    invoke(setup);
+                    for (Method method : setup.values())
+                    {
+                        invoke(method);
+                    }
                     break;
                 case ENABLED:
                     invoke(enable);
@@ -159,6 +171,10 @@ public class LifeCycle
         catch (IllegalAccessException e)
         {
             throw new IllegalStateException(e); // TODO better exception
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new IllegalStateException(e);
         }
 
         for (LifeCycle lifeCycle : impls)
@@ -191,35 +207,25 @@ public class LifeCycle
         if (method != null)
         {
             System.out.print(instance.getClass().getName() + " invoke " + method.getName() + "\n");
-            method.invoke(instance);
+
+            if (method.isAnnotationPresent(Setup.class))
+            {
+                info.injectionPoints().get(SETUP_COMPLETE.name(method.getAnnotation(Setup.class).value())).inject(modularity, this);
+            }
+            else if (method.isAnnotationPresent(Enable.class))
+            {
+                info.injectionPoints().get(ENABLED.name()).inject(modularity, this);
+            }
+            else
+            {
+                method.invoke(instance);
+            }
         }
     }
 
     public boolean isInstantiated()
     {
         return instance != null;
-    }
-
-    private void collectDependencies(Set<Dependency> deps, boolean required)
-    {
-        for (Dependency dep : deps)
-        {
-            try
-            {
-                LifeCycle lifecycle = modularity.getLifecycle(dep);
-                this.deps.put(dep.name(), lifecycle);
-            }
-            catch (MissingDependencyException e)
-            {
-                if (required)
-                {
-                    throw e;
-                }
-                modularity.maybe(dep);
-
-                System.out.println("Missing optional dependency to: " + dep);
-            }
-        }
     }
 
     private void findMethods()
@@ -237,128 +243,10 @@ public class LifeCycle
             }
             if (method.isAnnotationPresent(Setup.class))
             {
-                setup = method;
+                int value = method.getAnnotation(Setup.class).value();
+                setup.put(value, method);
             }
         }
-    }
-
-    private Object newInstance()
-    {
-        try
-        {
-            Class<?> instanceClass = Class.forName(info.getClassName(), true, info.getClassLoader());
-            Object instance;
-            if (info instanceof ServiceDefinitionMetadata)
-            {
-                instance = new ServiceProvider(instanceClass, impls);
-                // TODO find impls in modularity and link them to this
-            }
-            else // Module, ServiceImpl, ServiceProvider, ValueProvider
-            {
-                instance = injectDependencies(newInstance(getConstructor(instanceClass)));
-            }
-            if (instance == null)
-            {
-                throw new IllegalStateException();
-            }
-            return instance;
-        }
-        catch (ClassNotFoundException e)
-        {
-            throw new IllegalStateException(e);
-        }
-        catch (InvocationTargetException e)
-        {
-            throw new IllegalStateException(e);
-        }
-        catch (InstantiationException e)
-        {
-            throw new IllegalStateException(e);
-        }
-        catch (IllegalAccessException e)
-        {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private Object newInstance(Constructor<?> constructor) throws IllegalAccessException, InvocationTargetException, InstantiationException
-    {
-        return constructor.newInstance(getConstructorParams(constructor));
-    }
-
-    private Object injectDependencies(Object instance) throws IllegalAccessException
-    {
-        if (instance instanceof Module)
-        {
-            MODULE_META_FIELD.set(instance, info);
-            MODULE_MODULARITY_FIELD.set(instance, modularity);
-            MODULE_LIFECYCLE.set(instance, this);
-        }
-        for (Field field : instance.getClass().getDeclaredFields())
-        {
-            if (field.isAnnotationPresent(Inject.class))
-            {
-                Class<?> type = field.getType();
-                boolean isMaybe = Maybe.class.equals(type);
-                if (isMaybe)
-                {
-                    type = (Class)((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
-                }
-                field.setAccessible(true);
-                field.set(instance, getDependency(type, isMaybe));
-            }
-        }
-        return instance;
-    }
-
-    private Object[] getConstructorParams(Constructor<?> instanceConstructor)
-    {
-        Object[] parameters;
-        Class<?>[] parameterTypes = instanceConstructor.getParameterTypes();
-        parameters = new Object[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++)
-        {
-            parameters[i] = getDependency(parameterTypes[i], false);
-        }
-        return parameters;
-    }
-
-    private Object getDependency(Class<?> type, boolean isMaybe)
-    {
-        LifeCycle lifeCycle = deps.get(type.getName());
-        if (!isMaybe && lifeCycle.current == NONE)
-        {
-            throw new IllegalStateException();
-        }
-
-        return isMaybe ? lifeCycle.getMaybe() : lifeCycle.getProvided(this);
-    }
-
-
-    private Constructor<?> getConstructor(Class<?> instanceClass)
-    {
-        Constructor<?> instanceConstructor = null;
-        for (Constructor<?> constructor : instanceClass.getConstructors())
-        {
-            if (constructor.isAnnotationPresent(Inject.class))
-            {
-                instanceConstructor = constructor;
-                break;
-            }
-        }
-        if (instanceConstructor == null)
-        {
-            try
-            {
-                instanceConstructor = instanceClass.getConstructor();
-            }
-            catch (NoSuchMethodException e)
-            {
-                throw new IllegalStateException(info.getClassName() + " has no usable Constructor");// TODO error
-            }
-        }
-        instanceConstructor.setAccessible(true);
-        return instanceConstructor;
     }
 
     public Object getInstance()
@@ -420,5 +308,11 @@ public class LifeCycle
 
         PROVIDED // TODO prevent changing / except shutdown?
 
+        ;
+
+        public String name(Integer value)
+        {
+            return value == null ? name() : name() + ":" + value;
+        }
     }
 }

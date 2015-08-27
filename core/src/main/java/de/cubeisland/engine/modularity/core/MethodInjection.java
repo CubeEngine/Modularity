@@ -22,18 +22,19 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 
-public class FieldsInjection extends InjectionPoint
+public class MethodInjection extends InjectionPoint
 {
-    private List<String> fieldNames;
+    private String name;
 
-    public FieldsInjection(Dependency self, List<Dependency> dependencies, List<String> fieldNames)
+    public MethodInjection(Dependency self, List<Dependency> dependencies, String name)
     {
         super(self, dependencies);
-        this.fieldNames = fieldNames;
+        this.name = name;
     }
 
     @Override
@@ -41,28 +42,21 @@ public class FieldsInjection extends InjectionPoint
     {
         try
         {
-            Class<?> clazz = getClazz(getSelf(), lifeCycle);
-            Object[] deps = collectDependencies(modularity, lifeCycle);
-            for (int i = 0; i < fieldNames.size(); i++)
-            {
-                Field field = clazz.getDeclaredField(fieldNames.get(i));
-                field.setAccessible(true);
-                field.set(lifeCycle.getInstance(), deps[i]);
-            }
+            Method method = getClazz(getSelf(), lifeCycle).getMethod(name, getDependencies(modularity));
+            method.invoke(lifeCycle.getInstance(), collectDependencies(modularity, lifeCycle));
             return lifeCycle.getInstance();
         }
-        catch (NoSuchFieldException e)
+        catch (NoSuchMethodException e)
         {
-            throw new IllegalStateException(getSelf().name(), e);
+            throw new IllegalStateException(e);
+        }
+        catch (InvocationTargetException e)
+        {
+            throw new IllegalStateException(e);
         }
         catch (IllegalAccessException e)
         {
-            throw new IllegalStateException(getSelf().name(), e);
+            throw new IllegalStateException(e);
         }
-    }
-
-    public List<String> getFieldNames()
-    {
-        return fieldNames;
     }
 }

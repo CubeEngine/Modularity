@@ -24,8 +24,10 @@ package de.cubeisland.engine.modularity.asm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.marker.Version;
@@ -37,11 +39,19 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.ConstructorInjection;
 import de.cubeisland.engine.modularity.core.FieldsInjection;
+import de.cubeisland.engine.modularity.core.InjectionPoint;
 import de.cubeisland.engine.modularity.core.Maybe;
+import de.cubeisland.engine.modularity.core.MethodInjection;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
+import de.cubeisland.engine.modularity.core.marker.Enable;
+import de.cubeisland.engine.modularity.core.marker.Setup;
+
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.ENABLED;
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.INSTANTIATED;
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.SETUP_COMPLETE;
 
 /**
  * The base for DependencyInformation from Asm
@@ -51,8 +61,8 @@ public abstract class AsmDependencyInformation implements DependencyInformation
     private final Dependency identifier;
     private final String sourceVersion;
     private final ModularityClassLoader classLoader;
-    private final Set<Dependency> requiredDependencies = new HashSet<Dependency>();
-    private final Set<Dependency> optionalDependencies = new HashSet<Dependency>();
+    private Map<String, InjectionPoint> injectionPoints = new HashMap<String, InjectionPoint>();
+    private Set<Dependency> dependencies = new HashSet<Dependency>();
 
     public AsmDependencyInformation(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
     {
@@ -71,7 +81,11 @@ public abstract class AsmDependencyInformation implements DependencyInformation
                 reference = optional ? reference.getGenericType() : reference;
                 list.add(getIdentifier(reference, null, !optional));
             }
-            new ConstructorInjection(identifier, list); // TODO save injectionpoints
+            injectionPoints.put(INSTANTIATED.name(0), new ConstructorInjection(identifier, list));
+        }
+        else
+        {
+            injectionPoints.put(INSTANTIATED.name(0), new ConstructorInjection(identifier, Collections.<Dependency>emptyList()));
         }
 
 
@@ -87,27 +101,31 @@ public abstract class AsmDependencyInformation implements DependencyInformation
                 fields.add(field.getName());
             }
         }
-        if (!fieldDeps.isEmpty())
-        {
-            new FieldsInjection(identifier, fieldDeps, fields); // TODO save injectionpoint
-        }
+        injectionPoints.put(INSTANTIATED.name(1), new FieldsInjection(identifier, fieldDeps, fields));
 
         for (MethodCandidate method : candidate.getMethods())
         {
+            List<Dependency> methodParams = new ArrayList<Dependency>();
             if (method.isAnnotatedWith(Inject.class))
             {
                 for (TypeReference reference : method.getParameterTypes())
                 {
-                    // TODO version
-                    if (reference.getReferencedClass().equals(Maybe.class.getName()))
-                    {
-                        addOptionaldDependency(reference.getGenericType(), null);
-                    }
-                    else
-                    {
-                        addRequiredDependency(reference, null);
-                    }
+                    boolean optional = Maybe.class.getName().equals(reference.getReferencedClass());
+                    reference = optional ? reference.getGenericType() : reference;
+                    methodParams.add(getIdentifier(reference, null, !optional));
                 }
+            }
+            if (method.isAnnotatedWith(Setup.class))
+            {
+                injectionPoints.put(SETUP_COMPLETE.name((Integer)method.getAnnotation(Setup.class).property("value")), new MethodInjection(identifier, methodParams, method.getName()));
+            }
+            else if (method.isAnnotatedWith(Enable.class))
+            {
+                injectionPoints.put(ENABLED.name(), new MethodInjection(identifier, methodParams, method.getName()));
+            }
+            else if (!methodParams.isEmpty())
+            {
+                throw new IllegalStateException("Injection Method will never be called");
             }
         }
     }
@@ -129,11 +147,6 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         return constructorCandidate;
     }
 
-    void addOptionaldDependency(TypeReference type, AnnotationCandidate version)
-    {
-        optionalDependencies.add(getIdentifier(type, version, true));
-    }
-
     private Dependency getIdentifier(TypeReference type, AnnotationCandidate version, boolean required)
     {
         return new BasicDependency(type.getReferencedClass(), version != null ? version.property("value").toString() : null, required);
@@ -141,7 +154,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
 
     void addRequiredDependency(TypeReference type, AnnotationCandidate version)
     {
-        requiredDependencies.add(getIdentifier(type, version, true));
+        dependencies.add(getIdentifier(type, version, true));
     }
 
     @Override
@@ -168,17 +181,58 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         return identifier.version();
     }
 
+    @Override
+    public Map<String, InjectionPoint> injectionPoints()
+    {
+        return injectionPoints;
+    }
 
     @Override
     public Set<Dependency> requiredDependencies()
     {
-        return Collections.unmodifiableSet(requiredDependencies);
+        Set<Dependency> required = new HashSet<Dependency>();
+        for (InjectionPoint point : injectionPoints.values())
+        {
+            for (Dependency dependency : point.getDependencies())
+            {
+                if (dependency.required())
+                {
+                    required.add(dependency);
+                }
+            }
+        }
+        for (Dependency dependency : dependencies)
+        {
+            if (dependency.required())
+            {
+                required.add(dependency);
+            }
+        }
+        return required;
     }
 
     @Override
     public Set<Dependency> optionalDependencies()
     {
-        return Collections.unmodifiableSet(optionalDependencies);
+        Set<Dependency> optional = new HashSet<Dependency>();
+        for (InjectionPoint point : injectionPoints.values())
+        {
+            for (Dependency dependency : point.getDependencies())
+            {
+                if (!dependency.required())
+                {
+                    optional.add(dependency);
+                }
+            }
+        }
+        for (Dependency dependency : dependencies)
+        {
+            if (!dependency.required())
+            {
+                optional.add(dependency);
+            }
+        }
+        return optional;
     }
 
     @Override
