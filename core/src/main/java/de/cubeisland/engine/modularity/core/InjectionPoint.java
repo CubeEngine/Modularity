@@ -3,7 +3,7 @@ package de.cubeisland.engine.modularity.core;
 import java.util.List;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 
-public abstract class InjectionPoint<T>
+public abstract class InjectionPoint
 {
     private Dependency self;
     private List<Dependency> dependencies;
@@ -19,7 +19,12 @@ public abstract class InjectionPoint<T>
         return dependencies;
     }
 
-    public abstract Object inject(Modularity modularity, T into);
+    public Dependency getSelf()
+    {
+        return self;
+    }
+
+    public abstract Object inject(Modularity modularity, Object into);
 
     protected Object[] collectDependencies(Modularity modularity)
     {
@@ -51,11 +56,21 @@ public abstract class InjectionPoint<T>
         return result;
     }
 
-    protected Class getClazz()
+    public Class<?>[] getDependencies(Modularity modularity)
+    {
+        Class<?>[] classes = new Class<?>[dependencies.size()];
+        for (int i = 0; i < dependencies.size(); i++)
+        {
+            classes[i] = getClazz(modularity, dependencies.get(i));
+        }
+        return classes;
+    }
+
+    protected Class<?> getClazz(Modularity modularity, Dependency dep)
     {
         try
         {
-            return Class.forName(self.name(), true, cl); // TODO get ClassLoader
+            return Class.forName(dep.name(), true, modularity.getLifecycle(dep).getInformation().getClassLoader());
         }
         catch (ClassNotFoundException e)
         {

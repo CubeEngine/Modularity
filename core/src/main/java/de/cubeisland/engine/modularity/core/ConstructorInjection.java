@@ -3,9 +3,11 @@ package de.cubeisland.engine.modularity.core;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Objects;
+
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 
-public class ConstructorInjection extends InjectionPoint<Constructor>
+public class ConstructorInjection extends InjectionPoint
 {
     public ConstructorInjection(Dependency self, List<Dependency> dependencies)
     {
@@ -13,11 +15,12 @@ public class ConstructorInjection extends InjectionPoint<Constructor>
     }
 
     @Override
-    public Object inject(Modularity modularity, Constructor into)
+    public Object inject(Modularity modularity, Object into)
     {
         try
         {
-            return into.newInstance(collectDependencies(modularity));
+            Constructor constructor = getClazz(modularity, getSelf()).getConstructor(getDependencies(modularity));
+            return constructor.newInstance(collectDependencies(modularity));
         }
         catch (InstantiationException e)
         {
@@ -28,6 +31,10 @@ public class ConstructorInjection extends InjectionPoint<Constructor>
             throw new IllegalStateException(e);
         }
         catch (InvocationTargetException e)
+        {
+            throw new IllegalStateException(e);
+        }
+        catch (NoSuchMethodException e)
         {
             throw new IllegalStateException(e);
         }

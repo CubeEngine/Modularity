@@ -22,7 +22,6 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -37,6 +36,7 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
 import de.cubeisland.engine.modularity.core.ConstructorInjection;
+import de.cubeisland.engine.modularity.core.FieldsInjection;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
@@ -69,26 +69,27 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             {
                 boolean optional = reference.getReferencedClass().equals(Maybe.class.getName());
                 reference = optional ? reference.getGenericType() : reference;
-                list.add(new BasicDependency(reference.getReferencedClass(), null, !optional));
+                list.add(getIdentifier(reference, null, !optional));
             }
             new ConstructorInjection(identifier, list); // TODO save injectionpoints
         }
 
 
-
+        List<Dependency> fieldDeps = new ArrayList<Dependency>();
+        List<String> fields = new ArrayList<String>();
         for (FieldCandidate field : candidate.getFields())
         {
             if (field.isAnnotatedWith(Inject.class))
             {
-                if (Maybe.class.getName().equals(field.getType().getReferencedClass()))
-                {
-                    addOptionaldDependency(field.getType().getGenericType(), field.getAnnotation(Version.class));
-                }
-                else
-                {
-                    addRequiredDependency(field.getType(), field.getAnnotation(Version.class));
-                }
+                boolean optional = Maybe.class.getName().equals(field.getType().getReferencedClass());
+                TypeReference reference = optional ? field.getType().getGenericType() : field.getType();
+                fieldDeps.add(getIdentifier(reference, field.getAnnotation(Version.class), !optional));
+                fields.add(field.getName());
             }
+        }
+        if (!fieldDeps.isEmpty())
+        {
+            new FieldsInjection(identifier, fieldDeps, fields); // TODO save injectionpoint
         }
 
         for (MethodCandidate method : candidate.getMethods())
@@ -130,17 +131,17 @@ public abstract class AsmDependencyInformation implements DependencyInformation
 
     void addOptionaldDependency(TypeReference type, AnnotationCandidate version)
     {
-        optionalDependencies.add(getIdentifier(type, version));
+        optionalDependencies.add(getIdentifier(type, version, true));
     }
 
-    private Dependency getIdentifier(TypeReference type, AnnotationCandidate version)
+    private Dependency getIdentifier(TypeReference type, AnnotationCandidate version, boolean required)
     {
-        return new BasicDependency(type.getReferencedClass(), version != null ? version.property("value").toString() : null);
+        return new BasicDependency(type.getReferencedClass(), version != null ? version.property("value").toString() : null, required);
     }
 
     void addRequiredDependency(TypeReference type, AnnotationCandidate version)
     {
-        requiredDependencies.add(getIdentifier(type, version));
+        requiredDependencies.add(getIdentifier(type, version, true));
     }
 
     @Override
