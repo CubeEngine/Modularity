@@ -22,8 +22,11 @@
  */
 package de.cubeisland.engine.modularity.asm;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import de.cubeisland.engine.modularity.asm.marker.Version;
@@ -31,7 +34,9 @@ import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.AnnotationCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ConstructorCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
+import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import de.cubeisland.engine.modularity.core.ConstructorInjection;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.ModularityClassLoader;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
@@ -56,6 +61,21 @@ public abstract class AsmDependencyInformation implements DependencyInformation
         this.classLoader = candidate.getClassLoader();
 
         // Search dependencies:
+        ConstructorCandidate constructor = findConstructor(candidate, constructors);
+        if (constructor != null)
+        {
+            List<Dependency> list = new ArrayList<Dependency>();
+            for (TypeReference reference : constructor.getParameterTypes())
+            {
+                boolean optional = reference.getReferencedClass().equals(Maybe.class.getName());
+                reference = optional ? reference.getGenericType() : reference;
+                list.add(new BasicDependency(reference.getReferencedClass(), null, !optional));
+            }
+            new ConstructorInjection(identifier, list); // TODO save injectionpoints
+        }
+
+
+
         for (FieldCandidate field : candidate.getFields())
         {
             if (field.isAnnotatedWith(Inject.class))
@@ -71,17 +91,41 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             }
         }
 
+        for (MethodCandidate method : candidate.getMethods())
+        {
+            if (method.isAnnotatedWith(Inject.class))
+            {
+                for (TypeReference reference : method.getParameterTypes())
+                {
+                    // TODO version
+                    if (reference.getReferencedClass().equals(Maybe.class.getName()))
+                    {
+                        addOptionaldDependency(reference.getGenericType(), null);
+                    }
+                    else
+                    {
+                        addRequiredDependency(reference, null);
+                    }
+                }
+            }
+        }
+    }
+
+    private ConstructorCandidate findConstructor(TypeCandidate candidate, Set<ConstructorCandidate> constructors)
+    {
+        ConstructorCandidate constructorCandidate = null;
         for (ConstructorCandidate constructor : constructors)
         {
             if (constructor.isAnnotatedWith(Inject.class))
             {
-                for (TypeReference reference : constructor.getParameterTypes())
+                if (constructorCandidate != null)
                 {
-                    addRequiredDependency(reference, null); // TODO version
-                    // TODO optional
+                    throw new IllegalStateException("Multiple Injection Constructors found in " + candidate.getSimpleName());
                 }
+                constructorCandidate = constructor;
             }
         }
+        return constructorCandidate;
     }
 
     void addOptionaldDependency(TypeReference type, AnnotationCandidate version)

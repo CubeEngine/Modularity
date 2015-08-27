@@ -29,14 +29,39 @@ import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.marker.ModuleInfo;
 import de.cubeisland.engine.modularity.core.Maybe;
 import de.cubeisland.engine.modularity.core.Module;
-import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
+import de.cubeisland.engine.modularity.core.marker.Setup;
 
 @ModuleInfo(name = "complex", description = "just testing")
 public class ComplexModule extends Module
 {
     @Inject private Maybe<BasicService> anOptionalService;
-    @Inject private ComplexService aRequiredService;
     @Inject public File file;
     @Inject private SelfProvidingService selfProvidedService;
-    @Inject private PrintStream providedService;
+
+    @Inject
+    public ComplexModule(ComplexService requiredService)
+    {
+        assert requiredService != null;
+    }
+    
+    @Setup
+    @Inject
+    public void setup0(PrintStream providedService)
+    {
+        assert providedService != null;
+    }
+
+    @Setup(1)
+    @Inject
+    public void setup1(PrintStream providedService)
+    {
+        assert providedService != null;
+    }
+
+    @Setup(2)
+    @Inject
+    public void setup2(Maybe<BasicService> optionalService, File file, Maybe<File> optionalFile)
+    {
+        assert optionalService != null;
+    }
 }

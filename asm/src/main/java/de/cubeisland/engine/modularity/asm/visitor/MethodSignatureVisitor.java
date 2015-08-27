@@ -20,12 +20,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core.graph;
+package de.cubeisland.engine.modularity.asm.visitor;
 
-public interface Dependency
+import de.cubeisland.engine.modularity.asm.meta.TypeReference;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.signature.SignatureVisitor;
+
+/**
+ * Visits a Signature and provides a TypeReference with GenericType Information
+ */
+public class MethodSignatureVisitor extends SignatureVisitor
 {
-    String name();
-    String version();
+    private boolean nextType = false;
+    private TypeReference type;
+    private int cnt;
 
-    boolean required();
+    public MethodSignatureVisitor(TypeReference type, int cnt)
+    {
+        super(Opcodes.ASM5);
+        this.type = type;
+        this.cnt = cnt + 1;
+    }
+
+    @Override
+    public void visitClassType(String name)
+    {
+        if (nextType)
+        {
+            type.setGenericType(ModuleClassVisitor.refForObjectType(name));
+            nextType = false;
+        }
+    }
+
+    @Override
+    public SignatureVisitor visitTypeArgument(char wildcard)
+    {
+        nextType = cnt == 0;
+        return this;
+    }
+
+    @Override
+    public SignatureVisitor visitParameterType()
+    {
+        cnt--;
+        return this;
+    }
 }

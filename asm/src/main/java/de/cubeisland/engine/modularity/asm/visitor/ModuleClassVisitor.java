@@ -37,6 +37,7 @@ import de.cubeisland.engine.modularity.asm.meta.candidate.FieldCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.InterfaceCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.MethodCandidate;
 import de.cubeisland.engine.modularity.asm.meta.candidate.TypeCandidate;
+import de.cubeisland.engine.modularity.core.Maybe;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -52,6 +53,8 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class ModuleClassVisitor extends ClassVisitor
 {
+    private static Type MAYBE_TYPE = Type.getType(Maybe.class);
+
     private final File file;
     private TypeCandidate candidate;
 
@@ -124,7 +127,7 @@ public class ModuleClassVisitor extends ClassVisitor
         final TypeReference self = candidate.newReference();
         final int modifiers = parseMethodModifiers(access);
         final TypeReference returnType = refForReturnType(desc);
-        final List<TypeReference> params = refsForParams(desc);
+        final List<TypeReference> params = refsForParams(desc, signature);
 
         MethodCandidate method;
         if (candidate instanceof ClassCandidate && name.equals("<init>") && returnType.getReferencedClass().equals("void"))
@@ -137,18 +140,25 @@ public class ModuleClassVisitor extends ClassVisitor
             method = new MethodCandidate(self, name, modifiers, returnType, params);
             candidate.addMethod(method);
         }
+
         return new ModuleMethodVisitor(method);
     }
 
-    static List<TypeReference> refsForParams(String desc)
+    static List<TypeReference> refsForParams(String desc, String signature)
     {
         List<TypeReference> refs = new ArrayList<TypeReference>();
 
+        int index = 0;
         for (final Type type : Type.getArgumentTypes(desc))
         {
-            refs.add(new TypeReference(type.getClassName()));
+            TypeReference ref = new TypeReference(type.getClassName());
+            refs.add(ref);
+            if (type.equals(MAYBE_TYPE) && signature != null)
+            {
+                new SignatureReader(signature).accept(new MethodSignatureVisitor(ref, index));
+            }
+            index++;
         }
-
         return refs;
     }
 

@@ -31,4 +31,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Setup
 {
+    /**
+     * The Setup stage
+     */
+    int value() default 0;
 }

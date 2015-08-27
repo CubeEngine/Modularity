@@ -26,11 +26,18 @@ public class BasicDependency implements Dependency
 {
     private final String name;
     private final String version;
+    private final boolean required;
 
     public BasicDependency(String name, String version)
     {
+        this(name, version, true);
+    }
+
+    public BasicDependency(String name, String version, boolean required)
+    {
         this.name = name;
         this.version = version;
+        this.required = required;
     }
 
     @Override
@@ -43,6 +50,12 @@ public class BasicDependency implements Dependency
     public String version()
     {
         return version;
+    }
+
+    @Override
+    public boolean required()
+    {
+        return required;
     }
 
     @Override
