@@ -25,11 +25,13 @@ package de.cubeisland.engine.modularity.core;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
 import javax.inject.Provider;
+import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
@@ -72,7 +74,7 @@ public class LifeCycle
     private Method disable;
     private Map<Integer, Method> setup = new TreeMap<Integer, Method>();
 
-    private SettableMaybe maybe;
+    private Map<Dependency, SettableMaybe> maybes = new HashMap<Dependency, SettableMaybe>();
     private Queue<LifeCycle> impls = new PriorityQueue<LifeCycle>();
 
     public LifeCycle(Modularity modularity)
@@ -189,7 +191,7 @@ public class LifeCycle
     @SuppressWarnings("unchecked")
     private void updateMaybe(State state)
     {
-        if (maybe != null)
+        for (SettableMaybe maybe : maybes.values())
         {
             if (state == ENABLED)
             {
@@ -231,7 +233,16 @@ public class LifeCycle
     private void findMethods()
     {
         // find enable and disable methods
-        for (Method method : getProvided(this).getClass().getMethods())
+        Class<?> clazz;
+        if (instance instanceof ValueProvider)
+        {
+            clazz = instance.getClass();
+        }
+        else
+        {
+            clazz = getProvided(this).getClass();
+        }
+        for (Method method : clazz.getMethods())
         {
             if (method.isAnnotationPresent(Enable.class))
             {
@@ -255,11 +266,14 @@ public class LifeCycle
     }
 
     @SuppressWarnings("unchecked")
-    public Maybe getMaybe()
+    public Maybe getMaybe(LifeCycle other)
     {
+        Dependency identifier = other == null ? null : other.getInformation().getIdentifier();
+        SettableMaybe maybe = maybes.get(identifier);
         if (maybe == null)
         {
-            maybe = new SettableMaybe(getProvided(this));
+            maybe = new SettableMaybe(getProvided(other));
+            maybes.put(identifier, maybe);
         }
         return maybe;
     }

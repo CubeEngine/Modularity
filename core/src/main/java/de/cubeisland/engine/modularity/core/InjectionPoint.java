@@ -63,7 +63,7 @@ public abstract class InjectionPoint
                 }
                 else
                 {
-                    result[i] = dep.getMaybe(); // TODO maybes for Provided
+                    result[i] = dep.getMaybe(lifeCycle);
                 }
             }
             catch (MissingDependencyException e)
@@ -72,7 +72,7 @@ public abstract class InjectionPoint
                 {
                     throw e;
                 }
-                result[i] = modularity.maybe(dependency).getMaybe();
+                result[i] = modularity.maybe(dependency).getMaybe(lifeCycle);
             }
         }
         return result;
@@ -93,6 +93,10 @@ public abstract class InjectionPoint
     {
         try
         {
+            if (lifeCycle.getInformation() == null)
+            {
+                return Class.forName(dep.name());
+            }
             return Class.forName(dep.name(), true, lifeCycle.getInformation().getClassLoader());
         }
         catch (ClassNotFoundException e)

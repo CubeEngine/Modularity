@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
-import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 
 public class DependencyGraph
 {
