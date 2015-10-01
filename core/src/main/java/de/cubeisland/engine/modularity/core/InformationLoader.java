@@ -36,4 +36,5 @@ public interface InformationLoader
      * @return the DependencyInformation found
      */
     Set<DependencyInformation> loadInformation(File file, String... filters);
+    Set<DependencyInformation> loadInformationFromClasspath(String... filters);
 }

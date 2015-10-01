@@ -126,7 +126,12 @@ public class LifeCycle
                 case INSTANTIATED:
                     if (info instanceof ServiceDefinitionMetadata)
                     {
-                        Class<?> instanceClass = Class.forName(info.getClassName(), true, info.getClassLoader());
+                        ClassLoader classLoader = info.getClassLoader();
+                        if (classLoader == null) // may happen when loading from classpath
+                        {
+                            classLoader = modularity.getClass().getClassLoader(); // get parent classloader then
+                        }
+                        Class<?> instanceClass = Class.forName(info.getClassName(), true, classLoader);
                         instance = new ServiceProvider(instanceClass, impls);
                         // TODO find impls in modularity and link them to this
                     }
@@ -184,7 +189,7 @@ public class LifeCycle
             lifeCycle.transition(state);
         }
         current = state;
-        System.out.print("done\n");
+        System.out.print("done " + info.getIdentifier().name() + "\n");
         return this;
     }
 

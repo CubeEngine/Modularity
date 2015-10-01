@@ -65,6 +65,7 @@ public class ModularityClassLoader extends URLClassLoader
         this.modularity = modularity;
         this.sourceURL = sourceURL;
         this.dependencies = dependencies;
+        /* TODO test if this not needed anymore
         if (parent instanceof URLClassLoader)
         {
             try
@@ -73,13 +74,14 @@ public class ModularityClassLoader extends URLClassLoader
             }
             catch (IllegalAccessException e)
             {
-             throw new IllegalStateException(e);
+                throw new IllegalStateException(e);
             }
             catch (InvocationTargetException e)
             {
                 throw new IllegalStateException(e);
             }
         }
+        */
     }
 
     @Override

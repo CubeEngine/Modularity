@@ -52,7 +52,6 @@ public class BasicModularity implements Modularity
     public BasicModularity(InformationLoader loader)
     {
         this.loader = loader;
-        this.registerProvider(URL.class, new SourceURLProvider());
         this.register(Modularity.class, this);
     }
 
@@ -65,6 +64,23 @@ public class BasicModularity implements Modularity
             System.out.println("No DependencyInformation could be extracted from target source!"); // TODO
             return;
         }
+        addLoaded(loaded);
+    }
+
+    @Override
+    public void loadFromClassPath(String... filter)
+    {
+        Set<DependencyInformation> loaded = getLoader().loadInformationFromClasspath(filter);
+        if (loaded.isEmpty())
+        {
+            System.out.println("No DependencyInformation could be extracted from classpath!"); // TODO
+            return;
+        }
+        addLoaded(loaded);
+    }
+
+    private void addLoaded(Set<DependencyInformation> loaded)
+    {
         for (DependencyInformation info : loaded)
         {
             if (info instanceof ServiceImplementationMetadata)

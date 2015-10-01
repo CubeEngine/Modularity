@@ -28,12 +28,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,18 +88,46 @@ public class AsmInformationLoader implements InformationLoader
         return information;
     }
 
+    public Set<DependencyInformation> loadInformationFromClasspath(String... filters)
+    {
+        Set<DependencyInformation> result = new HashSet<DependencyInformation>();
+        if (modularity.getClass().getClassLoader() instanceof URLClassLoader)
+        {
+            try
+            {
+                for (URL url : ((URLClassLoader)modularity.getClass().getClassLoader()).getURLs())
+                {
+                    URI uri = url.toURI();
+                    if (uri.getScheme().equals("file"))
+                    {
+                        result.addAll(loadInformation(new File(uri), true, filters));
+                    }
+                }
+            }
+            catch (URISyntaxException e)
+            {
+                throw new IllegalStateException("", e);
+            }
+        }
+        return result;
+    }
+
     @Override
     public Set<DependencyInformation> loadInformation(File source, String... filters)
+    {
+        return loadInformation(source, false, filters);
+    }
+
+    private Set<DependencyInformation> loadInformation(File source, boolean deep, String[] filters)
     {
         Set<DependencyInformation> result = new HashSet<DependencyInformation>();
         if (source.isDirectory()) // if source is directory load each file
         {
             for (File file : source.listFiles())
             {
-                // TODO configurable
-                if (!file.isDirectory()) // do not search recursively
+                if (deep || !file.isDirectory()) // do not search recursively
                 {
-                    result.addAll(loadInformation(file, filters));
+                    result.addAll(loadInformation(file, deep, filters));
                 }
             }
             return result;
@@ -104,7 +135,6 @@ public class AsmInformationLoader implements InformationLoader
         try
         {
             Set<TypeCandidate> candidates = getCandidates(source, filters); // Get all candidates from source
-
             ModularityClassLoader classLoader = null;
             LinkedHashSet<Dependency> dependencies = new LinkedHashSet<Dependency>();
             if (source.getName().endsWith(".jar"))
@@ -220,7 +250,10 @@ public class AsmInformationLoader implements InformationLoader
         try
         {
             JarFile jarFile = new JarFile(file);
-            result = jarFile.getManifest().getMainAttributes().getValue(key);
+            if (jarFile.getManifest() != null)
+            {
+                result = jarFile.getManifest().getMainAttributes().getValue(key);
+            }
         }
         catch (ZipException ignored)
         {

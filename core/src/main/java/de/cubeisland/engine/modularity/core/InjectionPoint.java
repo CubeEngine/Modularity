@@ -93,7 +93,7 @@ public abstract class InjectionPoint
     {
         try
         {
-            if (lifeCycle.getInformation() == null)
+            if (lifeCycle.getInformation() == null || lifeCycle.getInformation().getClassLoader() == null)
             {
                 return Class.forName(dep.name());
             }

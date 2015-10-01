@@ -39,6 +39,7 @@ public interface Modularity
      * @return fluent interface
      */
     void load(File source, String... filter);
+    void loadFromClassPath(String... filter);
 
     <T> T provide(Class<T> type);
     LifeCycle getLifecycle(Class type);
