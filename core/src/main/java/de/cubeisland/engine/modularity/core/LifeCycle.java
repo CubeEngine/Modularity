@@ -82,7 +82,7 @@ public class LifeCycle
         this.modularity = modularity;
     }
 
-    public LifeCycle init(DependencyInformation info)
+    public LifeCycle load(DependencyInformation info)
     {
         System.out.print("Start Lifecycle of " + info.getIdentifier().name() + ":" + info.getIdentifier().version() +  "\n");
         this.info = info;
@@ -91,7 +91,7 @@ public class LifeCycle
     }
 
 
-    public LifeCycle init(ValueProvider provider)
+    public LifeCycle provide(ValueProvider provider)
     {
         System.out.print("Registered external provider " + provider.getClass().getName() + "\n");
         this.instance = provider;
@@ -107,109 +107,160 @@ public class LifeCycle
         return this;
     }
 
-    public LifeCycle transition(State state)
+    public boolean isIn(State state)
     {
-        if (state == NONE)
+        return current == state;
+    }
+
+    public LifeCycle instantiate()
+    {
+        if (isIn(NONE))
         {
-            return this;
-        }
-        if (current == state)
-        {
-            return this;
+            throw new IllegalStateException("Cannot instantiate when not loaded");
         }
 
-        System.out.print(info.getIdentifier().name() + " transition to " + state + "... \n");
-        try
+        if (isIn(LOADED))
         {
-            switch (state)
+            try
             {
-                case INSTANTIATED:
-                    if (info instanceof ServiceDefinitionMetadata)
+                if (info instanceof ServiceDefinitionMetadata)
+                {
+                    ClassLoader classLoader = info.getClassLoader();
+                    if (classLoader == null) // may happen when loading from classpath
                     {
-                        ClassLoader classLoader = info.getClassLoader();
-                        if (classLoader == null) // may happen when loading from classpath
-                        {
-                            classLoader = modularity.getClass().getClassLoader(); // get parent classloader then
-                        }
-                        Class<?> instanceClass = Class.forName(info.getClassName(), true, classLoader);
-                        instance = new ServiceProvider(instanceClass, impls);
-                        // TODO find impls in modularity and link them to this
+                        classLoader = modularity.getClass().getClassLoader(); // get parent classloader then
                     }
-                    else
+                    Class<?> instanceClass = Class.forName(info.getClassName(), true, classLoader);
+                    instance = new ServiceProvider(instanceClass, impls);
+                    // TODO find impls in modularity and link them to this
+
+                    // TODO transition all impls to INSTANTIATED?
+                }
+                else
+                {
+                    this.instance = info.injectionPoints().get(INSTANTIATED.name(0)).inject(modularity, this);
+                    info.injectionPoints().get(INSTANTIATED.name(1)).inject(modularity, this);
+                    if (instance instanceof Module)
                     {
-                        this.instance = info.injectionPoints().get(INSTANTIATED.name(0)).inject(modularity, this);
-                        info.injectionPoints().get(INSTANTIATED.name(1)).inject(modularity, this);
-                        if (instance instanceof Module)
-                        {
-                            MODULE_META_FIELD.set(instance, info);
-                            MODULE_MODULARITY_FIELD.set(instance, modularity);
-                            MODULE_LIFECYCLE.set(instance, this);
-                        }
-                        findMethods();
+                        MODULE_META_FIELD.set(instance, info);
+                        MODULE_MODULARITY_FIELD.set(instance, modularity);
+                        MODULE_LIFECYCLE.set(instance, this);
                     }
-                    break;
-                case SETUP_COMPLETE:
-                    for (Method method : setup.values())
-                    {
-                        invoke(method);
-                    }
-                    break;
-                case ENABLED:
-                    invoke(enable);
-                    updateMaybe(state);
-                    break;
-                case DISABLED:
-                    invoke(disable);
-                    updateMaybe(state);
-                    // TODO if active impl replace in service with inactive OR disable service too
-                    // TODO if service disable all impls too
-                    modularity.getGraph().getNode(info.getIdentifier()).getPredecessors(); // TODO somehow implement reload too
-                    // TODO disable predecessors
-                    break;
-                case SHUTDOWN:
-                    // TODO unregister mysqlf
-                    break;
+                    findMethods();
+                }
             }
-        }
-        catch (InvocationTargetException e)
-        {
-            throw new IllegalStateException(e.getCause()); // TODO better exception
-        }
-        catch (IllegalAccessException e)
-        {
-            throw new IllegalStateException(e); // TODO better exception
-        }
-        catch (ClassNotFoundException e)
-        {
-            throw new IllegalStateException(e);
+            catch (ClassNotFoundException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            catch (IllegalAccessException e)
+            {
+                throw new IllegalStateException(e);
+            }
+            current = INSTANTIATED;
         }
 
-        for (LifeCycle lifeCycle : impls)
-        {
-            lifeCycle.transition(state);
-        }
-        current = state;
-        System.out.print("done " + info.getIdentifier().name() + "\n");
+        // else State already reached or provided
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    private void updateMaybe(State state)
+    public LifeCycle setup()
     {
-        for (SettableMaybe maybe : maybes.values())
+        if (isIn(NONE))
         {
-            if (state == ENABLED)
+            throw new IllegalStateException("Cannot instantiate when not loaded");
+        }
+
+        if (isIn(LOADED))
+        {
+            this.instantiate();
+        }
+
+        if (isIn(INSTANTIATED))
+        {
+            // TODO abstract those methods away
+            for (Method method : setup.values())
+            {
+                invoke(method);
+            }
+
+            for (LifeCycle impl : impls)
+            {
+                impl.setup();
+            }
+
+            current = SETUP;
+        }
+
+        // else reached or provided
+        return this;
+    }
+
+    public LifeCycle enable()
+    {
+        if (isIn(NONE))
+        {
+            throw new IllegalStateException("Cannot instantiate when not loaded");
+        }
+
+        if (isIn(LOADED))
+        {
+            this.instantiate();
+        }
+
+        if (isIn(INSTANTIATED))
+        {
+            this.setup();
+        }
+
+        if (isIn(SETUP))
+        {
+            System.out.print("Enable " + info.getIdentifier().name() + "... \n");
+            invoke(enable);
+            for (SettableMaybe maybe : maybes.values())
             {
                 maybe.provide(getProvided(this));
             }
-            else if (state == DISABLED)
+
+            for (LifeCycle impl : impls)
+            {
+                impl.enable();
+            }
+
+            current = ENABLED;
+        }
+
+        return this;
+    }
+
+    public LifeCycle disable()
+    {
+        if (isIn(ENABLED))
+        {
+            invoke(disable);
+
+            for (SettableMaybe maybe : maybes.values())
             {
                 maybe.remove();
             }
+
+            // TODO if active impl replace in service with inactive OR disable service too
+            // TODO if service disable all impls too
+            modularity.getGraph().getNode(info.getIdentifier()).getPredecessors(); // TODO somehow implement reload too
+            // TODO disable predecessors
+
+            for (LifeCycle impl : impls)
+            {
+                impl.disable();
+            }
+
+            current = DISABLED;
         }
+
+        return this;
     }
 
-    private void invoke(Method method) throws InvocationTargetException, IllegalAccessException
+    private void invoke(Method method)
     {
         if (method != null)
         {
@@ -217,7 +268,8 @@ public class LifeCycle
 
             if (method.isAnnotationPresent(Setup.class))
             {
-                info.injectionPoints().get(SETUP_COMPLETE.name(method.getAnnotation(Setup.class).value())).inject(modularity, this);
+                info.injectionPoints().get(SETUP.name(method.getAnnotation(Setup.class).value()))
+                    .inject(modularity, this);
             }
             else if (method.isAnnotationPresent(Enable.class))
             {
@@ -225,7 +277,22 @@ public class LifeCycle
             }
             else
             {
-                method.invoke(instance);
+                try
+                {
+                    method.invoke(instance);
+                }
+                catch (IllegalAccessException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+                catch (InvocationTargetException e)
+                {
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }
@@ -287,10 +354,10 @@ public class LifeCycle
     {
         if (instance == null)
         {
-            this.transition(INSTANTIATED).transition(SETUP_COMPLETE);
+            this.instantiate().setup();
             if (!(info instanceof ModuleMetadata))
             {
-                transition(ENABLED); // All But Modules get Enabled
+                this.enable(); // All But Modules get Enabled
             }
         }
         Object toSet = instance;
@@ -320,7 +387,7 @@ public class LifeCycle
         NONE,
         LOADED,
         INSTANTIATED,
-        SETUP_COMPLETE,
+        SETUP,
         ENABLED,
         DISABLED,
         SHUTDOWN,

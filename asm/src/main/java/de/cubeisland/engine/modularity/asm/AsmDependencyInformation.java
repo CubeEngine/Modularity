@@ -51,7 +51,7 @@ import de.cubeisland.engine.modularity.core.marker.Setup;
 
 import static de.cubeisland.engine.modularity.core.LifeCycle.State.ENABLED;
 import static de.cubeisland.engine.modularity.core.LifeCycle.State.INSTANTIATED;
-import static de.cubeisland.engine.modularity.core.LifeCycle.State.SETUP_COMPLETE;
+import static de.cubeisland.engine.modularity.core.LifeCycle.State.SETUP;
 
 /**
  * The base for DependencyInformation from Asm
@@ -117,7 +117,7 @@ public abstract class AsmDependencyInformation implements DependencyInformation
             }
             if (method.isAnnotatedWith(Setup.class))
             {
-                injectionPoints.put(SETUP_COMPLETE.name((Integer)method.getAnnotation(Setup.class).property("value")), new MethodInjection(identifier, methodParams, method.getName()));
+                injectionPoints.put(SETUP.name((Integer)method.getAnnotation(Setup.class).property("value")), new MethodInjection(identifier, methodParams, method.getName()));
             }
             else if (method.isAnnotatedWith(Enable.class))
             {

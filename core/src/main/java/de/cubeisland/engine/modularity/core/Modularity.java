@@ -78,5 +78,11 @@ public interface Modularity
     <T> void register(Class<T> gameClass, T game);
     <T> void register(Class<T> gameClass, Provider<T> game);
 
+    /**
+     * Registers a handler for when modules get enabled or disabled
+     * @param handler the handler
+     */
+    void registerHandler(ModuleHandler handler);
+
     LifeCycle maybe(Dependency dep);
 }

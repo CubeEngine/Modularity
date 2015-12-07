@@ -23,9 +23,10 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Provider;
@@ -48,6 +49,8 @@ public class BasicModularity implements Modularity
     private final Map<Dependency, LifeCycle> lifeCycles = new HashMap<Dependency, LifeCycle>();
     private final Map<Dependency, ModuleMetadata> moduleInfos = new HashMap<Dependency, ModuleMetadata>();
     private final Map<Dependency, ServiceImplementationMetadata> serviceImpls = new HashMap<Dependency, ServiceImplementationMetadata>();
+
+    private final List<ModuleHandler> moduleHandlers = new ArrayList<ModuleHandler>();
 
     public BasicModularity(InformationLoader loader)
     {
@@ -153,14 +156,14 @@ public class BasicModularity implements Modularity
             lifeCycle = lifeCycles.get(node.getInformation().getIdentifier());
             if (lifeCycle == null)
             {
-                lifeCycle = new LifeCycle(this).init(node.getInformation());
+                lifeCycle = new LifeCycle(this).load(node.getInformation());
                 if (node.getInformation() instanceof ServiceDefinitionMetadata)
                 {
                     for (ServiceImplementationMetadata impl : serviceImpls.values())
                     {
                         if (impl.getActualClass().equals(node.getInformation().getActualClass()))
                         {
-                            lifeCycle.addImpl(new LifeCycle(this).init(impl));
+                            lifeCycle.addImpl(new LifeCycle(this).load(impl));
                         }
                     }
                 }
@@ -176,15 +179,22 @@ public class BasicModularity implements Modularity
         LifeCycle lifecycle = getLifecycle(dep);
         if (!lifecycle.isInstantiated())
         {
-            lifecycle.transition(INSTANTIATED);
+            lifecycle.instantiate();
         }
-        return lifecycle.transition(SETUP_COMPLETE);
+        return lifecycle.setup();
     }
 
     private LifeCycle enable(Dependency dep)
     {
         LifeCycle lifecycle = getLifecycle(dep);
-        return lifecycle.transition(ENABLED);
+        if (lifecycle.getInstance() instanceof Module)
+        {
+            for (ModuleHandler handler : moduleHandlers)
+            {
+                handler.onEnable(((Module)lifecycle.getInstance()));
+            }
+        }
+        return lifecycle.enable();
     }
 
 
@@ -218,7 +228,7 @@ public class BasicModularity implements Modularity
             LifeCycle lifecycle = getLifecycle(new BasicDependency(type.getName(), null));
             if (!lifecycle.isInstantiated())
             {
-                lifecycle.transition(INSTANTIATED).transition(SETUP_COMPLETE).transition(ENABLED);
+                lifecycle.enable();
             }
             return (T)lifecycle.getProvided(null);
         }
@@ -291,7 +301,15 @@ public class BasicModularity implements Modularity
 
     private LifeCycle disable(Dependency dep)
     {
-        return getLifecycle(dep).transition(DISABLED);
+        LifeCycle lifecycle = getLifecycle(dep);
+        if (lifecycle.getInstance() instanceof Module)
+        {
+            for (ModuleHandler handler : moduleHandlers)
+            {
+                handler.onDisable(((Module)lifecycle.getInstance()));
+            }
+        }
+        return lifecycle.disable();
     }
 
     @Override
@@ -299,7 +317,7 @@ public class BasicModularity implements Modularity
     {
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
-        maybe(dep).init(provider); // Get or create Lifecycle and init
+        maybe(dep).provide(provider); // Get or create Lifecycle and init
     }
 
     @Override
@@ -337,5 +355,11 @@ public class BasicModularity implements Modularity
     public InformationLoader getLoader()
     {
         return loader;
+    }
+
+    @Override
+    public void registerHandler(ModuleHandler handler)
+    {
+        moduleHandlers.add(handler);
     }
 }
