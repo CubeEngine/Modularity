@@ -64,7 +64,7 @@ public class BasicModularity implements Modularity
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         if (loaded.isEmpty())
         {
-            System.out.println("No DependencyInformation could be extracted from target source!"); // TODO
+            System.out.println("No DependencyInformation could be extracted from target source: " + source.getName()); // TODO
             return;
         }
         addLoaded(loaded);
