@@ -81,6 +81,18 @@
         <defaultGoal>clean install</defaultGoal>
         <plugins>
             <plugin>
+                <groupId>de.cubeisland.engine</groupId>
+                <artifactId>modulizer-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.cubeengine.maven.plugin.modulizer.ModulizeMojo</mainClass>
+                    <annotationType>de.cubeisland.engine.modularity.core.Module</annotationType>
+                    <annotationValues>
+                        <version>${project.version}</version>
+                        <description>${project.description}</description>
+                    </annotationValues>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.1</version>
