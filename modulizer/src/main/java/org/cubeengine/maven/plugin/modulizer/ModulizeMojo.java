@@ -75,7 +75,7 @@ public class ModulizeMojo extends AbstractMojo
     private File sourceFolder;
 
     /**
-     * @parameter default-value="${project.build.directory}/generated-sources/modulized-classes"
+     * @parameter default-value="${project.build.directory}/modulized-classes"
      */
     private File targetFolder;
 
@@ -132,7 +132,7 @@ public class ModulizeMojo extends AbstractMojo
         {
             String annotation = constructAnnotation(annotationType, annotationValues);
             getLog().info("Constructed this annotation: " + annotation);
-            writeTarget(target, encoding, addAnnotationToClass(sourceCode, mainClassName, annotation.replaceAll("\\$", "\\$")));
+            writeTarget(target, encoding, addAnnotationToClass(sourceCode, mainClassName, annotation));
         }
         catch (IOException e)
         {
@@ -146,7 +146,7 @@ public class ModulizeMojo extends AbstractMojo
 
     public static String addAnnotationToClass(String sourceCode, String className, String annotationCode)
     {
-        return sourceCode.replaceFirst("class\\s+" + Pattern.quote(className), annotationCode + " $0");
+        return sourceCode.replaceFirst("class\\s+" + Pattern.quote(className), annotationCode.replaceAll("\\$", "\\$") + " $0");
     }
 
     public static String constructAnnotation(String annotationType, Map<String, String> annotationValues)
