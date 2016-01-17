@@ -50,6 +50,7 @@ import de.cubeisland.engine.modularity.asm.marker.Provider;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.ServiceProvider;
+import de.cubeisland.engine.modularity.asm.marker.SourceVersion;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
@@ -220,8 +221,6 @@ public class AsmInformationLoader implements InformationLoader
 
     private Set<TypeCandidate> getCandidates(File file, String... filters) throws IOException
     {
-        String sourceVersion = getManifestInfo(file, "sourceVersion", "unknown-unknown");
-        String version = getManifestInfo(file, "version", "unknown");
         Set<TypeCandidate> candidates = new HashSet<TypeCandidate>();
         for (InputStream stream : getStreams(file, filters))
         {
@@ -230,11 +229,18 @@ public class AsmInformationLoader implements InformationLoader
             TypeCandidate candidate = classVisitor.getCandidate();
             if (candidate != null)
             {
-                candidate.setSourceVersion(sourceVersion);
+                String version = "unknown";
                 // Version info:
                 if (candidate.isAnnotatedWith(Version.class))
                 {
                     version = candidate.getAnnotation(Version.class).property("value").toString();
+                }
+                // SourceVersion for Module
+                if (candidate.isAnnotatedWith(SourceVersion.class))
+                {
+                    version = candidate.getAnnotation(SourceVersion.class).property("value").toString();
+                    String sourceVersion = candidate.getAnnotation(SourceVersion.class).property("sourceVersion").toString();
+                    candidate.setSourceVersion(sourceVersion);
                 }
                 candidate.setVersion(version);
 
@@ -242,27 +248,6 @@ public class AsmInformationLoader implements InformationLoader
             }
         }
         return candidates;
-    }
-
-    public static String getManifestInfo(File file, String key, String def) throws IOException
-    {
-        String result = def;
-        try
-        {
-            JarFile jarFile = new JarFile(file);
-            if (jarFile.getManifest() != null)
-            {
-                result = jarFile.getManifest().getMainAttributes().getValue(key);
-            }
-        }
-        catch (ZipException ignored)
-        {
-        }
-        if (result == null)
-        {
-            result = def;
-        }
-        return result;
     }
 
     private boolean implemented(TypeCandidate current, Class interfaceToCheck)

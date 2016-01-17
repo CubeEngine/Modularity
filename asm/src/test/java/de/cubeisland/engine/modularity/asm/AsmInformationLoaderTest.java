@@ -50,13 +50,8 @@ public class AsmInformationLoaderTest
     @Test
     public void testJar1()
     {
-
         Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module1.jar"));
         assertEquals(3, infos.size());
-        for (DependencyInformation info : infos)
-        {
-            assertEquals("branch-somehashvalue", info.getSourceVersion());
-        }
     }
 
     @Test
@@ -64,10 +59,6 @@ public class AsmInformationLoaderTest
     {
         Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module2.jar"));
         assertEquals(6, infos.size());
-        for (DependencyInformation info : infos)
-        {
-            assertEquals("branch-somehashvalue", info.getSourceVersion());
-        }
     }
 
 
@@ -85,7 +76,6 @@ public class AsmInformationLoaderTest
                 assertEquals("basic", ((ModuleMetadata)info).getName());
                 assertTrue(info.optionalDependencies().contains(new BasicDependency(BasicService.class.getName(),"1")));
             }
-
         }
     }
 }

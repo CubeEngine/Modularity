@@ -69,12 +69,6 @@ public class AsmModularityTest
                     out.write(b);
                     out.closeEntry();
                 }
-                out.putNextEntry(new JarEntry("META-INF/"));
-                out.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
-                RandomAccessFile f = new RandomAccessFile("src/test/resources/" + dir.getName() + ".MF", "r");
-                byte[] b = new byte[(int)f.length()];
-                f.read(b);
-                out.write(b);
                 out.closeEntry();
 
                 out.close();
