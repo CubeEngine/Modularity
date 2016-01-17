@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @goal modulize
@@ -129,7 +130,9 @@ public class ModulizeMojo extends AbstractMojo
 
         try
         {
-            writeTarget(target, encoding, addAnnotationToClass(sourceCode, mainClassName, constructAnnotation(annotationType, annotationValues)));
+            String annotation = constructAnnotation(annotationType, annotationValues);
+            getLog().info("Constructed this annotation: " + annotation);
+            writeTarget(target, encoding, addAnnotationToClass(sourceCode, mainClassName, annotation.replaceAll("\\$", "\\$")));
         }
         catch (IOException e)
         {
@@ -137,13 +140,13 @@ public class ModulizeMojo extends AbstractMojo
         }
 
         getLog().info("Class " + mainClass + " successfully modulized to " + target);
-        project.addCompileSourceRoot(target.toString());
+        project.addCompileSourceRoot(targetFolder.toString());
 
     }
 
     public static String addAnnotationToClass(String sourceCode, String className, String annotationCode)
     {
-        return sourceCode.replaceFirst("public\\s+class\\s+" + className, annotationCode + " $0");
+        return sourceCode.replaceFirst("class\\s+" + Pattern.quote(className), annotationCode + " $0");
     }
 
     public static String constructAnnotation(String annotationType, Map<String, String> annotationValues)
