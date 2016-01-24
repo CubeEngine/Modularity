@@ -21,7 +21,6 @@
     <modules>
         <module>core</module>
         <module>asm</module>
-        <module>modulizer</module>
     </modules>
 
     <licenses>
