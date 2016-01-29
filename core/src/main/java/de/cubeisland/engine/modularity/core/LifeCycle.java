@@ -84,7 +84,7 @@ public class LifeCycle
 
     public LifeCycle load(DependencyInformation info)
     {
-        System.out.print("Start Lifecycle of " + info.getIdentifier().name() + ":" + info.getIdentifier().version() +  "\n");
+        // System.out.print("Start Lifecycle of " + info.getIdentifier().name() + ":" + info.getIdentifier().version() +  "\n");
         this.info = info;
         this.current = LOADED;
         return this;
@@ -215,7 +215,15 @@ public class LifeCycle
 
         if (isIn(SETUP))
         {
-            System.out.print("Enable " + info.getIdentifier().name() + "... \n");
+            if (getInstance() instanceof Module)
+            {
+                System.out.print("Enable " + info.getIdentifier().name() + "\n");
+                for (ModuleHandler handler : modularity.getHandlers())
+                {
+                    handler.onEnable(((Module)getInstance()));
+                }
+            }
+
             invoke(enable);
             for (SettableMaybe maybe : maybes.values())
             {
@@ -237,6 +245,14 @@ public class LifeCycle
     {
         if (isIn(ENABLED))
         {
+            if (getInstance() instanceof Module)
+            {
+                for (ModuleHandler handler : modularity.getHandlers())
+                {
+                    handler.onDisable(((Module)getInstance()));
+                }
+            }
+
             invoke(disable);
 
             for (SettableMaybe maybe : maybes.values())
@@ -264,7 +280,7 @@ public class LifeCycle
     {
         if (method != null)
         {
-            System.out.print(instance.getClass().getName() + " invoke " + method.getName() + "\n");
+            // System.out.print(instance.getClass().getName() + " invoke " + method.getName() + "\n");
 
             if (method.isAnnotationPresent(Setup.class))
             {

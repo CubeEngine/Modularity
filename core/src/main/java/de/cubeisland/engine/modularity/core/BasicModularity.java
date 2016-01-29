@@ -24,6 +24,7 @@ package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -187,16 +188,8 @@ public class BasicModularity implements Modularity
     private LifeCycle enable(Dependency dep)
     {
         LifeCycle lifecycle = getLifecycle(dep);
-        if (lifecycle.getInstance() instanceof Module)
-        {
-            for (ModuleHandler handler : moduleHandlers)
-            {
-                handler.onEnable(((Module)lifecycle.getInstance()));
-            }
-        }
         return lifecycle.enable();
     }
-
 
     @Override
     public DependencyGraph getGraph()
@@ -302,13 +295,6 @@ public class BasicModularity implements Modularity
     private LifeCycle disable(Dependency dep)
     {
         LifeCycle lifecycle = getLifecycle(dep);
-        if (lifecycle.getInstance() instanceof Module)
-        {
-            for (ModuleHandler handler : moduleHandlers)
-            {
-                handler.onDisable(((Module)lifecycle.getInstance()));
-            }
-        }
         return lifecycle.disable();
     }
 
@@ -361,5 +347,11 @@ public class BasicModularity implements Modularity
     public void registerHandler(ModuleHandler handler)
     {
         moduleHandlers.add(handler);
+    }
+
+    @Override
+    public Collection<ModuleHandler> getHandlers()
+    {
+        return moduleHandlers;
     }
 }

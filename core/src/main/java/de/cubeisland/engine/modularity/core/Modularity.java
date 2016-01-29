@@ -23,6 +23,7 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Set;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
@@ -83,6 +84,8 @@ public interface Modularity
      * @param handler the handler
      */
     void registerHandler(ModuleHandler handler);
+
+    Collection<ModuleHandler> getHandlers();
 
     LifeCycle maybe(Dependency dep);
 }
