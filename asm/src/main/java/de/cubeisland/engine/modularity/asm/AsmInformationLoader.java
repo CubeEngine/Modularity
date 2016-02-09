@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -50,7 +51,6 @@ import de.cubeisland.engine.modularity.asm.marker.Provider;
 import de.cubeisland.engine.modularity.asm.marker.Service;
 import de.cubeisland.engine.modularity.asm.marker.ServiceImpl;
 import de.cubeisland.engine.modularity.asm.marker.ServiceProvider;
-import de.cubeisland.engine.modularity.asm.marker.SourceVersion;
 import de.cubeisland.engine.modularity.asm.marker.Version;
 import de.cubeisland.engine.modularity.asm.meta.TypeReference;
 import de.cubeisland.engine.modularity.asm.meta.candidate.ClassCandidate;
@@ -235,12 +235,27 @@ public class AsmInformationLoader implements InformationLoader
                 {
                     version = candidate.getAnnotation(Version.class).property("value").toString();
                 }
+
                 // SourceVersion for Module
-                if (candidate.isAnnotatedWith(SourceVersion.class))
+
+                if (candidate.isAnnotatedWith(ModuleInfo.class))
                 {
-                    version = candidate.getAnnotation(SourceVersion.class).property("value").toString();
-                    String sourceVersion = candidate.getAnnotation(SourceVersion.class).property("sourceVersion").toString();
-                    candidate.setSourceVersion(sourceVersion);
+                    ClassLoader cl = candidate.getClassLoader();
+                    if (cl == null)
+                    {
+                         cl = getClass().getClassLoader();
+                    }
+                    InputStream is = cl.getResourceAsStream("resources/" + candidate.getAnnotation(ModuleInfo.class).getProperties().get("name").toString() + ".properties");
+                    if (is != null)
+                    {
+                        Properties properties = new Properties();
+                        properties.load(is);
+                        candidate.setSourceVersion(properties.getProperty("sourceVersion"));
+                        if (version == null)
+                        {
+                            candidate.setVersion(properties.getProperty("version"));
+                        }
+                    }
                 }
                 candidate.setVersion(version);
 
