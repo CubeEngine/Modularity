@@ -23,6 +23,9 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
@@ -39,8 +43,6 @@ import de.cubeisland.engine.modularity.core.graph.Node;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
-
-import static de.cubeisland.engine.modularity.core.LifeCycle.State.*;
 
 public class BasicModularity implements Modularity
 {
@@ -353,5 +355,49 @@ public class BasicModularity implements Modularity
     public Collection<ModuleHandler> getHandlers()
     {
         return moduleHandlers;
+    }
+
+
+    @Override
+    public Object inject(Class<?> clazz)
+    {
+        Constructor<?>[] constructors = clazz.getConstructors();
+        if (constructors.length != 1)
+        {
+            throw new IllegalArgumentException(clazz.getName() + "  must have a single public Constructor");
+        }
+
+        Constructor<?> constructor = constructors[0];
+        Class<?>[] types = constructor.getParameterTypes();
+        Object[] values = new Object[types.length];
+        for (int i = 0; i < types.length; i++)
+        {
+            values[i] = provide(types[i]);
+        }
+
+        try
+        {
+            Object instance = constructor.newInstance(values);
+            for (Field field : clazz.getDeclaredFields())
+            {
+                if (field.isAnnotationPresent(Inject.class))
+                {
+                    field.set(instance, provide(field.getType()));
+                }
+            }
+            return instance;
+        }
+        catch (InstantiationException e)
+        {
+            throw new IllegalStateException(e);
+        }
+        catch (IllegalAccessException e)
+        {
+            throw new IllegalStateException(e);
+        }
+        catch (InvocationTargetException e)
+        {
+            throw new IllegalStateException(e);
+        }
     }
 }

@@ -88,4 +88,6 @@ public interface Modularity
     Collection<ModuleHandler> getHandlers();
 
     LifeCycle maybe(Dependency dep);
+
+    Object inject(Class<?> clazz);
 }
