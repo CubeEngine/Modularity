@@ -22,12 +22,7 @@
  */
 package de.cubeisland.engine.modularity.core;
 
-/**
- * Handels module enable or disable and acts accordingly
- */
-public interface ModuleHandler
+public interface PostInjectionHandler<T>
 {
-    void onEnable(Module module);
-
-    void onDisable(Module module);
+    void handle(T annotation, Object injected, Object owner);
 }

@@ -124,14 +124,22 @@ public class AsmInformationLoader implements InformationLoader
         Set<DependencyInformation> result = new HashSet<DependencyInformation>();
         if (source.isDirectory()) // if source is directory load each file
         {
-            for (File file : source.listFiles())
+            File[] files = source.listFiles();
+            if (files != null)
             {
-                if (deep || !file.isDirectory()) // do not search recursively
+                for (File file : files)
                 {
-                    result.addAll(loadInformation(file, deep, filters));
+                    if (deep || !file.isDirectory()) // do not search recursively
+                    {
+                        result.addAll(loadInformation(file, deep, filters));
+                    }
                 }
+                return result;
             }
-            return result;
+            else
+            {
+                System.out.print("No Files found in: " + source.getName() + "\n");
+            }
         }
         try
         {

@@ -25,7 +25,10 @@ package de.cubeisland.engine.modularity.core;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -75,7 +78,7 @@ public class LifeCycle
     private Map<Integer, Method> setup = new TreeMap<Integer, Method>();
 
     private Map<Dependency, SettableMaybe> maybes = new HashMap<Dependency, SettableMaybe>();
-    private Queue<LifeCycle> impls = new PriorityQueue<LifeCycle>();
+    private Queue<LifeCycle> impls = new LinkedList<LifeCycle>();
 
     public LifeCycle(Modularity modularity)
     {
@@ -139,13 +142,13 @@ public class LifeCycle
                 else
                 {
                     this.instance = info.injectionPoints().get(INSTANTIATED.name(0)).inject(modularity, this);
-                    info.injectionPoints().get(INSTANTIATED.name(1)).inject(modularity, this);
                     if (instance instanceof Module)
                     {
                         MODULE_META_FIELD.set(instance, info);
                         MODULE_MODULARITY_FIELD.set(instance, modularity);
                         MODULE_LIFECYCLE.set(instance, this);
                     }
+                    info.injectionPoints().get(INSTANTIATED.name(1)).inject(modularity, this);
                     findMethods();
                 }
             }
@@ -215,14 +218,8 @@ public class LifeCycle
 
         if (isIn(SETUP))
         {
-            if (getInstance() instanceof Module)
-            {
-                System.out.print("Enable " + info.getIdentifier().name() + "\n");
-                for (ModuleHandler handler : modularity.getHandlers())
-                {
-                    handler.onEnable(((Module)getInstance()));
-                }
-            }
+            System.out.print("Enable " + info.getIdentifier().name() + "\n");
+            modularity.runEnableHandlers(getInstance());
 
             invoke(enable);
             for (SettableMaybe maybe : maybes.values())
@@ -245,14 +242,7 @@ public class LifeCycle
     {
         if (isIn(ENABLED))
         {
-            if (getInstance() instanceof Module)
-            {
-                for (ModuleHandler handler : modularity.getHandlers())
-                {
-                    handler.onDisable(((Module)getInstance()));
-                }
-            }
-
+            modularity.runDisableHandlers(getInstance());
             invoke(disable);
 
             for (SettableMaybe maybe : maybes.values())

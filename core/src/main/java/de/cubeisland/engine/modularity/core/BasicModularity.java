@@ -23,15 +23,16 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -53,7 +54,8 @@ public class BasicModularity implements Modularity
     private final Map<Dependency, ModuleMetadata> moduleInfos = new HashMap<Dependency, ModuleMetadata>();
     private final Map<Dependency, ServiceImplementationMetadata> serviceImpls = new HashMap<Dependency, ServiceImplementationMetadata>();
 
-    private final List<ModuleHandler> moduleHandlers = new ArrayList<ModuleHandler>();
+    private final List<ModularityHandler> modularityHandlers = new ArrayList<ModularityHandler>();
+    private Map<Class<? extends Annotation>, PostInjectionHandler> postInjectionHandlers = new HashMap<Class<? extends Annotation>, PostInjectionHandler>();
 
     public BasicModularity(InformationLoader loader)
     {
@@ -154,7 +156,18 @@ public class BasicModularity implements Modularity
             Node node = graph.getNode(dep);
             if (node == null)
             {
-                throw new MissingDependencyException("Dependency is not available " + dep);
+                try // Try to construct the dependency ...
+                {
+                    Class clazz = Class.forName(dep.name());
+                    Object instance = inject(clazz); // Attempt to create instance
+                    lifeCycle = new LifeCycle(this).initProvided(instance); // Create Provided Lifecycle
+                    lifeCycles.put(dep, lifeCycle); // Register lifecycle for future use
+                    return lifeCycle;
+                }
+                catch (Exception e) // That did not go so well :/
+                {
+                    throw new MissingDependencyException("Dependency is not available " + dep.name(), e);
+                }
             }
             lifeCycle = lifeCycles.get(node.getInformation().getIdentifier());
             if (lifeCycle == null)
@@ -190,7 +203,16 @@ public class BasicModularity implements Modularity
     private LifeCycle enable(Dependency dep)
     {
         LifeCycle lifecycle = getLifecycle(dep);
-        return lifecycle.enable();
+        try
+        {
+            return lifecycle.enable();
+        }
+        catch (Exception e)
+        {
+            lifecycle.disable();
+            System.out.print("Could not load module: " + dep.name() + "\n");
+            throw new IllegalStateException(e); // TODO
+        }
     }
 
     @Override
@@ -317,11 +339,11 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public <T> void register(Class<T> clazz, Provider<T> provider)
+    public <T> void registerProvider(Class<T> clazz, Provider<T> instanceProvider)
     {
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
-        maybe(dep).initProvided(provider);
+        maybe(dep).initProvided(instanceProvider);
     }
 
     @Override
@@ -346,17 +368,46 @@ public class BasicModularity implements Modularity
     }
 
     @Override
-    public void registerHandler(ModuleHandler handler)
+    public void registerHandler(ModularityHandler handler)
     {
-        moduleHandlers.add(handler);
+        modularityHandlers.add(handler);
     }
 
     @Override
-    public Collection<ModuleHandler> getHandlers()
+    public <T extends Annotation> void registerPostInjectAnnotation(Class<T> annotation, PostInjectionHandler<T> handler)
     {
-        return moduleHandlers;
+        postInjectionHandlers.put(annotation, handler);
     }
 
+    @Override
+    public void runPostInjectHandler(Field field, Object instance, Object owner)
+    {
+        for (Entry<Class<? extends Annotation>, PostInjectionHandler> entry : postInjectionHandlers.entrySet())
+        {
+            if (field.isAnnotationPresent(entry.getKey()))
+            {
+                entry.getValue().handle(field.getAnnotation(entry.getKey()), instance, owner);
+            }
+        }
+    }
+
+    @Override
+    public void runEnableHandlers(Object instance)
+    {
+        for (ModularityHandler handler : modularityHandlers)
+        {
+            handler.onEnable(instance);
+        }
+    }
+
+    @Override
+    public void runDisableHandlers(Object instance)
+    {
+        for (ModularityHandler handler : modularityHandlers)
+        {
+            handler.onDisable(instance);
+        }
+    }
 
     @Override
     public Object inject(Class<?> clazz)
@@ -364,15 +415,27 @@ public class BasicModularity implements Modularity
         Constructor<?>[] constructors = clazz.getConstructors();
         if (constructors.length != 1)
         {
-            throw new IllegalArgumentException(clazz.getName() + "  must have a single public Constructor");
+            throw new IllegalArgumentException(clazz.getName() + " must have a single public Constructor");
         }
 
         Constructor<?> constructor = constructors[0];
+        if (!constructor.isAnnotationPresent(Inject.class))
+        {
+            throw new IllegalArgumentException(clazz.getName() + " must have an @Inject annotation on its Constructor");
+        }
         Class<?>[] types = constructor.getParameterTypes();
         Object[] values = new Object[types.length];
         for (int i = 0; i < types.length; i++)
         {
             values[i] = provide(types[i]);
+            if (values[i] == null)
+            {
+                values[i] = inject(types[i]);
+            }
+            if (values[i] == null)
+            {
+                throw new IllegalArgumentException("Cannot construct " + clazz.getSimpleName() + " due to missing dependency: " + types[i].getSimpleName());
+            }
         }
 
         try
@@ -382,7 +445,16 @@ public class BasicModularity implements Modularity
             {
                 if (field.isAnnotationPresent(Inject.class))
                 {
-                    field.set(instance, provide(field.getType()));
+                    Object provided = provide(field.getType());
+                    if (provided == null)
+                    {
+                        provided = inject(field.getType());
+                    }
+                    if (provided == null)
+                    {
+                        throw new IllegalArgumentException("Cannot construct " + clazz.getSimpleName() + " due to missing dependency: " + field.getType().getSimpleName());
+                    }
+                    field.set(instance, provided);
                 }
             }
             return instance;

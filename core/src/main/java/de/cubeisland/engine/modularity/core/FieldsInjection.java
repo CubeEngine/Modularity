@@ -48,6 +48,7 @@ public class FieldsInjection extends InjectionPoint
                 Field field = clazz.getDeclaredField(fieldNames.get(i));
                 field.setAccessible(true);
                 field.set(lifeCycle.getInstance(), deps[i]);
+                modularity.runPostInjectHandler(field, deps[i], lifeCycle.getInstance());
             }
             return lifeCycle.getInstance();
         }

@@ -23,7 +23,8 @@
 package de.cubeisland.engine.modularity.core;
 
 import java.io.File;
-import java.util.Collection;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Set;
 import javax.inject.Provider;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
@@ -76,18 +77,28 @@ public interface Modularity
 
     <T> void registerProvider(Class<T> clazz, ValueProvider<T> provider);
 
-    <T> void register(Class<T> gameClass, T game);
-    <T> void register(Class<T> gameClass, Provider<T> game);
+    <T> void register(Class<T> clazz, T instance);
+    <T> void registerProvider(Class<T> clazz, Provider<T> instanceProvider);
 
     /**
      * Registers a handler for when modules get enabled or disabled
      * @param handler the handler
      */
-    void registerHandler(ModuleHandler handler);
+    void registerHandler(ModularityHandler handler);
 
-    Collection<ModuleHandler> getHandlers();
+    /**
+     * After Injecting when annotated
+     * @param annotation
+     */
+    <T extends Annotation> void registerPostInjectAnnotation(Class<T> annotation, PostInjectionHandler<T> handler);
+
+    void runPostInjectHandler(Field field, Object instance, Object owner);
 
     LifeCycle maybe(Dependency dep);
 
     Object inject(Class<?> clazz);
+
+    void runEnableHandlers(Object instance);
+
+    void runDisableHandlers(Object instance);
 }

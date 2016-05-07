@@ -20,39 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.cubeisland.engine.modularity.core.service;
+package de.cubeisland.engine.modularity.core;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-public abstract class BasicInvocationHandler implements InvocationHandler
+/**
+ * Handels enable and disable on Modularity created instances
+ */
+public interface ModularityHandler
 {
-    private final ServiceProvider<?> service;
+    void onEnable(Object instance);
 
-    public BasicInvocationHandler(ServiceProvider<?> service)
-    {
-        this.service = service;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
-    {
-        Object impl = getImplementation();
-        if (impl == null)
-        {
-            // TODO custom exception
-            throw new IllegalStateException("The service <" + this.service.getInterface().getName() + "> was invoked, but has no implementations!");
-        }
-        try
-        {
-            return method.invoke(impl, args);
-        }
-        catch (InvocationTargetException e)
-        {
-            throw e.getCause();
-        }
-    }
-
-    public abstract Object getImplementation();
+    void onDisable(Object instance);
 }
