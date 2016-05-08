@@ -455,6 +455,7 @@ public class BasicModularity implements Modularity
                         throw new IllegalArgumentException("Cannot construct " + clazz.getSimpleName() + " due to missing dependency: " + field.getType().getSimpleName());
                     }
                     field.set(instance, provided);
+                    runPostInjectHandler(field, provided, instance);
                 }
             }
             return instance;
