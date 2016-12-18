@@ -38,6 +38,8 @@ import de.cubeisland.engine.modularity.core.graph.Dependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
 import de.cubeisland.engine.modularity.core.graph.meta.ServiceDefinitionMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceImplementationMetadata;
+import de.cubeisland.engine.modularity.core.graph.meta.ServiceProviderMetadata;
 import de.cubeisland.engine.modularity.core.marker.Disable;
 import de.cubeisland.engine.modularity.core.marker.Enable;
 import de.cubeisland.engine.modularity.core.marker.Setup;
@@ -311,15 +313,7 @@ public class LifeCycle
     private void findMethods()
     {
         // find enable and disable methods
-        Class<?> clazz;
-        if (instance instanceof ValueProvider)
-        {
-            clazz = instance.getClass();
-        }
-        else
-        {
-            clazz = getProvided(this).getClass();
-        }
+        Class<?> clazz = instance.getClass();
         for (Method method : clazz.getMethods())
         {
             if (method.isAnnotationPresent(Enable.class))
@@ -358,13 +352,18 @@ public class LifeCycle
 
     public Object getProvided(LifeCycle lifeCycle)
     {
+        boolean enable = true;
+        if (info instanceof ModuleMetadata)
+        {
+            enable = false;
+        }
         if (instance == null)
         {
-            this.instantiate().setup();
-            if (!(info instanceof ModuleMetadata))
-            {
-                this.enable(); // All But Modules get Enabled
-            }
+            this.instantiate();
+        }
+        if (enable)
+        {
+            this.enable(); // Instantiate Setup and enable dependency before providing it to someone else
         }
         Object toSet = instance;
         if (toSet instanceof Provider)
@@ -406,5 +405,10 @@ public class LifeCycle
         {
             return value == null ? name() : name() + ":" + value;
         }
+    }
+
+    @Override
+    public String toString() {
+        return info.getIdentifier().name() + " " + super.toString();
     }
 }

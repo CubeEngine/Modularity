@@ -82,6 +82,8 @@ public class AsmModularityTest
         }
 
         assertEquals(0, modularity.getGraph().getUnresolved().size());
+
+        modularity.getGraph().printOut();
     }
 
     @Test

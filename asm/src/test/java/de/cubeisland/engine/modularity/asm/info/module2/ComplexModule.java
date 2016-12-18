@@ -38,17 +38,12 @@ public class ComplexModule extends Module
     @Inject public File file;
     @Inject private SelfProvidingService selfProvidedService;
 
-    @Inject
-    public ComplexModule(ComplexService requiredService)
-    {
-        assert requiredService != null;
-    }
-    
     @Setup
     @Inject
-    public void setup0(PrintStream providedService)
+    public void setup0(ComplexService requiredService, PrintStream providedService)
     {
         assert providedService != null;
+        assert requiredService != null;
     }
 
     @Setup(1)

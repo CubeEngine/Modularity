@@ -137,4 +137,29 @@ public class DependencyGraph
     {
         return nodes.get(findVersion(dep, nodes.keySet()));
     }
+
+    public void printOut()
+    {
+        System.out.println("\n#######################\n");
+        for (Node node : nodes.values())
+        {
+            if (node.getPredecessors().contains(root))
+            {
+                printOut(node, 0);
+            }
+        }
+        System.out.println("\n#######################\n");
+    }
+
+    private void printOut(Node node, int level)
+    {
+        for (int i = 0; i < level; i++) {
+            System.out.print("\t");
+        }
+        System.out.println(node.getInformation().getIdentifier().name());
+        for (Node subNode : node.getSuccessors()) {
+            printOut(subNode, level + 1);
+        }
+
+    }
 }
