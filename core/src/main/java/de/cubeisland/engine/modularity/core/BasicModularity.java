@@ -57,7 +57,7 @@ public class BasicModularity implements Modularity
     private final List<ModularityHandler> modularityHandlers = new ArrayList<ModularityHandler>();
     private Map<Class<? extends Annotation>, PostInjectionHandler> postInjectionHandlers = new HashMap<Class<? extends Annotation>, PostInjectionHandler>();
 
-    public BasicModularity(InformationLoader loader)
+    public void init(InformationLoader loader)
     {
         this.loader = loader;
         this.register(Modularity.class, this);
@@ -69,7 +69,7 @@ public class BasicModularity implements Modularity
         Set<DependencyInformation> loaded = getLoader().loadInformation(source);
         if (loaded.isEmpty())
         {
-            System.out.println("No DependencyInformation could be extracted from target source: " + source.getName()); // TODO
+            this.log("No DependencyInformation could be extracted from target source: " + source.getName()); // TODO
             return;
         }
         addLoaded(loaded);
@@ -81,7 +81,7 @@ public class BasicModularity implements Modularity
         Set<DependencyInformation> loaded = getLoader().loadInformationFromClasspath(filter);
         if (loaded.isEmpty())
         {
-            System.out.println("No DependencyInformation could be extracted from classpath!"); // TODO
+            this.log("No DependencyInformation could be extracted from classpath!"); // TODO
             return;
         }
         addLoaded(loaded);
@@ -210,7 +210,7 @@ public class BasicModularity implements Modularity
         catch (Exception e)
         {
             lifecycle.disable();
-            System.out.print("Could not load module: " + dep.name() + "\n");
+            this.log("Could not load module: " + dep.name());
             throw new IllegalStateException(e); // TODO
         }
     }
@@ -472,5 +472,11 @@ public class BasicModularity implements Modularity
         {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public void log(String message)
+    {
+        System.out.println(message);
     }
 }

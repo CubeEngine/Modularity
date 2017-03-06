@@ -138,7 +138,7 @@ public class AsmInformationLoader implements InformationLoader
             }
             else
             {
-                System.out.print("No Files found in: " + source.getName() + "\n");
+                this.modularity.log("No Files found in: " + source.getName());
             }
         }
         try
@@ -340,10 +340,10 @@ public class AsmInformationLoader implements InformationLoader
         return list;
     }
 
-    public static Modularity newModularity()
+    public static Modularity newModularity(Modularity modularity)
     {
         AsmInformationLoader loader = new AsmInformationLoader();
-        BasicModularity modularity = new BasicModularity(loader);
+        modularity.init(loader);
         loader.modularity = modularity;
         return modularity;
     }

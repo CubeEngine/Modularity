@@ -89,7 +89,6 @@ public class LifeCycle
 
     public LifeCycle load(DependencyInformation info)
     {
-        // System.out.print("Start Lifecycle of " + info.getIdentifier().name() + ":" + info.getIdentifier().version() +  "\n");
         this.info = info;
         this.current = LOADED;
         return this;
@@ -98,7 +97,7 @@ public class LifeCycle
 
     public LifeCycle provide(ValueProvider provider)
     {
-        System.out.print("Registered external provider " + provider.getClass().getName() + "\n");
+        this.modularity.log("Registered external provider " + provider.getClass().getName());
         this.instance = provider;
         this.current = PROVIDED;
         return this;
@@ -106,7 +105,7 @@ public class LifeCycle
 
     public LifeCycle initProvided(Object object)
     {
-        System.out.print("Registered external provided object " + object.getClass().getName() + "\n");
+        this.modularity.log("Registered external provided object " + object.getClass().getName());
         this.instance = object;
         this.current = PROVIDED;
         return this;
@@ -220,7 +219,7 @@ public class LifeCycle
 
         if (isIn(SETUP))
         {
-            System.out.print("Enable " + info.getIdentifier().name() + "\n");
+            this.modularity.log("Enable " + info.getIdentifier().name());
             modularity.runEnableHandlers(getInstance());
 
             invoke(enable);
@@ -272,8 +271,6 @@ public class LifeCycle
     {
         if (method != null)
         {
-            // System.out.print(instance.getClass().getName() + " invoke " + method.getName() + "\n");
-
             if (method.isAnnotationPresent(Setup.class))
             {
                 info.injectionPoints().get(SETUP.name(method.getAnnotation(Setup.class).value()))

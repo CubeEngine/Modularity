@@ -33,6 +33,7 @@ import de.cubeisland.engine.modularity.asm.info.module2.ComplexModule;
 import de.cubeisland.engine.modularity.asm.info.module3.BasicModule2;
 import de.cubeisland.engine.modularity.asm.info.module3.ProvidedService;
 import de.cubeisland.engine.modularity.asm.info.module3.ProvidedServiceImpl;
+import de.cubeisland.engine.modularity.core.BasicModularity;
 import de.cubeisland.engine.modularity.core.Modularity;
 import de.cubeisland.engine.modularity.core.graph.Dependency;
 import org.junit.BeforeClass;
@@ -74,11 +75,11 @@ public class AsmModularityTest
                 out.close();
             }
         }
-        modularity = newModularity();
+        modularity = newModularity(new BasicModularity());
         modularity.load(new File("target/test-classes/"));
         for (Dependency missing : modularity.getGraph().getUnresolved().keySet())
         {
-            System.out.println("Missing dependency: " + missing);
+            modularity.log("Missing dependency: " + missing);
         }
 
         assertEquals(0, modularity.getGraph().getUnresolved().size());

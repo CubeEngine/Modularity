@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Set;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicService;
 import de.cubeisland.engine.modularity.asm.info.module1.BasicModule;
+import de.cubeisland.engine.modularity.core.BasicModularity;
 import de.cubeisland.engine.modularity.core.graph.BasicDependency;
 import de.cubeisland.engine.modularity.core.graph.DependencyInformation;
 import de.cubeisland.engine.modularity.core.graph.meta.ModuleMetadata;
@@ -50,14 +51,14 @@ public class AsmInformationLoaderTest
     @Test
     public void testJar1()
     {
-        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module1.jar"));
+        Set<DependencyInformation> infos = newModularity(new BasicModularity()).getLoader().loadInformation(new File("target/test-classes/module1.jar"));
         assertEquals(3, infos.size());
     }
 
     @Test
     public void testJar2()
     {
-        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File("target/test-classes/module2.jar"));
+        Set<DependencyInformation> infos = newModularity(new BasicModularity()).getLoader().loadInformation(new File("target/test-classes/module2.jar"));
         assertEquals(6, infos.size());
     }
 
@@ -65,7 +66,7 @@ public class AsmInformationLoaderTest
     @Test
     public void testFolder()
     {
-        Set<DependencyInformation> infos = newModularity().getLoader().loadInformation(new File(getPath(BasicModule.class)));
+        Set<DependencyInformation> infos = newModularity(new BasicModularity()).getLoader().loadInformation(new File(getPath(BasicModule.class)));
 
         for (DependencyInformation info : infos)
         {

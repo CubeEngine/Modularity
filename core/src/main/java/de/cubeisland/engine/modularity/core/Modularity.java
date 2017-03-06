@@ -32,6 +32,7 @@ import de.cubeisland.engine.modularity.core.graph.DependencyGraph;
 
 public interface Modularity
 {
+    void init(InformationLoader loader);
     /**
      * Loads a all DependencyInformation from given source
      *
@@ -101,4 +102,6 @@ public interface Modularity
     void runEnableHandlers(Object instance);
 
     void runDisableHandlers(Object instance);
+
+    void log(String message);
 }
