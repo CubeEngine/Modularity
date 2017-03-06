@@ -72,6 +72,7 @@ public class BasicModularity implements Modularity
             this.log("No DependencyInformation could be extracted from target source: " + source.getName()); // TODO
             return;
         }
+        this.log("Loaded DependencyInformation for " + loaded.size() + " objects from " + source.getName());
         addLoaded(loaded);
     }
 
@@ -84,6 +85,7 @@ public class BasicModularity implements Modularity
             this.log("No DependencyInformation could be extracted from classpath!"); // TODO
             return;
         }
+        this.log("Loaded DependencyInformation for " + loaded.size() + " objects from classpath");
         addLoaded(loaded);
     }
 
@@ -210,7 +212,7 @@ public class BasicModularity implements Modularity
         catch (Exception e)
         {
             lifecycle.disable();
-            this.log("Could not load module: " + dep.name());
+            this.logError("Could not load module: " + dep.name(), e);
             throw new IllegalStateException(e); // TODO
         }
     }
@@ -328,6 +330,7 @@ public class BasicModularity implements Modularity
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
         maybe(dep).provide(provider); // Get or create Lifecycle and init
+        this.log("Registered external provider " + provider.getClass().getName());
     }
 
     @Override
@@ -336,6 +339,7 @@ public class BasicModularity implements Modularity
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
         maybe(dep).initProvided(instance);
+        this.log("Registered external provided object " + instance.getClass().getName());
     }
 
     @Override
@@ -344,6 +348,7 @@ public class BasicModularity implements Modularity
         BasicDependency dep = new BasicDependency(clazz.getName(), null);
         graph.provided(dep);
         maybe(dep).initProvided(instanceProvider);
+        this.log("Registered external provided object " + instanceProvider.getClass().getName());
     }
 
     @Override
@@ -478,5 +483,15 @@ public class BasicModularity implements Modularity
     public void log(String message)
     {
         System.out.println(message);
+    }
+
+    @Override
+    public void logError(String message, Throwable t)
+    {
+        System.err.println(message);
+        if (t != null)
+        {
+            t.printStackTrace();
+        }
     }
 }

@@ -97,7 +97,6 @@ public class LifeCycle
 
     public LifeCycle provide(ValueProvider provider)
     {
-        this.modularity.log("Registered external provider " + provider.getClass().getName());
         this.instance = provider;
         this.current = PROVIDED;
         return this;
@@ -105,7 +104,6 @@ public class LifeCycle
 
     public LifeCycle initProvided(Object object)
     {
-        this.modularity.log("Registered external provided object " + object.getClass().getName());
         this.instance = object;
         this.current = PROVIDED;
         return this;

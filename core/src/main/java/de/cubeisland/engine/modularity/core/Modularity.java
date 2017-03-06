@@ -104,4 +104,5 @@ public interface Modularity
     void runDisableHandlers(Object instance);
 
     void log(String message);
+    void logError(String message, Throwable t);
 }
